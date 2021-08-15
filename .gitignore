@@ -1,0 +1,7 @@
+*.pdb
+*.lib
+x64/
+.vs/
+*.vcxproj.filters
+*.vcxproj.user
+GLFW/x64/
