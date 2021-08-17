@@ -50,9 +50,9 @@ int main(int argc, char* argv[])
 
 	float vertices[] = {
 		// positions         // colors
-		 0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
-		-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // bottom left
-		 0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // top 
+		 0.5f, -0.5f,  0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
+		-0.5f, -0.5f,  0.0f,  0.0f, 1.0f, 0.0f,  // bottom left
+		 0.0f,  0.5f,  0.0f,  0.0f, 0.0f, 1.0f   // top 
 	};
 
 	unsigned int VBO, VAO;
@@ -70,19 +70,8 @@ int main(int argc, char* argv[])
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-
-	// MATRICES
-	glm::mat4 model = glm::mat4(1.0f);
-	glm::mat4 view = glm::mat4(1.0f);
-	glm::mat4 projection = glm::mat4(1.0f);
-
-
-	glm::mat4 viewProjection = projection * view;
-
 	//UBO
 	UniformBuffer uniformBuffer;
-	copyMat4ToFloatArray(model, uniformBuffer.model);
-	copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
 
 	GLuint uboMatricesID;
 
@@ -102,7 +91,8 @@ int main(int argc, char* argv[])
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-	glBindBufferRange(GL_UNIFORM_BUFFER, uniformMatrixBlockIndex, uboMatricesID, 0, sizeof(UniformBuffer));
+	glBindBufferRange(GL_UNIFORM_BUFFER, uniformMatrixBlockIndex, uboMatricesID, 0, sizeof(UniformBuffer)); // Understand what this does, since something seems fishy
+
 
 	//USE glBufferSubData() to update the values of the UBO members later on whent the values change due to the addition of a camera.
 
@@ -111,8 +101,39 @@ int main(int argc, char* argv[])
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		//float delta = 80 * (float)glfwGetTime();
+		//glm::mat4 model = glm::mat4(1.0f);
+		//model = glm::rotate(model, glm::radians(delta), glm::vec3(0.0f, 1.0f, 0.0f));
+		//copyMat4ToFloatArray(model, uniformBuffer.model);
+
+		//glm::mat4 view = glm::mat4(1.0f);
+		//view = glm::translate(view, glm::vec3(0.0f, 0.0f, 2.0f));
+
+		//glm::mat4 projection = glm::perspective(90.0f, (float)800 / (float)600, 0.1f, 100.0f);
+
+		//glm::mat4 viewProjection = projection * view;
+		//copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
+
+		float delta = 80.0f * (float)glfwGetTime();
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::rotate(model, glm::radians(delta), glm::vec3(0.0f, 1.0f, 0.0f));
+		copyMat4ToFloatArray(model, uniformBuffer.model);
+
+		glm::mat4 view = glm::mat4(1.0f);
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -2.0f));
+
+		glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)800 / (float)600, 0.1f, 100.0f);
+
+		glm::mat4 viewProjection = projection * view;
+		copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
+
+		glBindBuffer(GL_UNIFORM_BUFFER, uboMatricesID);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 		basicShader.useProgram();
 		glBindVertexArray(VAO);
+
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glfwSwapBuffers(window);
