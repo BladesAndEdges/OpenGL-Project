@@ -50,10 +50,16 @@ int main(int argc, char* argv[])
 
 	float vertices[] = {
 		// positions         // colors
-		 0.5f, -0.5f,  0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
-		-0.5f, -0.5f,  0.0f,  0.0f, 1.0f, 0.0f,  // bottom left
-		 0.0f,  0.5f,  0.0f,  0.0f, 0.0f, 1.0f   // top 
+		 -0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,  // bottom right
+		0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f,  // bottom left
+		 0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f,   // top 
+
+		-0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f, 
+		0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 1.0f, 
+		-0.5f, 0.5f,  0.5f,  1.0f, 1.0f, 0.0f
 	};
+
+	std::cout << sizeof(vertices) << std::endl;
 
 	unsigned int VBO, VAO;
 	glGenVertexArrays(1, &VAO);
@@ -101,22 +107,9 @@ int main(int argc, char* argv[])
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		//float delta = 80 * (float)glfwGetTime();
-		//glm::mat4 model = glm::mat4(1.0f);
-		//model = glm::rotate(model, glm::radians(delta), glm::vec3(0.0f, 1.0f, 0.0f));
-		//copyMat4ToFloatArray(model, uniformBuffer.model);
-
-		//glm::mat4 view = glm::mat4(1.0f);
-		//view = glm::translate(view, glm::vec3(0.0f, 0.0f, 2.0f));
-
-		//glm::mat4 projection = glm::perspective(90.0f, (float)800 / (float)600, 0.1f, 100.0f);
-
-		//glm::mat4 viewProjection = projection * view;
-		//copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
-
 		float delta = 80.0f * (float)glfwGetTime();
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::rotate(model, glm::radians(delta), glm::vec3(0.0f, 1.0f, 0.0f));
+		//model = glm::rotate(model, glm::radians(delta), glm::vec3(0.0f, 1.0f, 0.0f));
 		copyMat4ToFloatArray(model, uniformBuffer.model);
 
 		glm::mat4 view = glm::mat4(1.0f);
@@ -134,7 +127,7 @@ int main(int argc, char* argv[])
 		basicShader.useProgram();
 		glBindVertexArray(VAO);
 
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
