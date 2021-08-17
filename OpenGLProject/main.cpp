@@ -50,13 +50,53 @@ int main(int argc, char* argv[])
 
 	float vertices[] = {
 		// positions         // colors
-		 -0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,  // bottom right
-		0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f,  // bottom left
-		 0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f,   // top 
+		 -0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,   // Front
+		0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f,  
+		 0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f,   
 
 		-0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f, 
 		0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 1.0f, 
-		-0.5f, 0.5f,  0.5f,  1.0f, 1.0f, 0.0f
+		-0.5f, 0.5f,  0.5f,  1.0f, 1.0f, 0.0f,
+
+		-0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,   // Bottom
+		0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f,
+		 0.5f,  -0.5f,  -0.5f,  0.0f, 0.0f, 1.0f,
+
+		-0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
+		0.5f, -0.5f,  -0.5f,  0.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f,  -0.5f,  1.0f, 1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f,   // Back
+		0.5f, -0.5f,  -0.5f,  0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f,  -0.5f,  0.0f, 0.0f, 1.0f,
+
+		-0.5f, -0.5f,  -0.5f,  1.0f, 0.0f, 0.0f,
+		0.5f, 0.5f,  -0.5f,  0.0f, 0.0f, 1.0f,
+		-0.5f, 0.5f,  -0.5f,  1.0f, 1.0f, 0.0f,
+
+		-0.5f, 0.5f, 0.5f,  1.0f, 0.0f, 0.0f,   // Top
+		0.5f, 0.5f,  0.5f,  0.0f, 1.0f, 0.0f,
+		 0.5f, 0.5f,  -0.5f,  0.0f, 0.0f, 1.0f,
+
+		-0.5f, 0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
+		0.5f, 0.5f,  -0.5f,  0.0f, 0.0f, 1.0f,
+		-0.5f, 0.5f,  -0.5f,  1.0f, 1.0f, 0.0f,
+
+		0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 0.0f,   // Right
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f,  -0.5f,  0.0f, 0.0f, 1.0f,
+
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
+		0.5f, 0.5f,  -0.5f,  0.0f, 0.0f, 1.0f,
+		0.5f, 0.5f,  0.5f,  1.0f, 1.0f, 0.0f,
+
+		-0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 0.0f,   // Left
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
+		 -0.5f, 0.5f, -0.5f,  0.0f, 0.0f, 1.0f,
+
+		-0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
+		-0.5f, 0.5f,  -0.5f,  0.0f, 0.0f, 1.0f,
+		-0.5f, 0.5f,  0.5f,  1.0f, 1.0f, 0.0f,
 	};
 
 	std::cout << sizeof(vertices) << std::endl;
@@ -104,12 +144,14 @@ int main(int argc, char* argv[])
 
 	while (!glfwWindowShouldClose(window))
 	{
+		glEnable(GL_DEPTH_TEST);
+
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		float delta = 80.0f * (float)glfwGetTime();
 		glm::mat4 model = glm::mat4(1.0f);
-		//model = glm::rotate(model, glm::radians(delta), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::rotate(model, glm::radians(delta), glm::vec3(1.0f, 1.0f, 1.0f));
 		copyMat4ToFloatArray(model, uniformBuffer.model);
 
 		glm::mat4 view = glm::mat4(1.0f);
@@ -127,7 +169,7 @@ int main(int argc, char* argv[])
 		basicShader.useProgram();
 		glBindVertexArray(VAO);
 
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
