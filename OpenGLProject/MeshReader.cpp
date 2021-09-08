@@ -152,18 +152,31 @@ std::vector<Face> MeshReader::triangulateFaceVertices(const std::vector<Vertex>&
 
 	for (int triangle = 0; triangle < vertexCount - 2; triangle++)
 	{
-		Vertex pivot = vertices[0];
-		Vertex firstNeighbour = vertices[triangle + 1];
-		Vertex secondNeighbour = vertices[triangle + 2];
-
 		Face face;
 
-		face.vertices.push_back(pivot);
-		face.vertices.push_back(firstNeighbour);
-		face.vertices.push_back(secondNeighbour);
+		face.A = vertices[0];
+		face.B = vertices[triangle + 1];
+		face.C = vertices[triangle + 2];
 
 		faces.push_back(face);
 	}
 
 	return faces;
+}
+
+std::vector<Face> MeshReader::getFaces() const
+{
+	return m_faces;
+}
+
+unsigned int MeshReader::getSizeOfFaceArray() const
+{
+	unsigned int size = 0;
+
+	for (unsigned int face = 0; face < m_faces.size(); face++)
+	{
+		size += sizeof(Face);
+	}
+
+	return size;
 }

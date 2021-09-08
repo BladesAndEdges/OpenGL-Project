@@ -24,13 +24,15 @@ private:
 
 public:
 
-	MeshReader(const std::string& fileName, const OBJTYPE& objType);
+	MeshReader(const std::string& fileName);
 
-	void parseFileWithPositiveIndices(const std::string& fileName);
-	void parseFileWithNegativeIndices(const std::string& fileName);
+	void parseFile(const std::string& fileName);
 
 	std::vector<Vertex> parseVertexData(const std::string& line);
 	std::vector<Face> triangulateFaceVertices(const std::vector<Vertex>& vertices);
+
+	std::vector<Face> getFaces() const;
+	unsigned int getSizeOfFaceArray() const;
 
 };
 
