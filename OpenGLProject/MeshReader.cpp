@@ -5,22 +5,12 @@
 #include <string>
 
 
-MeshReader::MeshReader(const std::string & fileName, const OBJTYPE& objType)
+MeshReader::MeshReader(const std::string & fileName)
 {
-	switch (objType)
-	{
-	case OBJTYPE::POSITIVE:
-		parseFileWithPositiveIndices(fileName);
-		break;
-	case OBJTYPE::NEGATIVE:
-		parseFileWithNegativeIndices(fileName);
-		break;
-	default:
-		throw std::exception("Incorrect Object file type!");
-	}
+	parseFile(fileName);
 }
 
-void MeshReader::parseFileWithPositiveIndices(const std::string & fileName)
+void MeshReader::parseFile(const std::string & fileName)
 {
 	std::ifstream ifs(fileName);
 
@@ -79,10 +69,6 @@ void MeshReader::parseFileWithPositiveIndices(const std::string & fileName)
 			m_faces.insert(std::end(m_faces), std::begin(faces), std::end(faces));
 		}
 	}
-}
-
-void MeshReader::parseFileWithNegativeIndices(const std::string & fileName)
-{
 }
 
 std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
