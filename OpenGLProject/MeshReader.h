@@ -3,11 +3,7 @@
 #include <string>
 #include <glm.hpp>
 #include <vector>
-
-struct Vertex
-{
-
-};
+#include "Face.h"
 
 enum class OBJTYPE
 {
@@ -20,9 +16,11 @@ class MeshReader
 
 private:
 
-	std::vector<glm::vec3> m_vertexCoordinates;
+	std::vector<glm::vec3> m_vertexPositions;
 	std::vector<glm::vec2> m_textureCoordinates;
 	std::vector<glm::vec3> m_normals;
+
+	std::vector<Face> m_faces;
 
 public:
 
@@ -30,6 +28,9 @@ public:
 
 	void parseFileWithPositiveIndices(const std::string& fileName);
 	void parseFileWithNegativeIndices(const std::string& fileName);
+
+	std::vector<Vertex> parseVertexData(const std::string& line);
+	std::vector<Face> triangulateFaceVertices(const std::vector<Vertex>& vertices);
 
 };
 
