@@ -111,10 +111,20 @@ std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
 
 				int vertexPositionId = stoi(vertexPositionIndex, nullptr); 
 			
+				if (vertexPositionId >= 1)
+				{
+					vertex.m_position[0] = m_vertexPositions[vertexPositionId - 1].x;
+					vertex.m_position[1] = m_vertexPositions[vertexPositionId - 1].y;
+					vertex.m_position[2] = m_vertexPositions[vertexPositionId - 1].z;
+				}
+				else
+				{
+					unsigned int arraySize = m_vertexPositions.size();
 
-				vertex.m_x = m_vertexPositions[vertexPositionId - 1].x;
-				vertex.m_y = m_vertexPositions[vertexPositionId - 1].y;
-				vertex.m_z = m_vertexPositions[vertexPositionId - 1].z;
+					vertex.m_position[0] = m_vertexPositions[arraySize + vertexPositionId].x;
+					vertex.m_position[1] = m_vertexPositions[arraySize + vertexPositionId].y;
+					vertex.m_position[2] = m_vertexPositions[arraySize + vertexPositionId].z;
+				}
 			}
 
 			if (vertexTextureCoordinateIndex != emptyString)
