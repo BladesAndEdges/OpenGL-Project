@@ -171,8 +171,7 @@ int main(int argc, char* argv[])
 	//MeshReader stanfordBunny(R"(Meshes\bunny\bunny.obj)");
 	//MeshReader stanfordBunny(R"(Meshes\CornellBox\CornellBox-Original.obj)");
 	//MeshReader stanfordBunny(R"(Meshes\CornellBox\CornellBox-Empty-CO.obj)");
-	//MeshReader stanfordBunny(R"(Meshes\sponza\sponza.obj)");
-	MeshReader stanfordBunny(R"(Meshes\fixedSponza.obj)");
+	MeshReader stanfordBunny(R"(Meshes\sponza\sponza.obj)");
 
 	unsigned int positiveCubeVBO;
 	unsigned int positiveCubeVAO;

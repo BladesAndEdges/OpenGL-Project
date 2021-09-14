@@ -23,9 +23,8 @@ public:
 
 	MeshReader(const std::string& fileName);
 
-	void parseFile(const std::string& fileName);
 	void parseMeshData(const std::string& fileName);
-	void resetAttributeArrays();
+	void parseSponza(const std::string& fileName);
 
 	std::vector<Vertex> parseVertexData(const std::string& line);
 	std::vector<Face> triangulateFaceVertices(const std::vector<Vertex>& vertices);
