@@ -12,6 +12,7 @@
 
 #include "UniformBuffer.h"
 #include "Texture.h"
+#include "MeshReader.h"
 
 void framebufferCallback(GLFWwindow* window, int width, int height)
 {
@@ -51,8 +52,6 @@ int main(int argc, char* argv[])
 
 	Shader basicShader("Shaders\\basicShader.vert", "Shaders\\basicShader.frag");
 
-
-	// THE BOTTOM QUAD IS MISSING A TRIANGLE
 	float vertices[] = {
 		// positions         // texture coordinate
 		 -0.5f, -0.5f,  0.5f,	0.0f, 0.0f,   // Front
@@ -165,6 +164,36 @@ int main(int argc, char* argv[])
 	Texture sample1920x1280(R"(Textures\sample_1920x1280.ppm)");
 	Texture sample5184x3456(R"(Textures\sample_5184x3456.ppm)");
 
+	//---------------------------------------------------------------------------------------------------------------------------------------
+	// Testing to see if the MeshReader Data can be rendered
+
+	//MeshReader stanfordBunny(R"(Meshes\cubePositive.obj)");
+	//MeshReader stanfordBunny(R"(Meshes\bunny\bunny.obj)");
+	//MeshReader stanfordBunny(R"(Meshes\CornellBox\CornellBox-Original.obj)");
+	//MeshReader stanfordBunny(R"(Meshes\CornellBox\CornellBox-Empty-CO.obj)");
+	//MeshReader stanfordBunny(R"(Meshes\sponza\sponza.obj)");
+	MeshReader stanfordBunny(R"(Meshes\fixedSponza.obj)");
+
+	unsigned int positiveCubeVBO;
+	unsigned int positiveCubeVAO;
+
+	glGenVertexArrays(1, &positiveCubeVAO);
+	glGenBuffers(1, &positiveCubeVBO);
+
+	glBindVertexArray(positiveCubeVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, positiveCubeVBO);
+
+	glBufferData(GL_ARRAY_BUFFER, stanfordBunny.getSizeOfFaceArray(), stanfordBunny.getFaces().data(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,  sizeof(Vertex), (void*)offsetof(Vertex, m_position));
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_normal));
+	glEnableVertexAttribArray(1);
+
+	Shader meshTestShader(R"(Shaders\meshTestShader.vert)", R"(Shaders\meshTestShader.frag)");
+	//-----------------------------------------------------------------------------------------------------------------------------------------
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -175,11 +204,10 @@ int main(int argc, char* argv[])
 
 		float delta = 80.0f * (float)glfwGetTime();
 		glm::mat4 model = glm::mat4(1.0f);
-		//model = glm::rotate(model, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		copyMat4ToFloatArray(model, uniformBuffer.model);
 
 		glm::mat4 view = glm::mat4(1.0f);
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -2.0f));
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
 
 		glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)800 / (float)600, 0.1f, 100.0f);
 
@@ -191,7 +219,7 @@ int main(int argc, char* argv[])
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 		//jpg
-		greenMarble.useTexture();
+		//greenMarble.useTexture();
 		//minion.useTexture();
 		//sandTexture.useTexture();
 		//sunflower.useTexture();
@@ -209,10 +237,11 @@ int main(int argc, char* argv[])
 		//sample1920x1280.useTexture();
 		//sample5184x3456.useTexture();
 
-		basicShader.useProgram();
-		glBindVertexArray(VAO);
-
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//basicShader.useProgram();
+		meshTestShader.useProgram();
+		glBindVertexArray(positiveCubeVAO);
+		
+		glDrawArrays(GL_TRIANGLES, 0, stanfordBunny.getFaces().size() * 3);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

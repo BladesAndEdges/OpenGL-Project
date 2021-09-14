@@ -5,6 +5,8 @@
 
 struct Face
 {
-	std::vector<Vertex> vertices;
+	Vertex A;
+	Vertex B;
+	Vertex C;
 };
 

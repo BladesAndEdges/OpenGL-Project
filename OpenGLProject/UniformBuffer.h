@@ -4,6 +4,7 @@
 #include <cstring>
 #include <gtc/type_ptr.hpp>
 
+
 struct UniformBuffer
 {
 	float model[16];
