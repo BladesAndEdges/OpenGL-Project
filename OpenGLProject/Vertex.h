@@ -3,9 +3,8 @@
 
 struct Vertex
 {
-	float m_x;
-	float m_y;
-	float m_z;
+	float m_position[3];
+	float m_normal[3];
 
 	Vertex();
 	Vertex(float x, float y, float z);
