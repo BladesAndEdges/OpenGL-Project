@@ -13,6 +13,7 @@
 #include "UniformBuffer.h"
 #include "Texture.h"
 #include "MeshReader.h"
+#include "Camera.h"
 
 void framebufferCallback(GLFWwindow* window, int width, int height)
 {
@@ -27,6 +28,38 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 	__debugbreak();
 }
 
+void processCameraInput(Camera& camera, GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		std::cout << "W key pressed" << std::endl;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		std::cout << "A key pressed" << std::endl;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		std::cout << "S key pressed" << std::endl;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		std::cout << "D key pressed" << std::endl;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+	{
+		std::cout << "Q key pressed" << std::endl;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+	{
+		std::cout << "E key pressed" << std::endl;
+	}
+}
 
 int main(int argc, char* argv[])
 {
@@ -169,9 +202,9 @@ int main(int argc, char* argv[])
 
 	//MeshReader stanfordBunny(R"(Meshes\cubePositive.obj)");
 	//MeshReader stanfordBunny(R"(Meshes\bunny\bunny.obj)");
-	//MeshReader stanfordBunny(R"(Meshes\CornellBox\CornellBox-Original.obj)");
+	MeshReader stanfordBunny(R"(Meshes\CornellBox\CornellBox-Original.obj)");
 	//MeshReader stanfordBunny(R"(Meshes\CornellBox\CornellBox-Empty-CO.obj)");
-	MeshReader stanfordBunny(R"(Meshes\sponza\sponza.obj)");
+	//MeshReader stanfordBunny(R"(Meshes\sponza\sponza.obj)");
 
 	unsigned int positiveCubeVBO;
 	unsigned int positiveCubeVAO;
@@ -194,8 +227,13 @@ int main(int argc, char* argv[])
 	Shader meshTestShader(R"(Shaders\meshTestShader.vert)", R"(Shaders\meshTestShader.frag)");
 	//-----------------------------------------------------------------------------------------------------------------------------------------
 
+	Camera camera;
+
 	while (!glfwWindowShouldClose(window))
 	{
+		glfwPollEvents();
+		processCameraInput(camera, window);
+
 		glEnable(GL_DEPTH_TEST);
 
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
@@ -243,10 +281,10 @@ int main(int argc, char* argv[])
 		glDrawArrays(GL_TRIANGLES, 0, stanfordBunny.getFaces().size() * 3);
 
 		glfwSwapBuffers(window);
-		glfwPollEvents();
 	}
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
+
 	return 0;
 }
