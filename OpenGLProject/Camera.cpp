@@ -5,9 +5,15 @@ Camera::Camera() : m_worldPosition(glm::vec3(0.0f, 0.0f, 0.0f)),
 {
 }
 
-glm::mat3 Camera::createViewMatrix() const
+glm::mat4 Camera::createViewMatrix() const
 {
-	return glm::mat3();
+	glm::mat4 viewMatrix;
+
+	glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), -m_worldPosition);
+
+	viewMatrix = translationMatrix;
+
+	return viewMatrix;
 }
 
 glm::vec3 Camera::getWorldPosition() const
@@ -18,4 +24,9 @@ glm::vec3 Camera::getWorldPosition() const
 glm::mat3 Camera::getWorldOrientation() const
 {
 	return m_worldOrientation;
+}
+
+void Camera::setCameraWorldPosition(const glm::vec3 & newWorldPosition)
+{
+	m_worldPosition = newWorldPosition;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include<glm.hpp>
+#include<gtc/matrix_transform.hpp>
 
 class Camera
 {
@@ -14,12 +15,12 @@ public:
 
 	Camera();
 
-	glm::mat3 createViewMatrix() const;
+	glm::mat4 createViewMatrix() const;
 
 	glm::vec3 getWorldPosition() const;
 	glm::mat3 getWorldOrientation() const;
 
-
+	void setCameraWorldPosition(const glm::vec3& newWorldPosition);
 
 };
 
