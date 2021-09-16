@@ -15,6 +15,12 @@
 #include "MeshReader.h"
 #include "Camera.h"
 
+float g_deltaTime = 0.0f;
+float g_previousFrameTime = 0.0f;
+
+float g_previousCursorX = 0.0f;
+float g_previousCursorY = 0.0f;
+
 void framebufferCallback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -30,35 +36,81 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 
 void processCameraInput(Camera& camera, GLFWwindow* window)
 {
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	float currentFrameTime = glfwGetTime();
+	g_deltaTime = currentFrameTime - g_previousFrameTime;
+	g_previousFrameTime = currentFrameTime;
+
+	const float unitsPerFrame = 500.0f * g_deltaTime;
+
+	const glm::vec3 forward(0.0f, 0.0f, -1.0f);
+	const glm::vec3 up(0.0f, 1.0f, 0.0f);
+	const glm::vec3 right(1.0f, 0.0f, 0.0f);
+	
+	//Find the screen coordinates of the cursor
+	double xPos;
+	double yPos;
+
+	glfwGetCursorPos(window, &xPos, &yPos);
+
+	float xCursorPos = (float)xPos;
+	float yCursorPos = (float)yPos;
+
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 	{
-		std::cout << "W key pressed" << std::endl;
+		// Yaw
+		const glm::vec3 worldSpaceUp = camera.getWorldOrientation() * up;
+
+		const float deltaX = g_previousCursorX - xCursorPos;
+		const glm::mat3 yawRotation = glm::mat3(glm::rotate(glm::mat4(1.0f), glm::radians(deltaX), worldSpaceUp)); // How do you not have a rotate for mat3??
+		camera.applyWorldSpaceRotation(yawRotation);
+
+		//Pitch
+		const glm::vec3 worldSpaceRight = camera.getWorldOrientation() * right;
+
+		const float deltaY = g_previousCursorY - yCursorPos;
+		const glm::mat3 pitchRotation = glm::mat3(glm::rotate(glm::mat4(1.0f), glm::radians(deltaY), worldSpaceRight));
+		camera.applyWorldSpaceRotation(pitchRotation);
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	g_previousCursorX = xCursorPos;
+	g_previousCursorY = yCursorPos;
+
+	//Camera Translation
+	glm::vec3 viewSpaceTranslation(0.0f, 0.0f, 0.0f);
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		std::cout << "A key pressed" << std::endl;
+		viewSpaceTranslation = viewSpaceTranslation + (unitsPerFrame * forward);
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		std::cout << "S key pressed" << std::endl;
+		viewSpaceTranslation = viewSpaceTranslation - (unitsPerFrame * forward);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		viewSpaceTranslation = viewSpaceTranslation - (unitsPerFrame * right);
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		std::cout << "D key pressed" << std::endl;
+		viewSpaceTranslation = viewSpaceTranslation + (unitsPerFrame * right);
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
-		std::cout << "Q key pressed" << std::endl;
+		viewSpaceTranslation = viewSpaceTranslation + (unitsPerFrame * up);
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 	{
-		std::cout << "E key pressed" << std::endl;
+		viewSpaceTranslation = viewSpaceTranslation - (unitsPerFrame * up);
 	}
+
+	glm::vec3 worldSpaceTranslation = camera.getWorldOrientation() * viewSpaceTranslation;
+	glm::vec3 newWorldSpacePosition = camera.getWorldPosition() + worldSpaceTranslation;
+	camera.setCameraWorldPosition(newWorldSpacePosition);
 }
 
 int main(int argc, char* argv[])
@@ -202,9 +254,9 @@ int main(int argc, char* argv[])
 
 	//MeshReader stanfordBunny(R"(Meshes\cubePositive.obj)");
 	//MeshReader stanfordBunny(R"(Meshes\bunny\bunny.obj)");
-	MeshReader stanfordBunny(R"(Meshes\CornellBox\CornellBox-Original.obj)");
+	//MeshReader stanfordBunny(R"(Meshes\CornellBox\CornellBox-Original.obj)");
 	//MeshReader stanfordBunny(R"(Meshes\CornellBox\CornellBox-Empty-CO.obj)");
-	//MeshReader stanfordBunny(R"(Meshes\sponza\sponza.obj)");
+	MeshReader stanfordBunny(R"(Meshes\sponza\sponza.obj)");
 
 	unsigned int positiveCubeVBO;
 	unsigned int positiveCubeVAO;
@@ -243,10 +295,10 @@ int main(int argc, char* argv[])
 		glm::mat4 model = glm::mat4(1.0f);
 		copyMat4ToFloatArray(model, uniformBuffer.model);
 
-		glm::mat4 view = glm::mat4(1.0f);
+		glm::mat4 view = camera.createViewMatrix();
 		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
 
-		glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)800 / (float)600, 0.1f, 100.0f);
+		glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)800 / (float)600, 0.1f, 1000.0f);
 
 		glm::mat4 viewProjection = projection * view;
 		copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
