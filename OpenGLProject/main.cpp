@@ -57,19 +57,21 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 	{
-		// Yaw
-		const glm::vec3 worldSpaceUp = camera.getWorldOrientation() * up;
+		//Probably not fixed, but work in progress
+		const glm::vec3 wRight = camera.getWorldOrientation() * glm::vec3(1.0f, 0.0f, 0.0f);
+		const glm::vec3 wUp = camera.getWorldOrientation() * glm::vec3(0.0f, 1.0f, 0.0f);
 
-		const float deltaX = g_previousCursorX - xCursorPos;
-		const glm::mat3 yawRotation = glm::mat3(glm::rotate(glm::mat4(1.0f), glm::radians(deltaX), worldSpaceUp)); // How do you not have a rotate for mat3??
-		camera.applyWorldSpaceRotation(yawRotation);
-
-		//Pitch
-		const glm::vec3 worldSpaceRight = camera.getWorldOrientation() * right;
+		std::cout << glm::dot(wRight, wUp) << std::endl;
 
 		const float deltaY = g_previousCursorY - yCursorPos;
-		const glm::mat3 pitchRotation = glm::mat3(glm::rotate(glm::mat4(1.0f), glm::radians(deltaY), worldSpaceRight));
-		camera.applyWorldSpaceRotation(pitchRotation);
+		const glm::mat3 pitchRotation = glm::mat3(glm::rotate(glm::mat4(1.0f), glm::radians(deltaY), right));
+
+		const float deltaX = g_previousCursorX - xCursorPos;
+		const glm::mat3 yawRotation = glm::mat3(glm::rotate(glm::mat4(1.0f), glm::radians(deltaX), up)); // How do you not have a rotate for mat3??
+
+		const glm::mat3 finalRotation =   yawRotation * camera.getWorldOrientation() * pitchRotation;
+
+		camera.setCameraWorldOrientation(finalRotation);
 	}
 
 	g_previousCursorX = xCursorPos;
@@ -111,6 +113,7 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 	glm::vec3 worldSpaceTranslation = camera.getWorldOrientation() * viewSpaceTranslation;
 	glm::vec3 newWorldSpacePosition = camera.getWorldPosition() + worldSpaceTranslation;
 	camera.setCameraWorldPosition(newWorldSpacePosition);
+
 }
 
 int main(int argc, char* argv[])

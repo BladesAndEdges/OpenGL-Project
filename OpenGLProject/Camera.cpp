@@ -1,8 +1,12 @@
 #include "Camera.h"
 
-Camera::Camera() : m_worldPosition(glm::vec3(0.0f, 0.0f, 0.0f)), 
-					m_worldOrientation(glm::mat3(1.0f))
+Camera::Camera() : m_worldPosition(glm::vec3(-61.0f, 169.0f, -411.0f))
 {
+	m_worldOrientation = glm::mat3(1.0f);
+
+	glm::mat4 m = glm::mat4(1.0f);
+	m = glm::mat3(glm::rotate(m, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+	m_worldOrientation = glm::mat3(glm::rotate(m, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
 }
 
 glm::mat4 Camera::createViewMatrix() const
@@ -36,4 +40,9 @@ void Camera::applyWorldSpaceRotation(const glm::mat3 & rotation)
 void Camera::setCameraWorldPosition(const glm::vec3 & newWorldPosition)
 {
 	m_worldPosition = newWorldPosition;
+}
+
+void Camera::setCameraWorldOrientation(const glm::mat3 & newWorldOrientation)
+{
+	m_worldOrientation = newWorldOrientation;
 }

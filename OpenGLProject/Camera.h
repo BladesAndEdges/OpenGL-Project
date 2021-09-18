@@ -22,6 +22,7 @@ public:
 
 	void applyWorldSpaceRotation(const glm::mat3& rotation);
 	void setCameraWorldPosition(const glm::vec3& newWorldPosition);
+	void setCameraWorldOrientation(const glm::mat3& newWorldOrientation);
 
 };
 
