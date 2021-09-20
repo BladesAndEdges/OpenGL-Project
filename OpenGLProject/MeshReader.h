@@ -19,6 +19,8 @@ private:
 	std::vector<Mesh> m_meshes;
 	std::vector<Face> m_faces;
 
+	// Unordered map of materials
+
 public:
 
 	MeshReader(const std::string& fileName);
