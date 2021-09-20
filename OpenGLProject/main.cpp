@@ -67,7 +67,7 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 		const glm::mat3 pitchRotation = glm::mat3(glm::rotate(glm::mat4(1.0f), glm::radians(deltaY), right));
 
 		const float deltaX = g_previousCursorX - xCursorPos;
-		const glm::mat3 yawRotation = glm::mat3(glm::rotate(glm::mat4(1.0f), glm::radians(deltaX), up)); // How do you not have a rotate for mat3??
+		const glm::mat3 yawRotation = glm::mat3(glm::rotate(glm::mat4(1.0f), glm::radians(deltaX), up)); 
 
 		const glm::mat3 finalRotation =   yawRotation * camera.getWorldOrientation() * pitchRotation;
 
@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
-	GLFWwindow* window = glfwCreateWindow(800, 600, "My Window", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(800, 600, "Crytek Sponza Project", nullptr, nullptr);
 
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebufferCallback);
@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
 
 	//---------------------------------------------------------------------------------------------------------------------------------------
 	// Testing to see if the MeshReader Data can be rendered
-	MeshReader stanfordBunny(R"(Meshes\sponza\sponza.obj)");
+	MeshReader mainModel(R"(Meshes\sponza\sponza.obj)");
 
 	unsigned int positiveCubeVBO;
 	unsigned int positiveCubeVAO;
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
 
 	glBindBuffer(GL_ARRAY_BUFFER, positiveCubeVBO);
 
-	glBufferData(GL_ARRAY_BUFFER, stanfordBunny.getSizeOfFaceArray(), stanfordBunny.getFaces().data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, mainModel.getSizeOfFaceArray(), mainModel.getFaces().data(), GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,  sizeof(Vertex), (void*)offsetof(Vertex, m_position));
 	glEnableVertexAttribArray(0);
@@ -210,7 +210,7 @@ int main(int argc, char* argv[])
 		glm::mat4 view = camera.createViewMatrix();
 		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
 
-		glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)800 / (float)600, 0.1f, 1000.0f);
+		glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)800 / (float)600, 0.1f, 10000.0f);
 
 		glm::mat4 viewProjection = projection * view;
 		copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
@@ -222,7 +222,7 @@ int main(int argc, char* argv[])
 		meshTestShader.useProgram();
 		glBindVertexArray(positiveCubeVAO);
 		
-		for (const Mesh& mesh : stanfordBunny.getMeshes())
+		for (const Mesh& mesh : mainModel.getMeshes())
 		{
 			glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 		}
