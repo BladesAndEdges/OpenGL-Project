@@ -5,8 +5,9 @@ Camera::Camera() : m_worldPosition(glm::vec3(-61.0f, 169.0f, -411.0f))
 	m_worldOrientation = glm::mat3(1.0f);
 
 	glm::mat4 m = glm::mat4(1.0f);
-	m = glm::mat3(glm::rotate(m, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
-	m_worldOrientation = glm::mat3(glm::rotate(m, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
+	m = glm::rotate(m, glm::radians(47.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	m = glm::rotate(m, glm::radians(47.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	m_worldOrientation = glm::mat3(m);
 }
 
 glm::mat4 Camera::createViewMatrix() const
