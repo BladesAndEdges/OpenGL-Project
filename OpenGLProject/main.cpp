@@ -166,32 +166,8 @@ int main(int argc, char* argv[])
 
 	//USE glBufferSubData() to update the values of the UBO members later on whent the values change due to the addition of a camera.
 
-	// Jpgs 
-	Texture greenMarble("Textures//greenMarble.jpg");
-	Texture minion("Textures//minion.jpg");
-	Texture sandTexture("Textures//sandTexture.jpg");
-	Texture sunflower("Textures//Sunflower.jpg");
-	Texture woodenCrate("Textures//woodenCrate.jpg");
-
-	////Pngs
-	Texture arcticFox("Textures//arcticFox.png");
-	Texture grayGradient("Textures//grayGradient.png");
-	Texture openglLogoTransparent("Textures//openglLogoTransparent.png");
-	Texture wood("Textures//wood.png");
-
-	//ppms
-	Texture sample640x426(R"(Textures\sample_640x426.ppm)");
-	Texture sample1280x853(R"(Textures\sample_1280x853.ppm)");
-	Texture sample1920x1280(R"(Textures\sample_1920x1280.ppm)");
-	Texture sample5184x3456(R"(Textures\sample_5184x3456.ppm)");
-
 	//---------------------------------------------------------------------------------------------------------------------------------------
 	// Testing to see if the MeshReader Data can be rendered
-
-	//MeshReader stanfordBunny(R"(Meshes\cubePositive.obj)");
-	//MeshReader stanfordBunny(R"(Meshes\bunny\bunny.obj)");
-	//MeshReader stanfordBunny(R"(Meshes\CornellBox\CornellBox-Original.obj)");
-	//MeshReader stanfordBunny(R"(Meshes\CornellBox\CornellBox-Empty-CO.obj)");
 	MeshReader stanfordBunny(R"(Meshes\sponza\sponza.obj)");
 
 	unsigned int positiveCubeVBO;
@@ -243,30 +219,13 @@ int main(int argc, char* argv[])
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		//jpg
-		//greenMarble.useTexture();
-		//minion.useTexture();
-		//sandTexture.useTexture();
-		//sunflower.useTexture();
-		//woodenCrate.useTexture();
-
-		////Pngs
-		//arcticFox.useTexture();
-		//grayGradient.useTexture();
-		//openglLogoTransparent.useTexture();
-		//wood.useTexture();
-
-		////ppms
-		//sample640x426.useTexture();
-		//sample1280x853.useTexture();
-		//sample1920x1280.useTexture();
-		//sample5184x3456.useTexture();
-
-		//basicShader.useProgram();
 		meshTestShader.useProgram();
 		glBindVertexArray(positiveCubeVAO);
 		
-		glDrawArrays(GL_TRIANGLES, 0, stanfordBunny.getFaces().size() * 3);
+		for (const Mesh& mesh : stanfordBunny.getMeshes())
+		{
+			glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
+		}
 
 		glfwSwapBuffers(window);
 	}
