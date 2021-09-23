@@ -15,10 +15,11 @@ class Texture
 
 	public:
 
+		Texture();
 		Texture(const std::string& texturePath);
 
 		void useTexture() const;
 
-		~Texture();
+		/*~Texture();*/
 };
 

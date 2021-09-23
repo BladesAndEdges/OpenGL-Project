@@ -1,6 +1,10 @@
 #include "Texture.h"
 #include <iostream>
 
+Texture::Texture()
+{
+}
+
 Texture::Texture(const std::string & texturePath)
 {
 	glGenTextures(1, &m_textureID);
@@ -41,7 +45,7 @@ void Texture::useTexture() const
 	glBindTexture(GL_TEXTURE_2D, m_textureID);
 }
 
-Texture::~Texture()
-{
-	glDeleteTextures(1, &m_textureID);
-}
+//Texture::~Texture()
+//{
+//	glDeleteTextures(1, &m_textureID);
+//}
