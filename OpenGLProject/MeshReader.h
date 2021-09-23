@@ -7,6 +7,8 @@
 #include "Mesh.h"
 #include "Face.h"
 
+#include "MaterialReader.h"
+
 class MeshReader
 {
 
@@ -20,13 +22,13 @@ private:
 	std::vector<Face> m_faces;
 
 	// Unordered map of materials
+	MaterialReader m_materialReader;
 
 public:
 
-	MeshReader(const std::string& fileName);
-
+	MeshReader(const std::string& objFileName , const std::string& materialFileName);
+	
 	void parseMeshData(const std::string& fileName);
-	void parseSponza(const std::string& fileName);
 
 	std::vector<Vertex> parseVertexData(const std::string& line);
 	std::vector<Face> triangulateFaceVertices(const std::vector<Vertex>& vertices);

@@ -2,12 +2,12 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <string>
 
 
-MeshReader::MeshReader(const std::string & fileName)
+MeshReader::MeshReader(const std::string & objFileName, const std::string& materialFileName)
 {
-	parseMeshData(fileName);
+	m_materialReader.parseMaterialFile(materialFileName);
+	parseMeshData(objFileName);
 }
 
 void MeshReader::parseMeshData(const std::string & fileName)
@@ -94,6 +94,16 @@ void MeshReader::parseMeshData(const std::string & fileName)
 
 			m_faces.insert(std::end(m_faces), std::begin(faces), std::end(faces));
 		}
+
+		if (prefix == "usemtl")
+		{
+			std::string materialName;
+
+			ifs >> materialName;
+			Material m = m_materialReader.getMaterials()[materialName];
+			currentMesh.material = &m;
+			std::cout << "e" << std::endl;
+		}
 	}
 
 	//If it's a single mesh within the Model, or for the final Mesh of a multi-mesh model
@@ -171,6 +181,9 @@ std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
 			if (vertexTextureCoordinateIndex != emptyString)
 			{
 				int vertexTextureCoordinateId = stoi(vertexTextureCoordinateIndex, nullptr);
+
+				vertex.m_textureCoordinate[0] = m_vertextextureCoordinates[vertexTextureCoordinateId - 1].x;
+				vertex.m_textureCoordinate[1] = m_vertextextureCoordinates[vertexTextureCoordinateId - 1].y;
 			}
 
 			if (vertexNormalIndex != emptyString)
