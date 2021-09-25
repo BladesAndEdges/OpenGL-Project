@@ -28,10 +28,30 @@ void framebufferCallback(GLFWwindow* window, int width, int height)
 
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
-	fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-		type, severity, message);
-	__debugbreak();
+	switch (severity)
+	{
+	case GL_DEBUG_SEVERITY_HIGH:
+		fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+			(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+			type, severity, message);
+		__debugbreak();
+		break;
+	case GL_DEBUG_SEVERITY_MEDIUM:
+		fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+			(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+			type, severity, message);
+		__debugbreak();
+		break;
+	case GL_DEBUG_SEVERITY_LOW:
+		fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+			(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+			type, severity, message);
+		__debugbreak();
+		break;
+	default:
+		break;
+	}
+
 }
 
 void processCameraInput(Camera& camera, GLFWwindow* window)
@@ -118,6 +138,7 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 
 int main(int argc, char* argv[])
 {
+
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -168,7 +189,8 @@ int main(int argc, char* argv[])
 
 	//---------------------------------------------------------------------------------------------------------------------------------------
 	// Testing to see if the MeshReader Data can be rendered
-	MeshReader mainModel(R"(Meshes\sponza\sponza.obj)");
+	MeshReader mainModel(R"(Meshes\sponza\sponza.obj)", R"(Meshes\sponza\sponza.mtl)");
+
 
 	unsigned int positiveCubeVBO;
 	unsigned int positiveCubeVAO;
@@ -185,8 +207,11 @@ int main(int argc, char* argv[])
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,  sizeof(Vertex), (void*)offsetof(Vertex, m_position));
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_normal));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_textureCoordinate));
 	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_normal));
+	glEnableVertexAttribArray(2);
 
 	Shader meshTestShader(R"(Shaders\meshTestShader.vert)", R"(Shaders\meshTestShader.frag)");
 	//-----------------------------------------------------------------------------------------------------------------------------------------
@@ -224,6 +249,7 @@ int main(int argc, char* argv[])
 		
 		for (const Mesh& mesh : mainModel.getMeshes())
 		{
+			mesh.material->m_textures[0].useTexture();
 			glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 		}
 
