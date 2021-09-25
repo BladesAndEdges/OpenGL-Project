@@ -1,5 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 
+#define ArraySize(x) sizeof(x)/sizeof(x[0]);
+
 #include<iostream>
 
 #include <glad.h>
@@ -60,6 +62,8 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 	g_deltaTime = currentFrameTime - g_previousFrameTime;
 	g_previousFrameTime = currentFrameTime;
 
+	std::cout << g_deltaTime << std::endl;
+
 	const float unitsPerFrame = 500.0f * g_deltaTime;
 
 	const glm::vec3 forward(0.0f, 0.0f, -1.0f);
@@ -80,8 +84,6 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 		//Probably not fixed, but work in progress
 		const glm::vec3 wRight = camera.getWorldOrientation() * glm::vec3(1.0f, 0.0f, 0.0f);
 		const glm::vec3 wUp = camera.getWorldOrientation() * glm::vec3(0.0f, 1.0f, 0.0f);
-
-		std::cout << glm::dot(wRight, wUp) << std::endl;
 
 		const float deltaY = g_previousCursorY - yCursorPos;
 		const glm::mat3 pitchRotation = glm::mat3(glm::rotate(glm::mat4(1.0f), glm::radians(deltaY), right));
@@ -136,9 +138,27 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 
 }
 
+float measureAverageFrameTime(const float frameTimeInMilisecods, unsigned int frameNumber, float frameTimeArray[128])
+{
+	const unsigned int arraySize = ArraySize(frameTimeArray);
+	const int indexInArray = frameNumber % arraySize;
+	frameTimeArray[indexInArray] = frameTimeInMilisecods;
+
+	float sum = 0.0f;
+	if (frameNumber >= 128)
+	{
+		for (unsigned int frame = 0; frame < arraySize; frame++)
+		{
+			sum += frameTimeArray[frame];
+		}
+	}
+
+	const float averageTime = sum / arraySize;
+	return averageTime;
+}
+
 int main(int argc, char* argv[])
 {
-
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -218,8 +238,13 @@ int main(int argc, char* argv[])
 
 	Camera camera;
 
+	float frameTimeArray[128];
+	unsigned int frameNumber = 0;
+
 	while (!glfwWindowShouldClose(window))
 	{
+		const float timerStartingPoint = glfwGetTime();
+
 		glfwPollEvents();
 		processCameraInput(camera, window);
 
@@ -246,14 +271,36 @@ int main(int argc, char* argv[])
 
 		meshTestShader.useProgram();
 		glBindVertexArray(positiveCubeVAO);
+
+		Texture background(R"(C:\Users\danie\Desktop\test.jpg)");
 		
 		for (const Mesh& mesh : mainModel.getMeshes())
 		{
-			mesh.material->m_textures[0].useTexture();
+			if (mesh.material->m_textures.size() != 0)
+			{
+				mesh.material->m_textures[0].useTexture();
+			}
+			else
+			{
+				background.useTexture();
+			}
+
 			glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 		}
 
 		glfwSwapBuffers(window);
+
+
+		const float timerEndPoint = glfwGetTime();
+
+		const float milisecondsElapsed = (timerEndPoint - timerStartingPoint)  * 1000.0f;
+
+		std::cout << "Frame Timer in miliseconds: " << milisecondsElapsed << std::endl;
+
+		float averageFrameTime = measureAverageFrameTime(milisecondsElapsed, frameNumber, frameTimeArray);
+
+		std::cout << "Average Time for 128 frames is: " << averageFrameTime << std::endl;
+		frameNumber++;
 	}
 
 	glfwDestroyWindow(window);
