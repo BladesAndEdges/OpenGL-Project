@@ -82,6 +82,11 @@ std::unordered_map<std::string, Material> MaterialReader::getMaterials() const
 	return m_Materials;
 }
 
+const std::unordered_map<std::string, Material>& MaterialReader::getMaterialReference() const
+{
+	return m_Materials;
+}
+
 //Ns 10.0000
 //Ni 1.5000
 //d 1.0000

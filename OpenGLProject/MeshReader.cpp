@@ -26,6 +26,8 @@ void MeshReader::parseMeshData(const std::string & fileName)
 	currentMesh.firstIndex = 0;
 	currentMesh.vertexCount = 0;
 
+	int materialCount = 0; // DELETE THIS
+
 	bool firstMesh = true;
 
 	while (ifs >> prefix)
@@ -97,12 +99,17 @@ void MeshReader::parseMeshData(const std::string & fileName)
 
 		if (prefix == "usemtl")
 		{
+			// I am uncertain why this works
 			std::string materialName;
 
 			ifs >> materialName;
-			Material m = m_materialReader.getMaterials()[materialName];
-			currentMesh.material = &m;
-			std::cout << "e" << std::endl;
+			
+			Material* mCopy = &m_materialReader.getMaterials().at(materialName);
+			const Material* mReference = &m_materialReader.getMaterialReference().at(materialName);
+
+			currentMesh.material = (Material*)mReference;
+
+			materialCount++;
 		}
 	}
 

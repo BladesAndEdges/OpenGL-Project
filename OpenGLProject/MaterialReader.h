@@ -18,6 +18,7 @@ public:
 
 	std::unordered_map<std::string, Material> getMaterials() const;
 
-	std::unordered_map<std::string, Material>& getReferenceToMaterials() const;
+	const std::unordered_map<std::string, Material>& getMaterialReference() const;
+
 };
 
