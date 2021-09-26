@@ -17,6 +17,8 @@
 #include "MeshReader.h"
 #include "Camera.h"
 
+#include <cstdint>
+
 float g_deltaTime = 0.0f;
 float g_previousFrameTime = 0.0f;
 
@@ -241,9 +243,11 @@ int main(int argc, char* argv[])
 	float frameTimeArray[128];
 	unsigned int frameNumber = 0;
 
+	Texture background(R"(C:\Users\danie\Desktop\test.jpg)");
+
 	while (!glfwWindowShouldClose(window))
 	{
-		const float timerStartingPoint = glfwGetTime();
+		const float timerStartingPoint = (float)glfwGetTime();
 
 		glfwPollEvents();
 		processCameraInput(camera, window);
@@ -271,31 +275,33 @@ int main(int argc, char* argv[])
 
 		meshTestShader.useProgram();
 		glBindVertexArray(positiveCubeVAO);
-
-		Texture background(R"(C:\Users\danie\Desktop\test.jpg)");
 		
+		uint64_t meshBytes = 0;
+		const Material* lionMaterial = mainModel.getMaterialReader().getMaterial("Material__25");
+
 		for (const Mesh& mesh : mainModel.getMeshes())
 		{
 			if (mesh.material->m_textures.size() != 0)
 			{
 				mesh.material->m_textures[0].useTexture();
+				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 			}
 			else
 			{
 				background.useTexture();
+				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 			}
-
-			glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 		}
 
 		glfwSwapBuffers(window);
 
+		//std::cout << "Mesh Data Memory Usage: " << meshBytes << std::endl;
 
 		const float timerEndPoint = glfwGetTime();
 
 		const float milisecondsElapsed = (timerEndPoint - timerStartingPoint)  * 1000.0f;
 
-		std::cout << "Frame Timer in miliseconds: " << milisecondsElapsed << std::endl;
+		/*std::cout << "Frame Timer in miliseconds: " << milisecondsElapsed << std::endl;*/
 
 		float averageFrameTime = measureAverageFrameTime(milisecondsElapsed, frameNumber, frameTimeArray);
 
