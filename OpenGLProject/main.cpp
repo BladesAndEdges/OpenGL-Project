@@ -18,6 +18,7 @@
 #include "Camera.h"
 
 #include <cstdint>
+#include <string>
 
 float g_deltaTime = 0.0f;
 float g_previousFrameTime = 0.0f;
@@ -167,7 +168,7 @@ int main(int argc, char* argv[])
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Crytek Sponza Project", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(800, 600, "", nullptr, nullptr);
 
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebufferCallback);
@@ -305,7 +306,15 @@ int main(int argc, char* argv[])
 
 		float averageFrameTime = measureAverageFrameTime(milisecondsElapsed, frameNumber, frameTimeArray);
 
-		std::cout << "Average Time for 128 frames is: " << averageFrameTime << std::endl;
+		int width, height;
+		glfwGetFramebufferSize(window, &width, &height);
+		std::cout << width << " " << height << std::endl;
+
+		const std::string projectName = "Crytek Sponza OpenGL Project ";
+		const std::string averageTimeTitle = std::to_string(averageFrameTime);
+		const std::string windowTitle = projectName + averageTimeTitle;
+		glfwSetWindowTitle(window, windowTitle.c_str());
+
 		frameNumber++;
 	}
 
