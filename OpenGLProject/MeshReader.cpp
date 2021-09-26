@@ -26,9 +26,9 @@ void MeshReader::parseMeshData(const std::string & fileName)
 	currentMesh.firstIndex = 0;
 	currentMesh.vertexCount = 0;
 
-	int materialCount = 0; // DELETE THIS
-
 	bool firstMesh = true;
+
+	unsigned int materialsUsed = 0;
 
 	while (ifs >> prefix)
 	{
@@ -44,6 +44,7 @@ void MeshReader::parseMeshData(const std::string & fileName)
 			currentMesh.vertexCount = 0;
 
 			firstMesh = false;
+			materialsUsed = 0;
 		}
 
 		if (prefix == "v")
@@ -99,17 +100,24 @@ void MeshReader::parseMeshData(const std::string & fileName)
 
 		if (prefix == "usemtl")
 		{
-			// I am uncertain why this works
 			std::string materialName;
 
 			ifs >> materialName;
-			
-			Material* mCopy = &m_materialReader.getMaterials().at(materialName);
-			const Material* mReference = &m_materialReader.getMaterialReference().at(materialName);
 
-			currentMesh.material = (Material*)mReference;
+			if (materialsUsed == 0)
+			{
+				currentMesh.material = m_materialReader.getMaterial(materialName);
+			}
+			else
+			{
+				m_meshes.push_back(currentMesh);
 
-			materialCount++;
+				currentMesh.material = m_materialReader.getMaterial(materialName);
+				currentMesh.firstIndex = m_faces.size() * 3;
+				currentMesh.vertexCount = 0;
+			}
+
+			materialsUsed++;
 		}
 	}
 
@@ -185,6 +193,7 @@ std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
 				}
 			}
 
+			//TO ADD: NEGATIVE INDICES
 			if (vertexTextureCoordinateIndex != emptyString)
 			{
 				int vertexTextureCoordinateId = stoi(vertexTextureCoordinateIndex, nullptr);
