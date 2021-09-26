@@ -250,3 +250,8 @@ unsigned int MeshReader::getSizeOfFaceArray() const
 
 	return size;
 }
+
+const MaterialReader & MeshReader::getMaterialReader() const
+{
+	return m_materialReader;
+}

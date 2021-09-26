@@ -21,7 +21,7 @@ private:
 	std::vector<Mesh> m_meshes;
 	std::vector<Face> m_faces;
 
-	// Unordered map of materials
+	//// Unordered map of materials
 	MaterialReader m_materialReader;
 
 public:
@@ -36,7 +36,8 @@ public:
 	std::vector<Face> getFaces() const;
 	std::vector<Mesh> getMeshes() const;
 
-	unsigned int getSizeOfMeshArray() const;
 	unsigned int getSizeOfFaceArray() const; // In bytes
+
+	const MaterialReader& getMaterialReader() const;
 };
 
