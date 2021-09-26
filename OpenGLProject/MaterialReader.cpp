@@ -62,6 +62,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 		if (str == "map_Ka")
 		{
+			//Duplicating textures here
 			std::string texturePath;
 			ifs >> texturePath;
 
@@ -77,14 +78,9 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 	m_Materials.insert({ materialName, currentMaterial }); // The last material will get canceled out due to ending the while loop
 }
 
-std::unordered_map<std::string, Material> MaterialReader::getMaterials() const
+const Material * MaterialReader::getMaterial(const std::string & materialName) const
 {
-	return m_Materials;
-}
-
-const std::unordered_map<std::string, Material>& MaterialReader::getMaterialReference() const
-{
-	return m_Materials;
+	return &m_Materials.at(materialName);
 }
 
 //Ns 10.0000

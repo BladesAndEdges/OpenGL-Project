@@ -16,9 +16,6 @@ public:
 
 	void parseMaterialFile(const std::string& fileName);
 
-	std::unordered_map<std::string, Material> getMaterials() const;
-
-	const std::unordered_map<std::string, Material>& getMaterialReference() const;
-
+	const Material* getMaterial(const std::string& materialName) const;
 };
 
