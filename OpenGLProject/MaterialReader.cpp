@@ -72,12 +72,19 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			const std::string path = R"(Meshes\sponza\)";
 			const std::string finalPath = path + texturePath;
 
-			Texture texture(finalPath); // Does the destructor destroy all textures?
+			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
+			{
+				Texture texture(finalPath); // Does the destructor destroy all textures?
 
-			m_textureHashMaps.addAmbientTexture(texture.getTextureID(), texture);
-			currentMaterial.m_ambientTexture = m_textureHashMaps.getAmbientTexture(texture.getTextureID());
+				m_textureHashMaps.addTexture(finalPath, texture);
+				currentMaterial.m_ambientTexture = m_textureHashMaps.getTexture(finalPath);
 
-			std::cout << "Loaded Ambient Texture: " << texturePath << " ID: " << texture.getTextureID() << std::endl;
+				std::cout << "Loaded Ambient Texture: " << texturePath << std::endl;
+			}
+			else
+			{
+				currentMaterial.m_ambientTexture = m_textureHashMaps.getTexture(finalPath);
+			}
 		}
 
 		if (str == "map_Kd")
@@ -88,12 +95,19 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			const std::string path = R"(Meshes\sponza\)";
 			const std::string finalPath = path + texturePath;
 
-			Texture texture(finalPath); // Does the destructor destroy all textures?
+			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
+			{
+				Texture texture(finalPath); // Does the destructor destroy all textures?
 
-			m_textureHashMaps.addDiffuseTexture(texture.getTextureID(), texture);
-			currentMaterial.m_diffuseTexture = m_textureHashMaps.getDiffuseTexture(texture.getTextureID());
+				m_textureHashMaps.addTexture(finalPath, texture);
+				currentMaterial.m_diffuseTexture = m_textureHashMaps.getTexture(finalPath);
 
-			std::cout << "Loaded Diffuse Texture: " << texturePath << " ID: " << texture.getTextureID() << std::endl;
+				std::cout << "Loaded Ambient Texture: " << texturePath << std::endl;
+			}
+			else
+			{
+				currentMaterial.m_diffuseTexture = m_textureHashMaps.getTexture(finalPath);
+			}
 		}
 
 		if (str == "map_Ks")
@@ -104,12 +118,19 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			const std::string path = R"(Meshes\sponza\)";
 			const std::string finalPath = path + texturePath;
 
-			Texture texture(finalPath); // Does the destructor destroy all textures?
+			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
+			{
+				Texture texture(finalPath); // Does the destructor destroy all textures?
 
-			m_textureHashMaps.addSpecularTexture(texture.getTextureID(), texture);
-			currentMaterial.m_specularTexture = m_textureHashMaps.getSpecularTexture(texture.getTextureID());
+				m_textureHashMaps.addTexture(finalPath, texture);
+				currentMaterial.m_specularTexture = m_textureHashMaps.getTexture(finalPath);
 
-			std::cout << "Loaded Specular Texture: " << texturePath << " ID: " << texture.getTextureID() <<std::endl;
+				std::cout << "Loaded Ambient Texture: " << texturePath << std::endl;
+			}
+			else
+			{
+				currentMaterial.m_specularTexture = m_textureHashMaps.getTexture(finalPath);
+			}
 		}
 	}
 
@@ -120,20 +141,5 @@ const Material * MaterialReader::getMaterial(const std::string & materialName) c
 {
 	return &m_Materials.at(materialName);
 }
-
-//Ns 10.0000
-//Ni 1.5000
-//d 1.0000
-//Tr 0.0000
-//Tf 1.0000 1.0000 1.0000
-//illum 2
-//Ka 1 1 1
-//Kd 1 1 1
-//Ks 0.0000 0.0000 0.0000
-//Ke 0.0000 0.0000 0.0000
-//map_Ka textures\sponza_thorn_diff.png
-//map_Kd textures\sponza_thorn_diff.png
-//map_d textures\sponza_thorn_mask.png
-//map_bump textures\sponza_thorn_bump.png
 
 

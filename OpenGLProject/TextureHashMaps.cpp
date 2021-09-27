@@ -4,34 +4,21 @@ TextureHashMaps::TextureHashMaps()
 {
 }
 
-void TextureHashMaps::addAmbientTexture(unsigned int textureId, const Texture & texture)
+void TextureHashMaps::addTexture(const std::string& path, const Texture & texture)
 {
-	m_ambientTextures.insert({ textureId, texture });
+	m_textures.insert({ path, texture });
 }
 
-void TextureHashMaps::addDiffuseTexture(unsigned int textureId, const Texture & texture)
+const Texture * TextureHashMaps::getTexture(const std::string& path) const
 {
-	m_diffuseTextures.insert({ textureId, texture });
-}
-
-void TextureHashMaps::addSpecularTexture(unsigned int textureId, const Texture & texture)
-{
-	m_specularTextures.insert({ textureId, texture });
-}
-
-const Texture * TextureHashMaps::getAmbientTexture(unsigned int id) const
-{
-	return &m_ambientTextures.at(id);
-}
-
-const Texture * TextureHashMaps::getDiffuseTexture(unsigned int id) const
-{
-	return &m_diffuseTextures.at(id);
-}
-
-const Texture * TextureHashMaps::getSpecularTexture(unsigned int id) const
-{
-	return &m_specularTextures.at(id);
+	if (m_textures.find(path) == m_textures.end())
+	{
+		return nullptr;
+	}
+	else
+	{
+		return &m_textures.at(path);
+	}
 }
 
 
