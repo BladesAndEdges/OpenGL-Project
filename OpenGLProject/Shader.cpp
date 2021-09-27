@@ -74,6 +74,11 @@ void Shader::useProgram() const
 	glUseProgram(m_programID);
 }
 
+void Shader::bindTextureToSampler(unsigned int samplerId, const std::string & samplerName) const
+{
+	glUniform1i(glGetUniformLocation(m_programID, samplerName.c_str()), samplerId);
+}
+
 GLuint Shader::getProgramID() const
 {
 	return m_programID;

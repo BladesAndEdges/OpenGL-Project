@@ -25,6 +25,8 @@ public:
 	void linkShaders(GLuint vertexShader, GLuint fragmentShader);
 	void useProgram() const;
 
+	void bindTextureToSampler(unsigned int samplerId, const std::string& samplerName) const;
+
 	GLuint getProgramID() const;
 
 };
