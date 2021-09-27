@@ -33,6 +33,11 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 				m_Materials.insert({ materialName, currentMaterial });
 			}
 
+			// Reset pointers??
+			currentMaterial.m_ambientTexture = nullptr;
+			currentMaterial.m_diffuseTexture = nullptr;
+			currentMaterial.m_specularTexture = nullptr;
+
 			ifs >> materialName;
 
 			firstMaterial = false;
@@ -72,7 +77,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			m_textureHashMaps.addAmbientTexture(texture.getTextureID(), texture);
 			currentMaterial.m_ambientTexture = m_textureHashMaps.getAmbientTexture(texture.getTextureID());
 
-			std::cout << "Loaded Ambient Texture: " << texturePath << std::endl;
+			std::cout << "Loaded Ambient Texture: " << texturePath << " ID: " << texture.getTextureID() << std::endl;
 		}
 
 		if (str == "map_Kd")
@@ -88,7 +93,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			m_textureHashMaps.addDiffuseTexture(texture.getTextureID(), texture);
 			currentMaterial.m_diffuseTexture = m_textureHashMaps.getDiffuseTexture(texture.getTextureID());
 
-			std::cout << "Loaded Diffuse Texture: " << texturePath << std::endl;
+			std::cout << "Loaded Diffuse Texture: " << texturePath << " ID: " << texture.getTextureID() << std::endl;
 		}
 
 		if (str == "map_Ks")
@@ -104,7 +109,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			m_textureHashMaps.addSpecularTexture(texture.getTextureID(), texture);
 			currentMaterial.m_specularTexture = m_textureHashMaps.getSpecularTexture(texture.getTextureID());
 
-			std::cout << "Loaded Specular Texture: " << texturePath << std::endl;
+			std::cout << "Loaded Specular Texture: " << texturePath << " ID: " << texture.getTextureID() <<std::endl;
 		}
 	}
 
