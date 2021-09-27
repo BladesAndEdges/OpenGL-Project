@@ -13,6 +13,8 @@ struct Material
 	glm::vec3 m_diffuseColour;
 	glm::vec3 m_specularColour;
 
-	std::vector<Texture> m_textures;
+	const Texture* m_ambientTexture;
+	const Texture* m_diffuseTexture;
+	const Texture* m_specularTexture;
 };
 

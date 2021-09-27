@@ -65,8 +65,6 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 	g_deltaTime = currentFrameTime - g_previousFrameTime;
 	g_previousFrameTime = currentFrameTime;
 
-	std::cout << g_deltaTime << std::endl;
-
 	const float unitsPerFrame = 500.0f * g_deltaTime;
 
 	const glm::vec3 forward(0.0f, 0.0f, -1.0f);
@@ -139,6 +137,7 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 	glm::vec3 newWorldSpacePosition = camera.getWorldPosition() + worldSpaceTranslation;
 	camera.setCameraWorldPosition(newWorldSpacePosition);
 
+	std::cout << camera.getWorldPosition().x << " " << camera.getWorldPosition().y << " " << camera.getWorldPosition().z << std::endl;
 }
 
 float measureAverageFrameTime(const float frameTimeInMilisecods, unsigned int frameNumber, float frameTimeArray[128])
@@ -237,6 +236,13 @@ int main(int argc, char* argv[])
 	glEnableVertexAttribArray(2);
 
 	Shader meshTestShader(R"(Shaders\meshTestShader.vert)", R"(Shaders\meshTestShader.frag)");
+	//Upload sampler data
+	meshTestShader.useProgram();
+	meshTestShader.bindTextureToSampler(0, "ambientTextureSampler");
+	meshTestShader.bindTextureToSampler(1, "diffuseTextureSampler");
+	meshTestShader.bindTextureToSampler(2, "specularTextureSampler");
+	glUseProgram(0);
+
 	//-----------------------------------------------------------------------------------------------------------------------------------------
 
 	Camera camera;
@@ -245,6 +251,7 @@ int main(int argc, char* argv[])
 	unsigned int frameNumber = 0;
 
 	Texture background(R"(C:\Users\danie\Desktop\test.jpg)");
+
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -270,33 +277,61 @@ int main(int argc, char* argv[])
 		glm::mat4 viewProjection = projection * view;
 		copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
 
+		meshTestShader.useProgram(); // Make sure the shader is being used before setting these textures
+		glBindVertexArray(positiveCubeVAO);
+
 		glBindBuffer(GL_UNIFORM_BUFFER, uboMatricesID);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		meshTestShader.useProgram();
-		glBindVertexArray(positiveCubeVAO);
-		
-		uint64_t meshBytes = 0;
-		const Material* lionMaterial = mainModel.getMaterialReader().getMaterial("Material__25");
+		/* This might actually be done once most likely, but ask*/
 
 		for (const Mesh& mesh : mainModel.getMeshes())
 		{
-			if (mesh.material->m_textures.size() != 0)
+			//Ambient
+			if (mesh.material->m_ambientTexture != nullptr)
 			{
-				mesh.material->m_textures[0].useTexture();
+				glActiveTexture(GL_TEXTURE0); 
+				mesh.material->m_ambientTexture->useTexture();
 				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 			}
 			else
 			{
+				glActiveTexture(GL_TEXTURE0); 
+				background.useTexture();
+				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
+			}
+
+			// Diffuse
+			if (mesh.material->m_diffuseTexture != nullptr)
+			{
+				glActiveTexture(GL_TEXTURE1); 
+				mesh.material->m_ambientTexture->useTexture();
+				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
+			}
+			else
+			{
+				glActiveTexture(GL_TEXTURE1);
+				background.useTexture();
+				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
+			}
+
+			// Specular
+			if (mesh.material->m_specularTexture != nullptr)
+			{
+				glActiveTexture(GL_TEXTURE2); 
+				mesh.material->m_specularTexture->useTexture();
+				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
+			}
+			else
+			{
+				glActiveTexture(GL_TEXTURE2); 
 				background.useTexture();
 				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 			}
 		}
 
 		glfwSwapBuffers(window);
-
-		//std::cout << "Mesh Data Memory Usage: " << meshBytes << std::endl;
 
 		const float timerEndPoint = glfwGetTime();
 
@@ -308,11 +343,11 @@ int main(int argc, char* argv[])
 
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
-		std::cout << width << " " << height << std::endl;
 
 		const std::string projectName = "Crytek Sponza OpenGL Project ";
 		const std::string averageTimeTitle = std::to_string(averageFrameTime);
 		const std::string windowTitle = projectName + averageTimeTitle;
+
 		glfwSetWindowTitle(window, windowTitle.c_str());
 
 		frameNumber++;

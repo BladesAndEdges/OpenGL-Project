@@ -61,7 +61,6 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 		if (str == "map_Ka")
 		{
-			//Duplicating textures here
 			std::string texturePath;
 			ifs >> texturePath;
 
@@ -72,6 +71,40 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			m_textureHashMaps.addAmbientTexture(texture.getTextureID(), texture);
 			currentMaterial.m_ambientTexture = m_textureHashMaps.getAmbientTexture(texture.getTextureID());
+
+			std::cout << "Loaded Ambient Texture: " << texturePath << std::endl;
+		}
+
+		if (str == "map_Kd")
+		{
+			std::string texturePath;
+			ifs >> texturePath;
+
+			const std::string path = R"(Meshes\sponza\)";
+			const std::string finalPath = path + texturePath;
+
+			Texture texture(finalPath); // Does the destructor destroy all textures?
+
+			m_textureHashMaps.addDiffuseTexture(texture.getTextureID(), texture);
+			currentMaterial.m_diffuseTexture = m_textureHashMaps.getDiffuseTexture(texture.getTextureID());
+
+			std::cout << "Loaded Diffuse Texture: " << texturePath << std::endl;
+		}
+
+		if (str == "map_Ks")
+		{
+			std::string texturePath;
+			ifs >> texturePath;
+
+			const std::string path = R"(Meshes\sponza\)";
+			const std::string finalPath = path + texturePath;
+
+			Texture texture(finalPath); // Does the destructor destroy all textures?
+
+			m_textureHashMaps.addSpecularTexture(texture.getTextureID(), texture);
+			currentMaterial.m_specularTexture = m_textureHashMaps.getSpecularTexture(texture.getTextureID());
+
+			std::cout << "Loaded Specular Texture: " << texturePath << std::endl;
 		}
 	}
 
