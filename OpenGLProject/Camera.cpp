@@ -1,13 +1,11 @@
 #include "Camera.h"
 
-Camera::Camera() : m_worldPosition(glm::vec3(-61.0f, 169.0f, -411.0f))
+const glm::vec3 magnificationVec = glm::vec3(257.0f, 488.0f, -238.0f);
+const glm::vec3 minificationVec = glm::vec3(228.0f, 488.0f, 141.0f);
+
+Camera::Camera() : m_worldPosition(magnificationVec)
 {
 	m_worldOrientation = glm::mat3(1.0f);
-
-	glm::mat4 m = glm::mat4(1.0f);
-	m = glm::rotate(m, glm::radians(47.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	m = glm::rotate(m, glm::radians(47.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	m_worldOrientation = glm::mat3(m);
 }
 
 glm::mat4 Camera::createViewMatrix() const
@@ -31,11 +29,6 @@ glm::vec3 Camera::getWorldPosition() const
 glm::mat3 Camera::getWorldOrientation() const
 {
 	return m_worldOrientation;
-}
-
-void Camera::applyWorldSpaceRotation(const glm::mat3 & rotation)
-{
-	m_worldOrientation = rotation * m_worldOrientation;
 }
 
 void Camera::setCameraWorldPosition(const glm::vec3 & newWorldPosition)
