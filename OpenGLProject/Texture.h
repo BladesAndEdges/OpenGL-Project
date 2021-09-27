@@ -20,6 +20,8 @@ class Texture
 
 		void useTexture() const;
 
+		GLuint getTextureID() const;
+
 		/*~Texture();*/
 };
 
