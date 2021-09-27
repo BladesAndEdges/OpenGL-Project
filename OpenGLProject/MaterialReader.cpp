@@ -31,7 +31,6 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			if (!firstMaterial)
 			{
 				m_Materials.insert({ materialName, currentMaterial });
-				currentMaterial.m_textures.clear();
 			}
 
 			ifs >> materialName;
@@ -71,7 +70,8 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			Texture texture(finalPath); // Does the destructor destroy all textures?
 
-			currentMaterial.m_textures.push_back(texture);
+			m_textureHashMaps.addAmbientTexture(texture.getTextureID(), texture);
+			currentMaterial.m_ambientTexture = m_textureHashMaps.getAmbientTexture(texture.getTextureID());
 		}
 	}
 
