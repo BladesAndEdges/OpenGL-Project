@@ -293,13 +293,11 @@ int main(int argc, char* argv[])
 			{
 				glActiveTexture(GL_TEXTURE0); 
 				mesh.material->m_ambientTexture->useTexture();
-				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 			}
 			else
 			{
 				glActiveTexture(GL_TEXTURE0); 
 				background.useTexture();
-				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 			}
 
 			// Diffuse
@@ -307,13 +305,11 @@ int main(int argc, char* argv[])
 			{
 				glActiveTexture(GL_TEXTURE1); 
 				mesh.material->m_ambientTexture->useTexture();
-				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 			}
 			else
 			{
 				glActiveTexture(GL_TEXTURE1);
 				background.useTexture();
-				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 			}
 
 			// Specular
@@ -321,14 +317,14 @@ int main(int argc, char* argv[])
 			{
 				glActiveTexture(GL_TEXTURE2); 
 				mesh.material->m_specularTexture->useTexture();
-				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 			}
 			else
 			{
 				glActiveTexture(GL_TEXTURE2); 
 				background.useTexture();
-				glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 			}
+
+			glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
 		}
 
 		glfwSwapBuffers(window);

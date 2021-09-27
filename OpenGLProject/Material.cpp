@@ -1,5 +1,5 @@
 #include "Material.h"
 
-Material::Material()
+Material::Material() : m_ambientTexture(nullptr), m_diffuseTexture(nullptr), m_specularTexture(nullptr)
 {
 }
