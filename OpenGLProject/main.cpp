@@ -260,6 +260,9 @@ int main(int argc, char* argv[])
 		glfwPollEvents();
 		processCameraInput(camera, window);
 
+		const glm::vec4 cameraWorldSpacePosition = glm::vec4(camera.getWorldPosition(), 1.0f);
+		copyVec4ToFloatArray(cameraWorldSpacePosition, uniformBuffer.worldSpaceCameraPosition);
+
 		glEnable(GL_DEPTH_TEST);
 
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
@@ -288,6 +291,13 @@ int main(int argc, char* argv[])
 
 		for (const Mesh& mesh : mainModel.getMeshes())
 		{
+			//Upload the correct data for the Material???
+			//You should check if the return of the uniform location is -1 btw
+			glUniform1f(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ns"), mesh.material->m_shininess);
+			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ka"), 1, value_ptr(mesh.material->m_ambientColour));
+			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Kd"), 1, value_ptr(mesh.material->m_diffuseColour));
+			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ks"), 1, value_ptr(mesh.material->m_specularColour));
+
 			//Ambient
 			if (mesh.material->m_ambientTexture != nullptr)
 			{
