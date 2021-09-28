@@ -132,6 +132,13 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 				currentMaterial.m_specularTexture = m_textureHashMaps.getTexture(finalPath);
 			}
 		}
+
+		if (str == "Ns")
+		{
+			float shininess;
+			ifs >> shininess;
+			currentMaterial.m_shininess = shininess;
+		}
 	}
 
 	m_Materials.insert({ materialName, currentMaterial }); // The last material will get canceled out due to ending the while loop
