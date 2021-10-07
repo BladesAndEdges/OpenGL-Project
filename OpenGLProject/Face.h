@@ -5,8 +5,6 @@
 
 struct Face
 {
-	Vertex A;
-	Vertex B;
-	Vertex C;
+	Vertex m_faceVertices[3];
 };
 

@@ -65,7 +65,7 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 	g_deltaTime = currentFrameTime - g_previousFrameTime;
 	g_previousFrameTime = currentFrameTime;
 
-	const float unitsPerFrame = 500.0f * g_deltaTime;
+	const float unitsPerFrame = 3000.0f * g_deltaTime;
 
 	const glm::vec3 forward(0.0f, 0.0f, -1.0f);
 	const glm::vec3 up(0.0f, 1.0f, 0.0f);
@@ -159,6 +159,7 @@ float measureAverageFrameTime(const float frameTimeInMilisecods, unsigned int fr
 	return averageTime;
 }
 
+
 int main(int argc, char* argv[])
 {
 	glfwInit();
@@ -211,20 +212,28 @@ int main(int argc, char* argv[])
 
 	//---------------------------------------------------------------------------------------------------------------------------------------
 	// Testing to see if the MeshReader Data can be rendered
+	//MeshReader mainModel(R"(Meshes\sponza\sponza.obj)", R"(Meshes\sponza\sponza.mtl)");
 	MeshReader mainModel(R"(Meshes\sponza\sponza.obj)", R"(Meshes\sponza\sponza.mtl)");
+	//MeshReader mainModel(R"(Meshes\sponza\cube.obj)", R"(Meshes\sponza\default.mtl)");
+
+	// Vertex Buffers and VAO
+	unsigned int modelVBO;
+	unsigned int modelVAO;
+
+	glGenVertexArrays(1, &modelVAO);
+	glGenBuffers(1, &modelVBO);
+
+	glBindVertexArray(modelVAO);
+
+	// Index Buffer
+	unsigned int modelIBO;
+	glGenBuffers(1, &modelIBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, modelIBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mainModel.getIndexBuffer().size() * sizeof(unsigned int), mainModel.getIndexBuffer().data(), GL_STATIC_DRAW);
 
 
-	unsigned int positiveCubeVBO;
-	unsigned int positiveCubeVAO;
-
-	glGenVertexArrays(1, &positiveCubeVAO);
-	glGenBuffers(1, &positiveCubeVBO);
-
-	glBindVertexArray(positiveCubeVAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, positiveCubeVBO);
-
-	glBufferData(GL_ARRAY_BUFFER, mainModel.getSizeOfFaceArray(), mainModel.getFaces().data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, modelVBO);
+	glBufferData(GL_ARRAY_BUFFER, mainModel.getIndexedVertexBuffer().size() * sizeof(Vertex), mainModel.getIndexedVertexBuffer().data(), GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,  sizeof(Vertex), (void*)offsetof(Vertex, m_position));
 	glEnableVertexAttribArray(0);
@@ -234,6 +243,8 @@ int main(int argc, char* argv[])
 
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_normal));
 	glEnableVertexAttribArray(2);
+
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	Shader meshTestShader(R"(Shaders\meshTestShader.vert)", R"(Shaders\meshTestShader.frag)");
 	//Upload sampler data
@@ -252,7 +263,6 @@ int main(int argc, char* argv[])
 
 	Texture background(R"(C:\Users\danie\Desktop\test.jpg)");
 
-
 	while (!glfwWindowShouldClose(window))
 	{
 		const float timerStartingPoint = (float)glfwGetTime();
@@ -260,7 +270,7 @@ int main(int argc, char* argv[])
 		glfwPollEvents();
 		processCameraInput(camera, window);
 
-		const glm::vec4 cameraWorldSpacePosition = glm::vec4(camera.getWorldPosition(), 1.0f);
+		const glm::vec4 cameraWorldSpacePosition = glm::vec4(camera.getWorldPosition(), 0.0f);
 		copyVec4ToFloatArray(cameraWorldSpacePosition, uniformBuffer.worldSpaceCameraPosition);
 
 		glEnable(GL_DEPTH_TEST);
@@ -281,7 +291,7 @@ int main(int argc, char* argv[])
 		copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
 
 		meshTestShader.useProgram(); // Make sure the shader is being used before setting these textures
-		glBindVertexArray(positiveCubeVAO);
+		glBindVertexArray(modelVAO);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, uboMatricesID);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
@@ -314,7 +324,7 @@ int main(int argc, char* argv[])
 			if (mesh.material->m_diffuseTexture != nullptr)
 			{
 				glActiveTexture(GL_TEXTURE1); 
-				mesh.material->m_ambientTexture->useTexture();
+				mesh.material->m_diffuseTexture->useTexture();
 			}
 			else
 			{
@@ -334,7 +344,10 @@ int main(int argc, char* argv[])
 				background.useTexture();
 			}
 
-			glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount);
+
+			//glDrawElements(GL_TRIANGLES, mainModel.getIndexBuffer().size(), GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
+			//glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount); // For non-indexed mesh
 		}
 
 		glfwSwapBuffers(window);
