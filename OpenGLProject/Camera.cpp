@@ -2,8 +2,9 @@
 
 const glm::vec3 magnificationVec = glm::vec3(257.0f, 488.0f, -238.0f);
 const glm::vec3 minificationVec = glm::vec3(228.0f, 488.0f, 141.0f);
+const glm::vec3 cubePositonVec = glm::vec3(0.0f, 0.0f, -8.0f);
 
-Camera::Camera() : m_worldPosition(magnificationVec)
+Camera::Camera() : m_worldPosition(cubePositonVec)
 {
 	m_worldOrientation = glm::mat3(1.0f);
 }
