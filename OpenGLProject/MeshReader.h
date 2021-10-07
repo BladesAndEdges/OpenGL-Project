@@ -19,7 +19,13 @@ private:
 	std::vector<glm::vec3> m_vertexNormals;
 
 	std::vector<Mesh> m_meshes;
-	std::vector<Face> m_faces;
+	std::vector<Face> m_faces; // Essentially the vertex buffer of duplicates
+
+	std::unordered_map<Vertex, unsigned int, KeyHasher> m_indices;
+	std::vector<unsigned int> m_indexBuffer;
+	std::vector<Vertex> m_indexedVertexBuffer;
+
+
 
 	//// Unordered map of materials
 	MaterialReader m_materialReader;
@@ -33,10 +39,11 @@ public:
 	std::vector<Vertex> parseVertexData(const std::string& line);
 	std::vector<Face> triangulateFaceVertices(const std::vector<Vertex>& vertices);
 
-	std::vector<Face> getFaces() const;
-	std::vector<Mesh> getMeshes() const;
+	const std::vector<Mesh>& getMeshes() const;
+	const std::vector<unsigned int>& getIndexBuffer() const;
+	const std::vector<Vertex>& getIndexedVertexBuffer() const;
 
-	unsigned int getSizeOfFaceArray() const; // In bytes
+	void createIndexBuffer();
 
 	const MaterialReader& getMaterialReader() const;
 };

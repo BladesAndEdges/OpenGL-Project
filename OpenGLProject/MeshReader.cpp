@@ -2,12 +2,16 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <assert.h>
 
 
 MeshReader::MeshReader(const std::string & objFileName, const std::string& materialFileName)
 {
 	m_materialReader.parseMaterialFile(materialFileName);
 	parseMeshData(objFileName);
+	createIndexBuffer();
+
+	assert((m_faces.size() * 3) == m_indexBuffer.size());
 }
 
 void MeshReader::parseMeshData(const std::string & fileName)
@@ -24,7 +28,7 @@ void MeshReader::parseMeshData(const std::string & fileName)
 
 	Mesh currentMesh;
 	currentMesh.firstIndex = 0;
-	currentMesh.vertexCount = 0;
+	currentMesh.indicesCount = 0;
 
 	bool firstMesh = true;
 
@@ -41,7 +45,7 @@ void MeshReader::parseMeshData(const std::string & fileName)
 			}
 
 			currentMesh.firstIndex = m_faces.size() * 3;
-			currentMesh.vertexCount = 0;
+			currentMesh.indicesCount = 0;
 
 			firstMesh = false;
 			materialsUsed = 0;
@@ -93,8 +97,7 @@ void MeshReader::parseMeshData(const std::string & fileName)
 			const std::vector<Face> faces = triangulateFaceVertices(faceVertices);
 
 			// Compute the vertex count for the mesh
-			currentMesh.vertexCount += faces.size() * 3;
-
+			currentMesh.indicesCount += faces.size() * 3;
 			m_faces.insert(std::end(m_faces), std::begin(faces), std::end(faces));
 		}
 
@@ -114,7 +117,7 @@ void MeshReader::parseMeshData(const std::string & fileName)
 
 				currentMesh.material = m_materialReader.getMaterial(materialName);
 				currentMesh.firstIndex = m_faces.size() * 3;
-				currentMesh.vertexCount = 0;
+				currentMesh.indicesCount = 0;
 			}
 
 			materialsUsed++;
@@ -198,17 +201,38 @@ std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
 			{
 				int vertexTextureCoordinateId = stoi(vertexTextureCoordinateIndex, nullptr);
 
-				vertex.m_textureCoordinate[0] = m_vertextextureCoordinates[vertexTextureCoordinateId - 1].x;
-				vertex.m_textureCoordinate[1] = m_vertextextureCoordinates[vertexTextureCoordinateId - 1].y;
+				if (vertexTextureCoordinateId >= 1)
+				{
+					vertex.m_textureCoordinate[0] = m_vertextextureCoordinates[vertexTextureCoordinateId - 1].x;
+					vertex.m_textureCoordinate[1] = m_vertextextureCoordinates[vertexTextureCoordinateId - 1].y;
+				}
+				else
+				{
+					unsigned int arraySize = m_vertextextureCoordinates.size();
+
+					vertex.m_textureCoordinate[0] = m_vertextextureCoordinates[arraySize + vertexTextureCoordinateId].x;
+					vertex.m_textureCoordinate[1] = m_vertextextureCoordinates[arraySize + vertexTextureCoordinateId].y;
+				}
 			}
 
 			if (vertexNormalIndex != emptyString)
 			{
 				int vertexNormalId = stoi(vertexNormalIndex, nullptr);
 
-				vertex.m_normal[0] = m_vertexNormals[vertexNormalId - 1].x;
-				vertex.m_normal[1] = m_vertexNormals[vertexNormalId - 1].y;
-				vertex.m_normal[2] = m_vertexNormals[vertexNormalId - 1].z;
+				if (vertexNormalId >= 1)
+				{
+					vertex.m_normal[0] = m_vertexNormals[vertexNormalId - 1].x;
+					vertex.m_normal[1] = m_vertexNormals[vertexNormalId - 1].y;
+					vertex.m_normal[2] = m_vertexNormals[vertexNormalId - 1].z;
+				}
+				else
+				{
+					unsigned int arraySize = m_vertexNormals.size();
+
+					vertex.m_normal[0] = m_vertexNormals[arraySize + vertexNormalId].x;
+					vertex.m_normal[1] = m_vertexNormals[arraySize + vertexNormalId].y;
+					vertex.m_normal[2] = m_vertexNormals[arraySize + vertexNormalId].z;
+				}
 			}
 
 			vertices.push_back(vertex);
@@ -228,9 +252,9 @@ std::vector<Face> MeshReader::triangulateFaceVertices(const std::vector<Vertex>&
 	{
 		Face face;
 
-		face.A = vertices[0];
-		face.B = vertices[triangle + 1];
-		face.C = vertices[triangle + 2];
+		face.m_faceVertices[0] = vertices[0];
+		face.m_faceVertices[1] = vertices[triangle + 1];
+		face.m_faceVertices[2] = vertices[triangle + 2];
 
 		faces.push_back(face);
 	}
@@ -238,26 +262,46 @@ std::vector<Face> MeshReader::triangulateFaceVertices(const std::vector<Vertex>&
 	return faces;
 }
 
-std::vector<Face> MeshReader::getFaces() const
-{
-	return m_faces;
-}
-
-std::vector<Mesh> MeshReader::getMeshes() const
+const std::vector<Mesh>& MeshReader::getMeshes() const
 {
 	return m_meshes;
 }
 
-unsigned int MeshReader::getSizeOfFaceArray() const
+const std::vector<unsigned int>& MeshReader::getIndexBuffer() const
 {
-	unsigned int size = 0;
+	return m_indexBuffer;
+}
+
+const std::vector<Vertex>& MeshReader::getIndexedVertexBuffer() const
+{
+	return m_indexedVertexBuffer;
+}
+
+void MeshReader::createIndexBuffer()
+{
+	std::unordered_map<Vertex, unsigned int, KeyHasher> indices;
+	unsigned int index = 0;
 
 	for (unsigned int face = 0; face < m_faces.size(); face++)
 	{
-		size += sizeof(Face);
-	}
+		for (unsigned int vertex = 0; vertex < 3; vertex++)
+		{
+			Vertex key = m_faces[face].m_faceVertices[vertex];
+			std::unordered_map<Vertex, unsigned int, KeyHasher>::iterator it = indices.find(key);
 
-	return size;
+			if (it == indices.end())
+			{
+				indices.insert({ key, index });
+				m_indexBuffer.push_back(index);
+				m_indexedVertexBuffer.push_back(key);
+				index++;
+			}
+			else
+			{
+				m_indexBuffer.push_back(it->second);
+			}
+		}
+	}
 }
 
 const MaterialReader & MeshReader::getMaterialReader() const

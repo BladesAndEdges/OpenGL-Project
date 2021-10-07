@@ -4,8 +4,8 @@
 
 struct Mesh
 {
-    unsigned int firstIndex;
-	unsigned int vertexCount;
+	unsigned int firstIndex;
+	unsigned int indicesCount;
 
 	const Material* material;
 };
