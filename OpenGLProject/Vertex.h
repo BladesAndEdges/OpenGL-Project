@@ -13,6 +13,8 @@ struct Vertex
 	float m_textureCoordinate[2];
 	float m_normal[3];
 
+	float m_tangent[4];
+
 	Vertex();
 	Vertex(float x, float y, float z);
 };
