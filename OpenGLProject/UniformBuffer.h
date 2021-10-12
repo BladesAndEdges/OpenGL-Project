@@ -1,8 +1,13 @@
 #pragma once
 
-#include <glm.hpp>
+#pragma warning(push)
+#pragma warning(disable:4201)   
+#include<glm.hpp>
+#include<gtc/type_ptr.hpp>
+#pragma warning(pop)
+
 #include <cstring>
-#include <gtc/type_ptr.hpp>
+
 
 
 struct UniformBuffer

@@ -8,9 +8,11 @@
 #include <GLFW/glfw3.h>
 
 #include "Shader.h"
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
+
+#pragma warning(push)
+#pragma warning(disable:4201)   
+#include<gtc/matrix_transform.hpp>
+#pragma warning(pop)
 
 #include "UniformBuffer.h"
 #include "Texture.h"
@@ -26,12 +28,12 @@ float g_previousFrameTime = 0.0f;
 float g_previousCursorX = 0.0f;
 float g_previousCursorY = 0.0f;
 
-void framebufferCallback(GLFWwindow* window, int width, int height)
+void framebufferCallback(GLFWwindow*, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
 
-void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
+void GLAPIENTRY MessageCallback(GLenum, GLenum type, GLuint, GLenum severity, GLsizei, const GLchar* message, const void*)
 {
 	switch (severity)
 	{
@@ -61,11 +63,11 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 
 void processCameraInput(Camera& camera, GLFWwindow* window)
 {
-	float currentFrameTime = glfwGetTime();
+	float currentFrameTime = (float)glfwGetTime();
 	g_deltaTime = currentFrameTime - g_previousFrameTime;
 	g_previousFrameTime = currentFrameTime;
 
-	const float unitsPerFrame = 3000.0f * g_deltaTime;
+	const float unitsPerFrame = 1500 * g_deltaTime;
 
 	const glm::vec3 forward(0.0f, 0.0f, -1.0f);
 	const glm::vec3 up(0.0f, 1.0f, 0.0f);
@@ -160,7 +162,7 @@ float measureAverageFrameTime(const float frameTimeInMilisecods, unsigned int fr
 }
 
 
-int main(int argc, char* argv[])
+int main()
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -181,6 +183,10 @@ int main(int argc, char* argv[])
 
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(MessageCallback, 0);
+
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CCW);
+	glCullFace(GL_BACK);
 
 	Shader basicShader("Shaders\\basicShader.vert", "Shaders\\basicShader.frag");
 
@@ -278,7 +284,6 @@ int main(int argc, char* argv[])
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		float delta = 80.0f * (float)glfwGetTime();
 		glm::mat4 model = glm::mat4(1.0f);
 		copyMat4ToFloatArray(model, uniformBuffer.model);
 
@@ -352,7 +357,7 @@ int main(int argc, char* argv[])
 
 		glfwSwapBuffers(window);
 
-		const float timerEndPoint = glfwGetTime();
+		const float timerEndPoint = (float)glfwGetTime();
 
 		const float milisecondsElapsed = (timerEndPoint - timerStartingPoint)  * 1000.0f;
 
