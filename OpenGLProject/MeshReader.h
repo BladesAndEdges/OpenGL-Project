@@ -8,6 +8,7 @@
 #include "Face.h"
 
 #include "MaterialReader.h"
+#include "mikktspace.h"
 
 class MeshReader
 {
@@ -25,6 +26,7 @@ private:
 	std::vector<unsigned int> m_indexBuffer;
 	std::vector<Vertex> m_indexedVertexBuffer;
 
+	SMikkTSpaceContext m_mikktSpaceContext;
 
 
 	//// Unordered map of materials
@@ -48,3 +50,14 @@ public:
 	const MaterialReader& getMaterialReader() const;
 };
 
+// MikktSpace getters and setters
+int getNumFaces(const SMikkTSpaceContext * pContext);
+int getNumVerticesOfFace(const SMikkTSpaceContext*, const int);
+
+// returns the position/normal/texcoord of the referenced face of vertex number iVert.
+// iVert is in the range {0,1,2} for triangles and {0,1,2,3} for quads.
+void getPosition(const SMikkTSpaceContext * pContext, float fvPosOut[], const int iFace, const int iVert);
+void getNormal(const SMikkTSpaceContext * pContext, float fvNormOut[], const int iFace, const int iVert);
+void getTexCoord(const SMikkTSpaceContext * pContext, float fvTexcOut[], const int iFace, const int iVert);
+
+void setTSpaceBasic(const SMikkTSpaceContext * pContext, const float fvTangent[], const float fSign, const int iFace, const int iVert);

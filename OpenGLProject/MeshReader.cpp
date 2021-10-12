@@ -9,6 +9,27 @@ MeshReader::MeshReader(const std::string & objFileName, const std::string& mater
 {
 	m_materialReader.parseMaterialFile(materialFileName);
 	parseMeshData(objFileName);
+
+	SMikkTSpaceContext* mikkTSpaceContext = new SMikkTSpaceContext();
+	SMikkTSpaceInterface* mikkTSpaceInterface = new SMikkTSpaceInterface();
+
+	mikkTSpaceInterface->m_getPosition = &getPosition;
+	mikkTSpaceInterface->m_getTexCoord = &getTexCoord;
+	mikkTSpaceInterface->m_getNormal = &getNormal;
+	mikkTSpaceInterface->m_getNumFaces = &getNumFaces;
+	mikkTSpaceInterface->m_getNumVerticesOfFace = &getNumVerticesOfFace;
+
+	mikkTSpaceInterface->m_setTSpaceBasic = &setTSpaceBasic;
+
+	mikkTSpaceContext->m_pInterface = mikkTSpaceInterface;
+	mikkTSpaceContext->m_pUserData = &m_faces;
+
+	bool result = genTangSpaceDefault(mikkTSpaceContext);
+	assert(result == true);
+
+	const std::vector<Face>* fp = (std::vector<Face>*)mikkTSpaceContext->m_pUserData;
+	m_faces = *fp;
+
 	createIndexBuffer();
 
 	assert((m_faces.size() * 3) == m_indexBuffer.size());
@@ -24,7 +45,6 @@ void MeshReader::parseMeshData(const std::string & fileName)
 	}
 
 	std::string prefix;
-	int count = 0;
 
 	Mesh currentMesh;
 	currentMesh.firstIndex = 0;
@@ -39,12 +59,12 @@ void MeshReader::parseMeshData(const std::string & fileName)
 		if (prefix == "Object" || prefix == "object" || prefix == "o")
 		{
 
-			if (!firstMesh)
+			if (!firstMesh && (currentMesh.indicesCount > 0))
 			{
 				m_meshes.push_back(currentMesh);
 			}
 
-			currentMesh.firstIndex = m_faces.size() * 3;
+			currentMesh.firstIndex = (unsigned int)m_faces.size() * 3;
 			currentMesh.indicesCount = 0;
 
 			firstMesh = false;
@@ -97,7 +117,7 @@ void MeshReader::parseMeshData(const std::string & fileName)
 			const std::vector<Face> faces = triangulateFaceVertices(faceVertices);
 
 			// Compute the vertex count for the mesh
-			currentMesh.indicesCount += faces.size() * 3;
+			currentMesh.indicesCount += (unsigned int)(faces.size() * 3);
 			m_faces.insert(std::end(m_faces), std::begin(faces), std::end(faces));
 		}
 
@@ -113,10 +133,13 @@ void MeshReader::parseMeshData(const std::string & fileName)
 			}
 			else
 			{
-				m_meshes.push_back(currentMesh);
+				if (currentMesh.indicesCount > 0)
+				{
+					m_meshes.push_back(currentMesh);
+				}
 
 				currentMesh.material = m_materialReader.getMaterial(materialName);
-				currentMesh.firstIndex = m_faces.size() * 3;
+				currentMesh.firstIndex = (unsigned int)(m_faces.size() * 3);
 				currentMesh.indicesCount = 0;
 			}
 
@@ -125,7 +148,10 @@ void MeshReader::parseMeshData(const std::string & fileName)
 	}
 
 	//If it's a single mesh within the Model, or for the final Mesh of a multi-mesh model
-	m_meshes.push_back(currentMesh);
+	if (currentMesh.indicesCount > 0)
+	{
+		m_meshes.push_back(currentMesh);
+	}
 }
 
 std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
@@ -188,7 +214,7 @@ std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
 				}
 				else
 				{
-					unsigned int arraySize = m_vertexPositions.size();
+					unsigned int arraySize = (unsigned int)m_vertexPositions.size();
 
 					vertex.m_position[0] = m_vertexPositions[arraySize + vertexPositionId].x;
 					vertex.m_position[1] = m_vertexPositions[arraySize + vertexPositionId].y;
@@ -208,7 +234,7 @@ std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
 				}
 				else
 				{
-					unsigned int arraySize = m_vertextextureCoordinates.size();
+					unsigned int arraySize = (unsigned int)m_vertextextureCoordinates.size();
 
 					vertex.m_textureCoordinate[0] = m_vertextextureCoordinates[arraySize + vertexTextureCoordinateId].x;
 					vertex.m_textureCoordinate[1] = m_vertextextureCoordinates[arraySize + vertexTextureCoordinateId].y;
@@ -227,7 +253,7 @@ std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
 				}
 				else
 				{
-					unsigned int arraySize = m_vertexNormals.size();
+					unsigned int arraySize = (unsigned int)m_vertexNormals.size();
 
 					vertex.m_normal[0] = m_vertexNormals[arraySize + vertexNormalId].x;
 					vertex.m_normal[1] = m_vertexNormals[arraySize + vertexNormalId].y;
@@ -244,7 +270,7 @@ std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
 
 std::vector<Face> MeshReader::triangulateFaceVertices(const std::vector<Vertex>& vertices)
 {
-	const int vertexCount = vertices.size();
+	const int vertexCount = (int)vertices.size();
 
 	std::vector<Face> faces;
 
@@ -307,4 +333,51 @@ void MeshReader::createIndexBuffer()
 const MaterialReader & MeshReader::getMaterialReader() const
 {
 	return m_materialReader;
+}
+
+int getNumFaces(const SMikkTSpaceContext * pContext)
+{
+	const std::vector<Face>* const fp = (const std::vector<Face>* const)pContext->m_pUserData;
+	return (int)fp->size();
+}
+
+int getNumVerticesOfFace(const SMikkTSpaceContext*, const int)
+{
+	return 3;
+}
+
+void getPosition(const SMikkTSpaceContext * pContext, float fvPosOut[], const int iFace, const int iVert)
+{
+	const std::vector<Face>* const fp = (const std::vector<Face>* const)pContext->m_pUserData;
+	
+	fvPosOut[0] = (*fp)[iFace].m_faceVertices[iVert].m_position[0];
+	fvPosOut[1] = (*fp)[iFace].m_faceVertices[iVert].m_position[1];
+	fvPosOut[2] = (*fp)[iFace].m_faceVertices[iVert].m_position[2];
+}
+
+void getNormal(const SMikkTSpaceContext * pContext, float fvNormOut[], const int iFace, const int iVert)
+{
+	const std::vector<Face>* const fp = (const std::vector<Face>* const)pContext->m_pUserData;
+
+	fvNormOut[0] = (*fp)[iFace].m_faceVertices[iVert].m_normal[0];
+	fvNormOut[1] = (*fp)[iFace].m_faceVertices[iVert].m_normal[1];
+	fvNormOut[2] = (*fp)[iFace].m_faceVertices[iVert].m_normal[2];
+}
+
+void getTexCoord(const SMikkTSpaceContext * pContext, float fvTexcOut[], const int iFace, const int iVert)
+{
+	const std::vector<Face>* const fp = (const std::vector<Face>* const)pContext->m_pUserData;
+
+	fvTexcOut[0] = (*fp)[iFace].m_faceVertices[iVert].m_textureCoordinate[0];
+	fvTexcOut[1] = (*fp)[iFace].m_faceVertices[iVert].m_textureCoordinate[1];
+}
+
+void setTSpaceBasic(const SMikkTSpaceContext * pContext, const float fvTangent[], const float fSign, const int iFace, const int iVert)
+{
+	std::vector<Face>* const fp = (std::vector<Face>* const)pContext->m_pUserData;
+
+	(*fp)[iFace].m_faceVertices[iVert].m_tangent[0] = fvTangent[0];
+	(*fp)[iFace].m_faceVertices[iVert].m_tangent[1] = fvTangent[1];
+	(*fp)[iFace].m_faceVertices[iVert].m_tangent[2] = fvTangent[2];
+	(*fp)[iFace].m_faceVertices[iVert].m_tangent[3] = fSign;
 }
