@@ -102,7 +102,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 				m_textureHashMaps.addTexture(finalPath, texture);
 				currentMaterial.m_diffuseTexture = m_textureHashMaps.getTexture(finalPath);
 
-				std::cout << "Loaded Ambient Texture: " << texturePath << std::endl;
+				std::cout << "Loaded Diffuse Texture: " << texturePath << std::endl;
 			}
 			else
 			{
@@ -125,11 +125,34 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 				m_textureHashMaps.addTexture(finalPath, texture);
 				currentMaterial.m_specularTexture = m_textureHashMaps.getTexture(finalPath);
 
-				std::cout << "Loaded Ambient Texture: " << texturePath << std::endl;
+				std::cout << "Loaded Specular Texture: " << texturePath << std::endl;
 			}
 			else
 			{
 				currentMaterial.m_specularTexture = m_textureHashMaps.getTexture(finalPath);
+			}
+		}
+
+		if (str == "map_normal")
+		{
+			std::string texturePath;
+			ifs >> texturePath;
+
+			const std::string path = R"(Meshes\sponza\)";
+			const std::string finalPath = path + texturePath;
+
+			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
+			{
+				Texture texture(finalPath); // Does the destructor destroy all textures?
+
+				m_textureHashMaps.addTexture(finalPath, texture);
+				currentMaterial.m_normalMapTexture = m_textureHashMaps.getTexture(finalPath);
+
+				std::cout << "Loaded Normal Texture: " << texturePath << std::endl;
+			}
+			else
+			{
+				currentMaterial.m_normalMapTexture = m_textureHashMaps.getTexture(finalPath);
 			}
 		}
 

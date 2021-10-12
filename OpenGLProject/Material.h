@@ -1,6 +1,11 @@
 #pragma once
 
-#include <glm.hpp>
+
+#pragma warning(push)
+#pragma warning(disable:4201)   
+#include<glm.hpp>
+#pragma warning(pop)
+
 #include <vector>
 
 #include "Texture.h"
@@ -18,5 +23,6 @@ struct Material
 	const Texture* m_ambientTexture;
 	const Texture* m_diffuseTexture;
 	const Texture* m_specularTexture;
+	const Texture* m_normalMapTexture;
 };
 
