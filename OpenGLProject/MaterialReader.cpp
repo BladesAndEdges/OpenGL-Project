@@ -37,6 +37,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			currentMaterial.m_ambientTexture = nullptr;
 			currentMaterial.m_diffuseTexture = nullptr;
 			currentMaterial.m_specularTexture = nullptr;
+			currentMaterial.m_normalMapTexture = nullptr;
 
 			ifs >> materialName;
 

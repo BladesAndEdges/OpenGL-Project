@@ -250,6 +250,9 @@ int main()
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_normal));
 	glEnableVertexAttribArray(2);
 
+	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_tangent));
+	glEnableVertexAttribArray(3);
+
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	Shader meshTestShader(R"(Shaders\meshTestShader.vert)", R"(Shaders\meshTestShader.frag)");
@@ -258,6 +261,7 @@ int main()
 	meshTestShader.bindTextureToSampler(0, "ambientTextureSampler");
 	meshTestShader.bindTextureToSampler(1, "diffuseTextureSampler");
 	meshTestShader.bindTextureToSampler(2, "specularTextureSampler");
+	meshTestShader.bindTextureToSampler(3, "normalMapTextureSampler");
 	glUseProgram(0);
 
 	//-----------------------------------------------------------------------------------------------------------------------------------------
@@ -346,6 +350,18 @@ int main()
 			else
 			{
 				glActiveTexture(GL_TEXTURE2); 
+				background.useTexture();
+			}
+
+			// Specular
+			if (mesh.material->m_normalMapTexture != nullptr)
+			{
+				glActiveTexture(GL_TEXTURE3);
+				mesh.material->m_normalMapTexture->useTexture();
+			}
+			else
+			{
+				glActiveTexture(GL_TEXTURE3);
 				background.useTexture();
 			}
 
