@@ -4,6 +4,10 @@
 
 #include<iostream>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include <glad.h>
 #include <GLFW/glfw3.h>
 
@@ -171,7 +175,6 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
 	GLFWwindow* window = glfwCreateWindow(800, 600, "", nullptr, nullptr);
-
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebufferCallback);
 
@@ -180,6 +183,24 @@ int main()
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
+
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsClassic();
+
+	// Setup Platform/Renderer backends
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	const char* glsl_version = "#version 430 core";
+	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	bool show_demo_window = true;
 
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(MessageCallback, 0);
@@ -271,13 +292,26 @@ int main()
 	float frameTimeArray[128];
 	unsigned int frameNumber = 0;
 
-	Texture background(R"(C:\Users\danie\Desktop\test.jpg)");
+	//Texture background(R"(C:\Users\danie\Desktop\test.jpg)");
+	Texture background(R"(Meshes\sponza\textures\dummy_ddn.png)");
 
 	while (!glfwWindowShouldClose(window))
 	{
 		const float timerStartingPoint = (float)glfwGetTime();
 
 		glfwPollEvents();
+
+		// Start the Dear ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+		if (show_demo_window) 
+		{
+			ImGui::ShowDemoWindow(&show_demo_window);
+		}
+
 		processCameraInput(camera, window);
 
 		const glm::vec4 cameraWorldSpacePosition = glm::vec4(camera.getWorldPosition(), 0.0f);
@@ -294,7 +328,10 @@ int main()
 		glm::mat4 view = camera.createViewMatrix();
 		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
 
-		glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)800 / (float)600, 0.1f, 10000.0f);
+		int windowWidth, windowHeight;
+		glfwGetWindowSize(window, &windowWidth, &windowHeight);
+
+		glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)windowWidth / (float)windowHeight, 0.1f, 10000.0f);
 
 		glm::mat4 viewProjection = projection * view;
 		copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
@@ -371,6 +408,10 @@ int main()
 			//glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount); // For non-indexed mesh
 		}
 
+		// Rendering
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		glfwSwapBuffers(window);
 
 		const float timerEndPoint = (float)glfwGetTime();
@@ -392,6 +433,12 @@ int main()
 
 		frameNumber++;
 	}
+
+	// Cleanup
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
