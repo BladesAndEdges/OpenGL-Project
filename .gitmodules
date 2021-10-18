@@ -4,3 +4,9 @@
 [submodule "OpenGLProject/Submodules/glm"]
 	path = OpenGLProject/Submodules/glm
 	url = https://github.com/g-truc/glm.git
+[submodule "OpenGLProject/Submodules/imgui"]
+	path = OpenGLProject/Submodules/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "OpenGLProject/Submodules/MikkTSpace"]
+	path = OpenGLProject/Submodules/MikkTSpace
+	url = https://github.com/mmikk/MikkTSpace.git
