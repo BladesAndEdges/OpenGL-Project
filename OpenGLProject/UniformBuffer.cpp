@@ -19,3 +19,12 @@ void copyVec4ToFloatArray(const glm::vec4 & source, float destination[4])
 		destination[element] = vectorData[element];
 	}
 }
+
+void copyBoolIntoBuffer(const bool source, bool& destination)
+{
+	destination = source;
+}
+
+UniformBuffer::UniformBuffer() : normalMapToggle(1), ambientToggle(1), diffuseToggle(1), specularToggle(1)
+{
+}
