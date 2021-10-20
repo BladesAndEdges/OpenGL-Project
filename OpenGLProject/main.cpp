@@ -142,8 +142,6 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 	glm::vec3 worldSpaceTranslation = camera.getWorldOrientation() * viewSpaceTranslation;
 	glm::vec3 newWorldSpacePosition = camera.getWorldPosition() + worldSpaceTranslation;
 	camera.setCameraWorldPosition(newWorldSpacePosition);
-
-	std::cout << camera.getWorldPosition().x << " " << camera.getWorldPosition().y << " " << camera.getWorldPosition().z << std::endl;
 }
 
 float measureAverageFrameTime(const float frameTimeInMilisecods, unsigned int frameNumber, float frameTimeArray[128])
@@ -197,7 +195,7 @@ int main()
 
 	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	const char* glsl_version = "#version 430 core";
+	const char* glsl_version = "#version 450 core";
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
 	bool show_demo_window = true;
@@ -295,6 +293,11 @@ int main()
 	//Texture background(R"(C:\Users\danie\Desktop\test.jpg)");
 	Texture background(R"(Meshes\sponza\textures\dummy_ddn.png)");
 
+	bool normalMapBool = true;
+	bool ambientBool = true;
+	bool diffuseBool = true;
+	bool specularBool = true;
+
 	while (!glfwWindowShouldClose(window))
 	{
 		const float timerStartingPoint = (float)glfwGetTime();
@@ -311,6 +314,57 @@ int main()
 		{
 			ImGui::ShowDemoWindow(&show_demo_window);
 		}
+
+		// I probably do not need the copy, but can change the value in the uniform directly
+
+		ImGui::Begin("Debug Toggles");
+		ImGui::Checkbox("Normal Mapping", &normalMapBool);
+		if (normalMapBool)
+		{
+			uniformBuffer.normalMapToggle = 1;
+		}
+		else
+		{
+			uniformBuffer.normalMapToggle = 0;
+		}
+
+		ImGui::Checkbox("Ambient", &ambientBool);
+		if (ambientBool)
+		{
+			uniformBuffer.ambientToggle = 1;
+		}
+		else
+		{
+			uniformBuffer.ambientToggle = 0;
+		}
+
+		ImGui::Checkbox("Diffuse", &diffuseBool);
+		if (diffuseBool)
+		{
+			uniformBuffer.diffuseToggle = 1;
+		}
+		else
+		{
+			uniformBuffer.diffuseToggle = 0;
+		}
+
+		ImGui::Checkbox("Specular", &specularBool);
+		if (specularBool)
+		{
+			uniformBuffer.specularToggle = 1;
+		}
+		else
+		{
+			uniformBuffer.specularToggle = 0;
+		}
+
+
+		ImGui::End();
+
+		std::cout << uniformBuffer.normalMapToggle << std::endl;
+		std::cout << uniformBuffer.ambientToggle << std::endl;
+		std::cout << uniformBuffer.diffuseToggle << std::endl;
+		std::cout << uniformBuffer.specularToggle << std::endl;
 
 		processCameraInput(camera, window);
 
@@ -340,7 +394,7 @@ int main()
 		glBindVertexArray(modelVAO);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, uboMatricesID);
-		glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 		/* This might actually be done once most likely, but ask*/
