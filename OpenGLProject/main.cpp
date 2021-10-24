@@ -427,11 +427,148 @@ int main()
 		meshTestShader.useProgram(); // Make sure the shader is being used before setting these textures
 		glBindVertexArray(modelVAO);
 
-		glBindBuffer(GL_UNIFORM_BUFFER, uboMatricesID);
+		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 		/* This might actually be done once most likely, but ask*/
+
+		//--------------------------------------------------------------------------------------------------------------------------------------
+		//32 bit depth texture, 256x256
+
+		int camWidth, camHeight;
+		glfwGetFramebufferSize(window, &camWidth, &camHeight);
+
+		glViewport(0, 0, camWidth, camHeight);
+
+		unsigned int depth_tex;
+		glGenTextures(1, &depth_tex);
+		glBindTexture(GL_TEXTURE_2D, depth_tex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		//NULL means reserve texture memory, but texels are undefined
+		//You can also try GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT24 for the internal format.
+		//If GL_DEPTH24_STENCIL8_EXT, go ahead and use it (GL_EXT_packed_depth_stencil)
+
+		int widthDepthMap, heightDepthMap;
+		glfwGetFramebufferSize(window, &widthDepthMap, &heightDepthMap);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, widthDepthMap, heightDepthMap, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
+		//-------------------------
+
+		glObjectLabel(GL_TEXTURE, depth_tex, -1, "ShadowMap");
+
+		unsigned int fb;
+		glGenFramebuffers(1, &fb);
+		glBindFramebuffer(GL_FRAMEBUFFER, fb);
+		//Attach
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_tex, 0);
+		//-------------------------
+		//Does the GPU support current FBO configuration?
+		//Before checking the configuration, you should call these 2 according to the spec.
+		//At the very least, you need to call glDrawBuffer(GL_NONE)
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+
+		GLenum status;
+		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		checkFramebufferStatus(status);
+		//-------------------------
+		//----and to render to it, don't forget to call
+		//At the very least, you need to call glDrawBuffer(GL_NONE)
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+		//-------------------------
+		//If you want to render to the back buffer again, you must bind 0 AND THEN CALL glDrawBuffer(GL_BACK)
+		//else GL_INVALID_OPERATION will be raised
+
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		for (const Mesh& mesh : mainModel.getMeshes())
+		{
+			//Upload the correct data for the Material???
+			//You should check if the return of the uniform location is -1 btw
+			glUniform1f(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ns"), mesh.material->m_shininess);
+			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ka"), 1, value_ptr(mesh.material->m_ambientColour));
+			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Kd"), 1, value_ptr(mesh.material->m_diffuseColour));
+			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ks"), 1, value_ptr(mesh.material->m_specularColour));
+
+			//Ambient
+			if (mesh.material->m_ambientTexture != nullptr)
+			{
+				glActiveTexture(GL_TEXTURE0);
+				mesh.material->m_ambientTexture->useTexture();
+			}
+			else
+			{
+				glActiveTexture(GL_TEXTURE0);
+				background.useTexture();
+			}
+
+			// Diffuse
+			if (mesh.material->m_diffuseTexture != nullptr)
+			{
+				glActiveTexture(GL_TEXTURE1);
+				mesh.material->m_diffuseTexture->useTexture();
+			}
+			else
+			{
+				glActiveTexture(GL_TEXTURE1);
+				background.useTexture();
+			}
+
+			// Specular
+			if (mesh.material->m_specularTexture != nullptr)
+			{
+				glActiveTexture(GL_TEXTURE2);
+				mesh.material->m_specularTexture->useTexture();
+			}
+			else
+			{
+				glActiveTexture(GL_TEXTURE2);
+				background.useTexture();
+			}
+
+			// Specular
+			if (mesh.material->m_normalMapTexture != nullptr)
+			{
+				glActiveTexture(GL_TEXTURE3);
+				mesh.material->m_normalMapTexture->useTexture();
+			}
+			else
+			{
+				glActiveTexture(GL_TEXTURE3);
+				background.useTexture();
+			}
+
+
+			//glDrawElements(GL_TRIANGLES, mainModel.getIndexBuffer().size(), GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
+			//glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount); // For non-indexed mesh
+		}
+
+		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		checkFramebufferStatus(status);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDrawBuffer(GL_BACK);
+		glReadBuffer(GL_BACK);
+		//--------------------------------------------------------------------------------------------------------------------------------------
+
+		   //Delete resources
+		glDeleteTextures(1, &depth_tex);
+		//Bind 0, which means render to back buffer, as a result, fb is unbound
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDeleteFramebuffers(1, &fb);
+
+		int winWidth, winHeight;
+		glfwGetWindowSize(window, &winWidth, &winHeight);
+		glViewport(0, 0, windowWidth , winHeight);
+
+		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		for (const Mesh& mesh : mainModel.getMeshes())
 		{
