@@ -246,8 +246,6 @@ int main()
 	//UBO
 	UniformBuffer uniformBuffer;
 
-	GLuint uboMatricesID;
-
 	unsigned int uniformMatrixBlockIndex;
 	uniformMatrixBlockIndex = glGetUniformBlockIndex(basicShader.getProgramID(), "sceneMatrices");
 	assert(uniformMatrixBlockIndex != GL_INVALID_INDEX);
@@ -258,14 +256,17 @@ int main()
 	These "names" are integers. They are not guarranteed
 	to be a set of continuous integers.
 	*/
-	glGenBuffers(1, &uboMatricesID);
 
-	glBindBuffer(GL_UNIFORM_BUFFER, uboMatricesID);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
+	GLuint sceneUBO;
+	glGenBuffers(1, &sceneUBO);
+
+	glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), nullptr, GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-	glBindBufferRange(GL_UNIFORM_BUFFER, uniformMatrixBlockIndex, uboMatricesID, 0, sizeof(UniformBuffer)); // Understand what this does, since something seems fishy
+	glObjectLabel(GL_BUFFER, sceneUBO, -1, "SceneUniformBuffer");
 
+	glBindBufferRange(GL_UNIFORM_BUFFER, uniformMatrixBlockIndex, sceneUBO, 0, sizeof(UniformBuffer)); // Understand what this does, since something seems fishy
 
 	//USE glBufferSubData() to update the values of the UBO members later on whent the values change due to the addition of a camera.
 
@@ -327,10 +328,15 @@ int main()
 	//Texture background(R"(C:\Users\danie\Desktop\test.jpg)");
 	Texture background(R"(Meshes\sponza\textures\dummy_ddn.png)");
 
+	// ImGui stuff
 	bool normalMapBool = true;
 	bool ambientBool = true;
 	bool diffuseBool = true;
 	bool specularBool = true;
+
+	float azimuthAngle = 0.0f;
+	float zenithAngle = 0.0f;
+	float bus[3] = { 0.0f, 0.0f, 0.0f };
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -343,72 +349,30 @@ int main()
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-		if (show_demo_window) 
-		{
-			ImGui::ShowDemoWindow(&show_demo_window);
-		}
+		// ---------------------------------------------------------------------------------------------------------------------------
+		// Trying to rotate the Vector for the Sun
+		// this will be in it's own separate function eventually
+		glm::mat4 lightSourceOrientation = glm::mat4(1.0f);
+		glm::mat4 azimuthMatrix = glm::mat4(1.0f);
+		glm::mat4 zenithMatrix = glm::mat4(1.0f);
 
-		// I probably do not need the copy, but can change the value in the uniform directly
+		azimuthMatrix = glm::rotate(azimuthMatrix, glm::radians(azimuthAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+		zenithMatrix = glm::rotate(zenithMatrix, glm::radians(zenithAngle), glm::vec3(1.0f, 0.0f, 0.0f));
 
-		ImGui::Begin("Debug Toggles");
-		ImGui::Checkbox("Normal Mapping", &normalMapBool);
-		if (normalMapBool)
-		{
-			uniformBuffer.normalMapToggle = 1;
-		}
-		else
-		{
-			uniformBuffer.normalMapToggle = 0;
-		}
+		lightSourceOrientation = azimuthMatrix * zenithMatrix;
 
-		ImGui::Checkbox("Ambient", &ambientBool);
-		if (ambientBool)
-		{
-			uniformBuffer.ambientToggle = 1;
-		}
-		else
-		{
-			uniformBuffer.ambientToggle = 0;
-		}
+		glm::vec4 lightSourceDirection = glm::vec4(0.0f, 1001.0f, 0.0f, 0.0f);
+		lightSourceDirection = lightSourceOrientation * lightSourceDirection;
 
-		ImGui::Checkbox("Diffuse", &diffuseBool);
-		if (diffuseBool)
-		{
-			uniformBuffer.diffuseToggle = 1;
-		}
-		else
-		{
-			uniformBuffer.diffuseToggle = 0;
-		}
-
-		ImGui::Checkbox("Specular", &specularBool);
-		if (specularBool)
-		{
-			uniformBuffer.specularToggle = 1;
-		}
-		else
-		{
-			uniformBuffer.specularToggle = 0;
-		}
-
-
-		ImGui::End();
-
-		std::cout << uniformBuffer.normalMapToggle << std::endl;
-		std::cout << uniformBuffer.ambientToggle << std::endl;
-		std::cout << uniformBuffer.diffuseToggle << std::endl;
-		std::cout << uniformBuffer.specularToggle << std::endl;
+		copyVec4ToFloatArray(lightSourceDirection, uniformBuffer.lightSourceDirection);
+		// ------------------------------------------------------------------------------------------------------------------------------
 
 		processCameraInput(camera, window);
 
-		const glm::vec4 cameraWorldSpacePosition = glm::vec4(camera.getWorldPosition(), 0.0f);
-		copyVec4ToFloatArray(cameraWorldSpacePosition, uniformBuffer.worldSpaceCameraPosition);
-
 		glEnable(GL_DEPTH_TEST);
 
-		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		const glm::vec4 cameraWorldSpacePosition = glm::vec4(camera.getWorldPosition(), 0.0f);
+		copyVec4ToFloatArray(cameraWorldSpacePosition, uniformBuffer.worldSpaceCameraPosition);
 
 		glm::mat4 model = glm::mat4(1.0f);
 		copyMat4ToFloatArray(model, uniformBuffer.model);
@@ -632,6 +596,62 @@ int main()
 			glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
 			//glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount); // For non-indexed mesh
 		}
+
+		// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+		if (show_demo_window)
+		{
+			ImGui::ShowDemoWindow(&show_demo_window);
+		}
+
+		// I probably do not need the copy, but can change the value in the uniform directly
+
+		ImGui::Begin("Debug Toggles");
+		ImGui::Checkbox("Normal Mapping", &normalMapBool);
+		if (normalMapBool)
+		{
+			uniformBuffer.normalMapToggle = 1;
+		}
+		else
+		{
+			uniformBuffer.normalMapToggle = 0;
+		}
+
+		ImGui::Checkbox("Ambient", &ambientBool);
+		if (ambientBool)
+		{
+			uniformBuffer.ambientToggle = 1;
+		}
+		else
+		{
+			uniformBuffer.ambientToggle = 0;
+		}
+
+		ImGui::Checkbox("Diffuse", &diffuseBool);
+		if (diffuseBool)
+		{
+			uniformBuffer.diffuseToggle = 1;
+		}
+		else
+		{
+			uniformBuffer.diffuseToggle = 0;
+		}
+
+		ImGui::Checkbox("Specular", &specularBool);
+		if (specularBool)
+		{
+			uniformBuffer.specularToggle = 1;
+		}
+		else
+		{
+			uniformBuffer.specularToggle = 0;
+		}
+
+		ImGui::SliderFloat("Azimuth", &azimuthAngle, 0.0f, 360.0f);
+		ImGui::SliderFloat("Zenith", &zenithAngle, 0.0f, 90.0f);
+
+		ImGui::ColorEdit3("Light Colour", bus);
+
+		ImGui::End();
 
 		// Rendering
 		ImGui::Render();
