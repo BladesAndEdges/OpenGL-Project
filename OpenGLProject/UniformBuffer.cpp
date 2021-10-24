@@ -25,6 +25,7 @@ void copyBoolIntoBuffer(const bool source, bool& destination)
 	destination = source;
 }
 
-UniformBuffer::UniformBuffer() : normalMapToggle(1), ambientToggle(1), diffuseToggle(1), specularToggle(1)
+UniformBuffer::UniformBuffer() : normalMapToggle(1), ambientToggle(1), diffuseToggle(1), specularToggle(1),
+									lightSourceDirection{0.0f, 1001.0f, 0.0f, 0.0f}
 {
 }

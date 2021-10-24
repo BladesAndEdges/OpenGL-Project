@@ -15,6 +15,7 @@ struct UniformBuffer
 	UniformBuffer();
 
 	float worldSpaceCameraPosition[4]; // 4 * sizeof(float), 4 byte aligned
+	float lightSourceDirection[4];
 	float model[16]; // 16 * sizeof(float), 4 byte aligned
 	float viewProjection[16]; // 16 * sizeof(float), 4 byte aligned
 
