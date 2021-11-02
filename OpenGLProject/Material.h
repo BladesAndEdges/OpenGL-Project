@@ -24,5 +24,6 @@ struct Material
 	const Texture* m_diffuseTexture;
 	const Texture* m_specularTexture;
 	const Texture* m_normalMapTexture;
+	const Texture* m_maskTexture;
 };
 

@@ -157,6 +157,29 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			}
 		}
 
+		if (str == "map_d")
+		{
+			std::string texturePath;
+			ifs >> texturePath;
+
+			const std::string path = R"(Meshes\sponza\)";
+			const std::string finalPath = path + texturePath;
+
+			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
+			{
+				Texture texture(finalPath); 
+
+				m_textureHashMaps.addTexture(finalPath, texture);
+				currentMaterial.m_maskTexture = m_textureHashMaps.getTexture(finalPath);
+
+				std::cout << "Loaded Mask Texture: " << texturePath << std::endl;
+			}
+			else
+			{
+				currentMaterial.m_maskTexture = m_textureHashMaps.getTexture(finalPath);
+			}
+		}
+
 		if (str == "Ns")
 		{
 			float shininess;
