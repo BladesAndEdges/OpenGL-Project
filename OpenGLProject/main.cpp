@@ -316,6 +316,7 @@ int main()
 	meshTestShader.bindTextureToSampler(1, "diffuseTextureSampler");
 	meshTestShader.bindTextureToSampler(2, "specularTextureSampler");
 	meshTestShader.bindTextureToSampler(3, "normalMapTextureSampler");
+	meshTestShader.bindTextureToSampler(4, "maskTextureSampler");
 	glUseProgram(0);
 
 	//-----------------------------------------------------------------------------------------------------------------------------------------
@@ -326,7 +327,8 @@ int main()
 	unsigned int frameNumber = 0;
 
 	//Texture background(R"(C:\Users\danie\Desktop\test.jpg)");
-	Texture background(R"(Meshes\sponza\textures\dummy_ddn.png)");
+	Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)");
+	Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)");
 
 	// ImGui stuff
 	bool normalMapBool = true;
@@ -337,6 +339,49 @@ int main()
 	float azimuthAngle = 0.0f;
 	float zenithAngle = 0.0f;
 	float bus[3] = { 0.0f, 0.0f, 0.0f };
+
+	unsigned int depth_tex;
+	glGenTextures(1, &depth_tex);
+	glBindTexture(GL_TEXTURE_2D, depth_tex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//NULL means reserve texture memory, but texels are undefined
+	//You can also try GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT24 for the internal format.
+	//If GL_DEPTH24_STENCIL8_EXT, go ahead and use it (GL_EXT_packed_depth_stencil)
+
+	int widthDepthMap, heightDepthMap;
+	glfwGetFramebufferSize(window, &widthDepthMap, &heightDepthMap);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, widthDepthMap, heightDepthMap, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+
+
+	glObjectLabel(GL_TEXTURE, depth_tex, -1, "ShadowMap");
+
+	unsigned int fb;
+	glGenFramebuffers(1, &fb);
+	glBindFramebuffer(GL_FRAMEBUFFER, fb);
+	//Attach
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_tex, 0);
+	//-------------------------
+	//Does the GPU support current FBO configuration?
+	//Before checking the configuration, you should call these 2 according to the spec.
+	//At the very least, you need to call glDrawBuffer(GL_NONE)
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+
+	GLenum status;
+	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	checkFramebufferStatus(status);
+	//-------------------------
+	//----and to render to it, don't forget to call
+	//At the very least, you need to call glDrawBuffer(GL_NONE)
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	//-------------------------
+	//If you want to render to the back buffer again, you must bind 0 AND THEN CALL glDrawBuffer(GL_BACK)
+	//else GL_INVALID_OPERATION will be raised
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -405,49 +450,6 @@ int main()
 
 		glViewport(0, 0, camWidth, camHeight);
 
-		unsigned int depth_tex;
-		glGenTextures(1, &depth_tex);
-		glBindTexture(GL_TEXTURE_2D, depth_tex);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		//NULL means reserve texture memory, but texels are undefined
-		//You can also try GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT24 for the internal format.
-		//If GL_DEPTH24_STENCIL8_EXT, go ahead and use it (GL_EXT_packed_depth_stencil)
-
-		int widthDepthMap, heightDepthMap;
-		glfwGetFramebufferSize(window, &widthDepthMap, &heightDepthMap);
-
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, widthDepthMap, heightDepthMap, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
-		//-------------------------
-
-		glObjectLabel(GL_TEXTURE, depth_tex, -1, "ShadowMap");
-
-		unsigned int fb;
-		glGenFramebuffers(1, &fb);
-		glBindFramebuffer(GL_FRAMEBUFFER, fb);
-		//Attach
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_tex, 0);
-		//-------------------------
-		//Does the GPU support current FBO configuration?
-		//Before checking the configuration, you should call these 2 according to the spec.
-		//At the very least, you need to call glDrawBuffer(GL_NONE)
-		glDrawBuffer(GL_NONE);
-		glReadBuffer(GL_NONE);
-
-		GLenum status;
-		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		checkFramebufferStatus(status);
-		//-------------------------
-		//----and to render to it, don't forget to call
-		//At the very least, you need to call glDrawBuffer(GL_NONE)
-		glDrawBuffer(GL_NONE);
-		glReadBuffer(GL_NONE);
-		//-------------------------
-		//If you want to render to the back buffer again, you must bind 0 AND THEN CALL glDrawBuffer(GL_BACK)
-		//else GL_INVALID_OPERATION will be raised
-
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		for (const Mesh& mesh : mainModel.getMeshes())
@@ -468,7 +470,7 @@ int main()
 			else
 			{
 				glActiveTexture(GL_TEXTURE0);
-				background.useTexture();
+				dummyNormalMap.useTexture();
 			}
 
 			// Diffuse
@@ -480,7 +482,7 @@ int main()
 			else
 			{
 				glActiveTexture(GL_TEXTURE1);
-				background.useTexture();
+				dummyNormalMap.useTexture();
 			}
 
 			// Specular
@@ -492,7 +494,7 @@ int main()
 			else
 			{
 				glActiveTexture(GL_TEXTURE2);
-				background.useTexture();
+				dummyNormalMap.useTexture();
 			}
 
 			// Specular
@@ -504,7 +506,19 @@ int main()
 			else
 			{
 				glActiveTexture(GL_TEXTURE3);
-				background.useTexture();
+				dummyNormalMap.useTexture();
+			}
+
+			// Mask
+			if (mesh.material->m_maskTexture != nullptr)
+			{
+				glActiveTexture(GL_TEXTURE4);
+				mesh.material->m_maskTexture->useTexture();
+			}
+			else
+			{
+				glActiveTexture(GL_TEXTURE4);
+				dummyMask.useTexture();
 			}
 
 
@@ -513,19 +527,17 @@ int main()
 			//glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount); // For non-indexed mesh
 		}
 
+		//ImGui::Begin("Shadow Map");
+		ImGui::Image((void*)(intptr_t)depth_tex, ImVec2(512.0f, 512.0f));
+		//ImGui::End();
+
 		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		checkFramebufferStatus(status);
+		//--------------------------------------------------------------------------------------------------------------------------------------
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDrawBuffer(GL_BACK);
 		glReadBuffer(GL_BACK);
-		//--------------------------------------------------------------------------------------------------------------------------------------
-
-		   //Delete resources
-		glDeleteTextures(1, &depth_tex);
-		//Bind 0, which means render to back buffer, as a result, fb is unbound
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDeleteFramebuffers(1, &fb);
 
 		int winWidth, winHeight;
 		glfwGetWindowSize(window, &winWidth, &winHeight);
@@ -552,7 +564,7 @@ int main()
 			else
 			{
 				glActiveTexture(GL_TEXTURE0); 
-				background.useTexture();
+				dummyNormalMap.useTexture();
 			}
 
 			// Diffuse
@@ -564,7 +576,7 @@ int main()
 			else
 			{
 				glActiveTexture(GL_TEXTURE1);
-				background.useTexture();
+				dummyNormalMap.useTexture();
 			}
 
 			// Specular
@@ -576,7 +588,7 @@ int main()
 			else
 			{
 				glActiveTexture(GL_TEXTURE2); 
-				background.useTexture();
+				dummyNormalMap.useTexture();
 			}
 
 			// Specular
@@ -588,7 +600,19 @@ int main()
 			else
 			{
 				glActiveTexture(GL_TEXTURE3);
-				background.useTexture();
+				dummyNormalMap.useTexture();
+			}
+
+			// Mask
+			if (mesh.material->m_maskTexture != nullptr)
+			{
+				glActiveTexture(GL_TEXTURE4);
+				mesh.material->m_maskTexture->useTexture();
+			}
+			else
+			{
+				glActiveTexture(GL_TEXTURE4);
+				dummyMask.useTexture();
 			}
 
 
@@ -684,6 +708,9 @@ int main()
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
+	glDeleteFramebuffers(1, &fb);
+	glDeleteTextures(1, &depth_tex);
+	//Bind 0, which means render to back buffer, as a result, fb is unbound
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
