@@ -28,8 +28,6 @@ Texture::Texture(const std::string & texturePath)
 	glTexParameterf(GL_TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
 
 	int numberOfChannels;
-	int width;
-	int height;
 
 	//Do I need to flip the coordinates using stbi_image_flip?
 	stbi_set_flip_vertically_on_load(true);
@@ -61,6 +59,16 @@ void Texture::useTexture() const
 GLuint Texture::getTextureID() const
 {
 	return m_textureID;
+}
+
+unsigned int Texture::getWidth()
+{
+	return width;
+}
+
+unsigned int Texture::getHeight()
+{
+	return height;
 }
 
 //Texture::~Texture()

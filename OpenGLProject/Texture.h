@@ -5,13 +5,13 @@
 #include <string>
 #include <assert.h>
 
-
-
 class Texture
 {
 	private:
 
 		GLuint m_textureID;
+		int width;
+		int height;
 
 	public:
 
@@ -21,6 +21,10 @@ class Texture
 		void useTexture() const;
 
 		GLuint getTextureID() const;
+
+		unsigned int getWidth();
+		unsigned int getHeight();
+
 
 		/*~Texture();*/
 };
