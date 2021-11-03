@@ -208,17 +208,17 @@ std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
 			
 				if (vertexPositionId >= 1)
 				{
-					vertex.m_position[0] = m_vertexPositions[vertexPositionId - 1].x;
-					vertex.m_position[1] = m_vertexPositions[vertexPositionId - 1].y;
-					vertex.m_position[2] = m_vertexPositions[vertexPositionId - 1].z;
+					vertex.m_position[0] = m_vertexPositions[vertexPositionId - 1].x / 10.0f; 
+					vertex.m_position[1] = m_vertexPositions[vertexPositionId - 1].y / 10.0f;
+					vertex.m_position[2] = m_vertexPositions[vertexPositionId - 1].z / 10.0f;
 				}
 				else
 				{
 					unsigned int arraySize = (unsigned int)m_vertexPositions.size();
 
-					vertex.m_position[0] = m_vertexPositions[arraySize + vertexPositionId].x;
-					vertex.m_position[1] = m_vertexPositions[arraySize + vertexPositionId].y;
-					vertex.m_position[2] = m_vertexPositions[arraySize + vertexPositionId].z;
+					vertex.m_position[0] = m_vertexPositions[arraySize + vertexPositionId].x / 10.0f;
+					vertex.m_position[1] = m_vertexPositions[arraySize + vertexPositionId].y / 10.0f;
+					vertex.m_position[2] = m_vertexPositions[arraySize + vertexPositionId].z / 10.0f;
 				}
 			}
 
