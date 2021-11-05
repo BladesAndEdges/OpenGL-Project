@@ -2,30 +2,38 @@
 
 #include "stb_image.h"
 #include "glad.h"
+
+#include <cstdint>
 #include <string>
 #include <assert.h>
 
+
+enum class TextureTarget
+{
+	Texture2D
+};
+
+//-------------------------------------------------------------------------------------------
 class Texture
 {
 	private:
 
 		GLuint m_textureID;
-		int width;
-		int height;
+		uint32_t m_width;
+		uint32_t m_height;
+
+		GLenum translateTargetToOpenGL(const TextureTarget& target) const;
 
 	public:
 
-		Texture();
-		Texture(const std::string& texturePath);
+		Texture(const std::string& textureSource);
+		Texture(const std::string& textureSource, const TextureTarget& textureTarget);
 
-		void useTexture() const;
+		void useTexture(GLuint textureUnit) const;
 
 		GLuint getTextureID() const;
+		uint32_t getWidth() const;
+		uint32_t getHeight() const;
 
-		unsigned int getWidth();
-		unsigned int getHeight();
-
-
-		/*~Texture();*/
 };
 
