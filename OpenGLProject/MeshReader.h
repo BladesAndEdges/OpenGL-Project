@@ -26,10 +26,12 @@ private:
 	std::vector<unsigned int> m_indexBuffer;
 	std::vector<Vertex> m_indexedVertexBuffer;
 
+	glm::vec3 m_sceneCenter;
+
 	SMikkTSpaceContext m_mikktSpaceContext;
 
 
-	//// Unordered map of materials
+	// Unordered map of materials
 	MaterialReader m_materialReader;
 
 public:
@@ -47,7 +49,12 @@ public:
 
 	void createIndexBuffer();
 
+	//Compute the scene center
+	glm::vec3 computeSceneCenter();
+	glm::vec3 getSceneCenter() const;
+
 	const MaterialReader& getMaterialReader() const;
+
 };
 
 // MikktSpace getters and setters

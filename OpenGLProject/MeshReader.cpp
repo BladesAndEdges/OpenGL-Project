@@ -33,6 +33,8 @@ MeshReader::MeshReader(const std::string & objFileName, const std::string& mater
 	createIndexBuffer();
 
 	assert((m_faces.size() * 3) == m_indexBuffer.size());
+
+	m_sceneCenter = computeSceneCenter();
 }
 
 void MeshReader::parseMeshData(const std::string & fileName)
@@ -208,18 +210,21 @@ std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
 			
 				if (vertexPositionId >= 1)
 				{
-					vertex.m_position[0] = m_vertexPositions[vertexPositionId - 1].x / 10.0f; 
-					vertex.m_position[1] = m_vertexPositions[vertexPositionId - 1].y / 10.0f;
-					vertex.m_position[2] = m_vertexPositions[vertexPositionId - 1].z / 10.0f;
+					vertex.m_position[0] = m_vertexPositions[vertexPositionId - 1].x / 100.0f; 
+					vertex.m_position[1] = m_vertexPositions[vertexPositionId - 1].y / 100.0f;
+					vertex.m_position[2] = m_vertexPositions[vertexPositionId - 1].z / 100.0f;
 				}
 				else
 				{
 					unsigned int arraySize = (unsigned int)m_vertexPositions.size();
 
-					vertex.m_position[0] = m_vertexPositions[arraySize + vertexPositionId].x / 10.0f;
-					vertex.m_position[1] = m_vertexPositions[arraySize + vertexPositionId].y / 10.0f;
-					vertex.m_position[2] = m_vertexPositions[arraySize + vertexPositionId].z / 10.0f;
+					vertex.m_position[0] = m_vertexPositions[arraySize + vertexPositionId].x / 100.0f;
+					vertex.m_position[1] = m_vertexPositions[arraySize + vertexPositionId].y / 100.0f;
+					vertex.m_position[2] = m_vertexPositions[arraySize + vertexPositionId].z / 100.0f;
 				}
+
+				// Code for centering the camera position
+
 			}
 
 			//TO ADD: NEGATIVE INDICES
@@ -328,6 +333,67 @@ void MeshReader::createIndexBuffer()
 			}
 		}
 	}
+}
+
+glm::vec3 MeshReader::computeSceneCenter()
+{
+	float minX = m_indexedVertexBuffer[0].m_position[0];
+	float maxX = minX;
+
+	float minY = m_indexedVertexBuffer[0].m_position[1];
+	float maxY = minY;
+
+	float minZ = m_indexedVertexBuffer[0].m_position[2];
+	float maxZ = minZ;
+
+	// Start from 1 since the initial vertex is used as a starting value
+	for (unsigned int vertex = 1; vertex < m_indexedVertexBuffer.size(); vertex++)
+	{
+		float vertexX = m_indexedVertexBuffer[vertex].m_position[0];
+		float vertexY = m_indexedVertexBuffer[vertex].m_position[1];
+		float vertexZ = m_indexedVertexBuffer[vertex].m_position[2];
+
+		if (vertexX < minX)
+		{
+			minX = vertexX;
+		}
+		
+		if (vertexX > maxX)
+		{
+			maxX = vertexX;
+		}
+
+		if (vertexY < minY)
+		{
+			minY = vertexY;
+		}
+
+		if (vertexY > maxY)
+		{
+			maxY = vertexY;
+		}
+
+		if (vertexZ < minZ)
+		{
+			minZ = vertexZ;
+		}
+
+		if (vertexZ > maxZ)
+		{
+			maxZ = vertexZ;
+		}
+	}
+
+	const float halfwayX = (minX + maxX) / 2.0f;
+	const float halfwayY = (minY + maxY) / 2.0f;
+	const float halfWayZ = (minZ + maxZ) / 2.0f;
+
+	return glm::vec3(halfwayX, halfwayY, halfWayZ);
+}
+
+glm::vec3 MeshReader::getSceneCenter() const
+{
+	return m_sceneCenter;
 }
 
 const MaterialReader & MeshReader::getMaterialReader() const
