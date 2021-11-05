@@ -71,7 +71,7 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 	g_deltaTime = currentFrameTime - g_previousFrameTime;
 	g_previousFrameTime = currentFrameTime;
 
-	const float unitsPerFrame = 1500 * g_deltaTime;
+	const float unitsPerFrame = 5.0f * g_deltaTime;
 
 	const glm::vec3 forward(0.0f, 0.0f, -1.0f);
 	const glm::vec3 up(0.0f, 1.0f, 0.0f);
@@ -168,7 +168,6 @@ void checkFramebufferStatus(GLenum status)
 	switch (status)
 	{
 	case GL_FRAMEBUFFER_COMPLETE:
-		std::cout << "GL_FRAMEBUFFER_COMPLETE" << std::endl;
 		break;
 	case GL_FRAMEBUFFER_UNDEFINED:
 		std::cout << "GL_FRAMEBUFFER_UNDEFINED" << std::endl;
@@ -321,14 +320,16 @@ int main()
 
 	//-----------------------------------------------------------------------------------------------------------------------------------------
 
-	Camera camera;
+	Camera camera(mainModel.getSceneCenter());
 
 	float frameTimeArray[128];
 	unsigned int frameNumber = 0;
 
-	//Texture background(R"(C:\Users\danie\Desktop\test.jpg)");
-	Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)");
-	Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)");
+	//Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)");
+	//Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)");
+
+	Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", TextureTarget::Texture2D);
+	Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D);
 
 	// ImGui stuff
 	bool normalMapBool = true;
@@ -362,29 +363,22 @@ int main()
 	unsigned int fb;
 	glGenFramebuffers(1, &fb);
 	glBindFramebuffer(GL_FRAMEBUFFER, fb);
+
 	//Attach
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_tex, 0);
-	//-------------------------
-	//Does the GPU support current FBO configuration?
-	//Before checking the configuration, you should call these 2 according to the spec.
-	//At the very least, you need to call glDrawBuffer(GL_NONE)
+
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 
 	GLenum status;
 	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	checkFramebufferStatus(status);
-	//-------------------------
-	//----and to render to it, don't forget to call
-	//At the very least, you need to call glDrawBuffer(GL_NONE)
-	glDrawBuffer(GL_NONE);
-	glReadBuffer(GL_NONE);
-	//-------------------------
-	//If you want to render to the back buffer again, you must bind 0 AND THEN CALL glDrawBuffer(GL_BACK)
-	//else GL_INVALID_OPERATION will be raised
+
 
 	while (!glfwWindowShouldClose(window))
 	{
+		std::cout << camera.getWorldPosition().x << " " << camera.getWorldPosition().y << " " << camera.getWorldPosition().z << std::endl;
+
 		const float timerStartingPoint = (float)glfwGetTime();
 
 		glfwPollEvents();
@@ -428,9 +422,9 @@ int main()
 		int windowWidth, windowHeight;
 		glfwGetWindowSize(window, &windowWidth, &windowHeight);
 
-		glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)windowWidth / (float)windowHeight, 0.1f, 10000.0f);
+		glm::mat4 persProj = glm::perspective(glm::radians(90.0f), (float)windowWidth / (float)windowHeight, 0.1f, 1000.0f);
 
-		glm::mat4 viewProjection = projection * view;
+		glm::mat4 viewProjection = persProj * view;
 		copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
 
 		meshTestShader.useProgram(); // Make sure the shader is being used before setting these textures
@@ -440,16 +434,12 @@ int main()
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		/* This might actually be done once most likely, but ask*/
-
-		//--------------------------------------------------------------------------------------------------------------------------------------
-		//32 bit depth texture, 256x256
-
 		int camWidth, camHeight;
 		glfwGetFramebufferSize(window, &camWidth, &camHeight);
 
 		glViewport(0, 0, camWidth, camHeight);
 
+		glBindFramebuffer(GL_FRAMEBUFFER, fb);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		for (const Mesh& mesh : mainModel.getMeshes())
@@ -464,61 +454,51 @@ int main()
 			//Ambient
 			if (mesh.material->m_ambientTexture != nullptr)
 			{
-				glActiveTexture(GL_TEXTURE0);
-				mesh.material->m_ambientTexture->useTexture();
+				mesh.material->m_ambientTexture->useTexture(0);
 			}
 			else
 			{
-				glActiveTexture(GL_TEXTURE0);
-				dummyNormalMap.useTexture();
+				dummyNormalMap.useTexture(0);
 			}
 
 			// Diffuse
 			if (mesh.material->m_diffuseTexture != nullptr)
 			{
-				glActiveTexture(GL_TEXTURE1);
-				mesh.material->m_diffuseTexture->useTexture();
+				mesh.material->m_diffuseTexture->useTexture(1);
 			}
 			else
 			{
-				glActiveTexture(GL_TEXTURE1);
-				dummyNormalMap.useTexture();
+				dummyNormalMap.useTexture(1);
 			}
 
 			// Specular
 			if (mesh.material->m_specularTexture != nullptr)
 			{
-				glActiveTexture(GL_TEXTURE2);
-				mesh.material->m_specularTexture->useTexture();
+				mesh.material->m_specularTexture->useTexture(2);
 			}
 			else
 			{
-				glActiveTexture(GL_TEXTURE2);
-				dummyNormalMap.useTexture();
+				dummyNormalMap.useTexture(2);
 			}
 
 			// Specular
 			if (mesh.material->m_normalMapTexture != nullptr)
 			{
-				glActiveTexture(GL_TEXTURE3);
-				mesh.material->m_normalMapTexture->useTexture();
+				mesh.material->m_normalMapTexture->useTexture(3);
 			}
 			else
 			{
-				glActiveTexture(GL_TEXTURE3);
-				dummyNormalMap.useTexture();
+				dummyNormalMap.useTexture(3);
 			}
 
 			// Mask
 			if (mesh.material->m_maskTexture != nullptr)
 			{
-				glActiveTexture(GL_TEXTURE4);
-				mesh.material->m_maskTexture->useTexture();
+				mesh.material->m_maskTexture->useTexture(4);
 			}
 			else
 			{
-				glActiveTexture(GL_TEXTURE4);
-				dummyMask.useTexture();
+				dummyMask.useTexture(4);
 			}
 
 
@@ -546,6 +526,16 @@ int main()
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// Perspective
+		glm::mat4 perspectiveProjection = glm::perspective(glm::radians(90.0f), (float)windowWidth / (float)windowHeight, 0.1f, 1000.0f);
+
+		viewProjection = perspectiveProjection * view;
+		copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
+
+		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 		for (const Mesh& mesh : mainModel.getMeshes())
 		{
 			//Upload the correct data for the Material???
@@ -558,61 +548,51 @@ int main()
 			//Ambient
 			if (mesh.material->m_ambientTexture != nullptr)
 			{
-				glActiveTexture(GL_TEXTURE0); 
-				mesh.material->m_ambientTexture->useTexture();
+				mesh.material->m_ambientTexture->useTexture(0);
 			}
 			else
 			{
-				glActiveTexture(GL_TEXTURE0); 
-				dummyNormalMap.useTexture();
+				dummyNormalMap.useTexture(0);
 			}
 
 			// Diffuse
 			if (mesh.material->m_diffuseTexture != nullptr)
 			{
-				glActiveTexture(GL_TEXTURE1); 
-				mesh.material->m_diffuseTexture->useTexture();
+				mesh.material->m_diffuseTexture->useTexture(1);
 			}
 			else
 			{
-				glActiveTexture(GL_TEXTURE1);
-				dummyNormalMap.useTexture();
+				dummyNormalMap.useTexture(1);
 			}
 
 			// Specular
 			if (mesh.material->m_specularTexture != nullptr)
 			{
-				glActiveTexture(GL_TEXTURE2); 
-				mesh.material->m_specularTexture->useTexture();
+				mesh.material->m_specularTexture->useTexture(2);
 			}
 			else
 			{
-				glActiveTexture(GL_TEXTURE2); 
-				dummyNormalMap.useTexture();
+				dummyNormalMap.useTexture(2);
 			}
 
 			// Specular
 			if (mesh.material->m_normalMapTexture != nullptr)
 			{
-				glActiveTexture(GL_TEXTURE3);
-				mesh.material->m_normalMapTexture->useTexture();
+				mesh.material->m_normalMapTexture->useTexture(3);
 			}
 			else
 			{
-				glActiveTexture(GL_TEXTURE3);
-				dummyNormalMap.useTexture();
+				dummyNormalMap.useTexture(3);
 			}
 
 			// Mask
 			if (mesh.material->m_maskTexture != nullptr)
 			{
-				glActiveTexture(GL_TEXTURE4);
-				mesh.material->m_maskTexture->useTexture();
+				mesh.material->m_maskTexture->useTexture(4);
 			}
 			else
 			{
-				glActiveTexture(GL_TEXTURE4);
-				dummyMask.useTexture();
+				dummyMask.useTexture(4);
 			}
 
 

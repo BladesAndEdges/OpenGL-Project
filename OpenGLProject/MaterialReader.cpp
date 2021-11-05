@@ -75,7 +75,8 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				Texture texture(finalPath); // Does the destructor destroy all textures?
+				//Texture texture(finalPath);
+				Texture texture(finalPath, TextureTarget::Texture2D); // Does the destructor destroy all textures?
 
 				m_textureHashMaps.addTexture(finalPath, texture);
 				currentMaterial.m_ambientTexture = m_textureHashMaps.getTexture(finalPath);
@@ -98,7 +99,8 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				Texture texture(finalPath); // Does the destructor destroy all textures?
+				//Texture texture(finalPath);
+				Texture texture(finalPath, TextureTarget::Texture2D); // Does the destructor destroy all textures?
 
 				m_textureHashMaps.addTexture(finalPath, texture);
 				currentMaterial.m_diffuseTexture = m_textureHashMaps.getTexture(finalPath);
@@ -121,7 +123,8 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				Texture texture(finalPath); // Does the destructor destroy all textures?
+				//Texture texture(finalPath);
+				Texture texture(finalPath, TextureTarget::Texture2D); // Does the destructor destroy all textures?
 
 				m_textureHashMaps.addTexture(finalPath, texture);
 				currentMaterial.m_specularTexture = m_textureHashMaps.getTexture(finalPath);
@@ -144,7 +147,8 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				Texture texture(finalPath); // Does the destructor destroy all textures?
+				//Texture texture(finalPath);
+				Texture texture(finalPath, TextureTarget::Texture2D); // Does the destructor destroy all textures?
 
 				m_textureHashMaps.addTexture(finalPath, texture);
 				currentMaterial.m_normalMapTexture = m_textureHashMaps.getTexture(finalPath);
@@ -167,7 +171,8 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				Texture texture(finalPath); 
+				//Texture texture(finalPath);
+				Texture texture(finalPath, TextureTarget::Texture2D);
 
 				m_textureHashMaps.addTexture(finalPath, texture);
 				currentMaterial.m_maskTexture = m_textureHashMaps.getTexture(finalPath);

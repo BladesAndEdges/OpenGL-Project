@@ -17,12 +17,14 @@ GLenum Texture::translateTargetToOpenGL(const TextureTarget & target) const
 	return result;
 }
 
+#include <iostream>
+
 Texture::Texture(const std::string & texturePath, const TextureTarget& textureTarget)
 {
 	const GLenum target = translateTargetToOpenGL(textureTarget);
 	assert(target != 0);
 
-	glCreateTextures(target, 1, &m_textureID);
+	glCreateTextures(GL_TEXTURE_2D, 1, &m_textureID);
 	assert(m_textureID > 0);
 
 	stbi_set_flip_vertically_on_load(true);
@@ -51,11 +53,11 @@ Texture::Texture(const std::string & texturePath, const TextureTarget& textureTa
 
 	glGenerateTextureMipmap(m_textureID);
 
-	glTextureParameteri(m_textureID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTextureParameteri(m_textureID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTextureParameteri(m_textureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTextureParameteri(m_textureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTextureParameteri(m_textureID, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTextureParameteri(m_textureID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTextureParameterf(target, TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
+	glTextureParameterf(m_textureID, TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
 }
 
 Texture::Texture(const std::string & texturePath)
