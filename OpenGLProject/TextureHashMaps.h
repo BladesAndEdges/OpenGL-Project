@@ -14,7 +14,7 @@ public:
 
 	TextureHashMaps();
 
-	void addTexture(const std::string& path, const Texture& texture);
+	void addTexture(const std::string& path, Texture&& texture);
 	const Texture* getTexture(const std::string& path) const;
 
 
