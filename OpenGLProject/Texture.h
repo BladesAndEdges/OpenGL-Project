@@ -46,7 +46,8 @@ public:
 	Texture(const std::string& source, TextureTarget target, TextureWrapMode wrapMode,
 		TextureFilterMode filterMode);
 
-	Texture(const std::string& label, TextureTarget target, TextureWrapMode wrapMode, TextureFilterMode filterMode);
+	Texture(const std::string& label, uint32_t width,  uint32_t height, TextureTarget target
+									, TextureWrapMode wrapMode, TextureFilterMode filterMode, TextureFormat format);
 
 	~Texture();
 
@@ -75,7 +76,6 @@ private:
 	GLenum translateWrapModeToOpenGL(TextureWrapMode wrapMode) const;
 	GLenum translateFilterModeToOpenGLMinFilter(TextureFilterMode filterMode) const;
 	GLenum translateFilterModeToOpenGLMagFilter(TextureFilterMode filterMode) const;
-	GLenum translateTextureFormatToOpenGLSizedFormat(TextureFormat format) const;
-
+	GLenum translateFormatToOpenGLSizedFormat(TextureFormat format) const;
 };
 

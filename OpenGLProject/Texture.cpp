@@ -72,7 +72,7 @@ GLenum Texture::translateFilterModeToOpenGLMagFilter(TextureFilterMode filterMod
 }
 
 // --------------------------------------------------------------------------------
-GLenum Texture::translateTextureFormatToOpenGLSizedFormat(TextureFormat format) const
+GLenum Texture::translateFormatToOpenGLSizedFormat(TextureFormat format) const
 {
 	switch (format)
 	{
@@ -163,66 +163,25 @@ Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMo
 	glTextureParameterf(m_name, TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
 }
 
-Texture::Texture(const std::string& label, TextureTarget target, TextureWrapMode wrapMode, TextureFilterMode filterMode)
+// --------------------------------------------------------------------------------
+Texture::Texture(const std::string& label, uint32_t width, uint32_t height, TextureTarget target,
+							TextureWrapMode wrapMode, TextureFilterMode filterMode, TextureFormat format)
 {
 	const GLenum glTarget = translateTargetToOpenGL(target);
 	const GLenum glWrapMode = translateWrapModeToOpenGL(wrapMode);
 	const GLenum glMinFilterMode = translateFilterModeToOpenGLMinFilter(filterMode);
 	const GLenum glMagFilterMode = translateFilterModeToOpenGLMagFilter(filterMode);
+	const GLenum glSizedFormat = translateFormatToOpenGLSizedFormat(format);
 
 	glCreateTextures(glTarget, 1, &m_name);
 	assert(m_name > 0);
 
-	stbi_set_flip_vertically_on_load(true);
+	m_width = width;
+	m_height = height;
 
-	GLint width;
-	GLint height;
-	GLint numberOfChannels;
+	glTextureStorage2D(m_name, 1, glSizedFormat, m_width, m_height);
 
-	GLubyte* textureData = stbi_load(source.c_str(), &width, &height, &numberOfChannels, 0);
-
-	m_width = (uint32_t)width;
-	m_height = (uint32_t)height;
-
-	if (textureData)
-	{
-		switch (numberOfChannels)
-		{
-		case 1:
-			glTextureStorage2D(m_name, 1, GL_R8, m_width, m_height);
-			glTextureSubImage2D(m_name, 0, 0, 0, m_width, m_height, GL_RED, GL_UNSIGNED_BYTE, textureData);
-			stbi_image_free(textureData);
-			break;
-
-		case 2:
-			glTextureStorage2D(m_name, 1, GL_RG8, m_width, m_height);
-			glTextureSubImage2D(m_name, 0, 0, 0, m_width, m_height, GL_RG, GL_UNSIGNED_BYTE, textureData);
-			stbi_image_free(textureData);
-			break;
-
-		case 3:
-			glTextureStorage2D(m_name, 1, GL_RGB8, m_width, m_height);
-			glTextureSubImage2D(m_name, 0, 0, 0, m_width, m_height, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-			stbi_image_free(textureData);
-			break;
-
-		case 4:
-			glTextureStorage2D(m_name, 1, GL_RGBA8, m_width, m_height);
-			glTextureSubImage2D(m_name, 0, 0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
-			stbi_image_free(textureData);
-			break;
-
-		default:
-			throw std::exception("The number of channels within the texture does not match one of the supported values!");
-			break;
-		}
-	}
-	else
-	{
-		throw std::exception("Could not load texture image!");
-	}
-
-	glObjectLabel(GL_TEXTURE, m_name, -1, source.c_str());
+	glObjectLabel(GL_TEXTURE, m_name, -1, label.c_str());
 
 	glGenerateTextureMipmap(m_name);
 
@@ -230,7 +189,6 @@ Texture::Texture(const std::string& label, TextureTarget target, TextureWrapMode
 	glTextureParameteri(m_name, GL_TEXTURE_WRAP_T, glWrapMode);
 	glTextureParameteri(m_name, GL_TEXTURE_MIN_FILTER, glMinFilterMode);
 	glTextureParameteri(m_name, GL_TEXTURE_MAG_FILTER, glMagFilterMode);
-	glTextureParameterf(m_name, TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
 }
 
 // --------------------------------------------------------------------------------
