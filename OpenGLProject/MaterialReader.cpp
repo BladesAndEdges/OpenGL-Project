@@ -6,6 +6,14 @@
 
 MaterialReader::MaterialReader()
 {
+	Texture defaultNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat,
+		TextureFilterMode::Point);
+
+	Texture defaultMaskTexture(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat,
+		TextureFilterMode::Point);
+
+	m_textureHashMaps.addTexture(R"(Meshes\sponza\textures\dummy_ddn.png)", std::move(defaultNormalMap));
+	m_textureHashMaps.addTexture(R"(Meshes\sponza\textures\dummy_mask.png)", std::move(defaultMaskTexture));
 }
 
 void MaterialReader::parseMaterialFile(const std::string & fileName)
@@ -30,14 +38,16 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 		{
 			if (!firstMaterial)
 			{
+				if (currentMaterial.m_normalMapTexture == nullptr) { provideNormalMapTexture(currentMaterial); };
+				if (currentMaterial.m_maskTexture == nullptr) { provideMaskTexture(currentMaterial); };
 				m_Materials.insert({ materialName, currentMaterial });
 			}
 
-			// Reset pointers??
 			currentMaterial.m_ambientTexture = nullptr;
 			currentMaterial.m_diffuseTexture = nullptr;
 			currentMaterial.m_specularTexture = nullptr;
 			currentMaterial.m_normalMapTexture = nullptr;
+			currentMaterial.m_maskTexture = nullptr;
 
 			ifs >> materialName;
 
@@ -188,7 +198,11 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 		}
 	}
 
-	m_Materials.insert({ materialName, currentMaterial }); // The last material will get canceled out due to ending the while loop
+	// The last material will get canceled out due to ending the while loop
+	if (currentMaterial.m_normalMapTexture == nullptr) { provideNormalMapTexture(currentMaterial); };
+	if (currentMaterial.m_maskTexture == nullptr) { provideMaskTexture(currentMaterial); };
+
+	m_Materials.insert({ materialName, currentMaterial }); 
 }
 
 const Material * MaterialReader::getMaterial(const std::string & materialName) const

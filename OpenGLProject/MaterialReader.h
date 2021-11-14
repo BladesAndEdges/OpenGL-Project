@@ -22,5 +22,8 @@ private:
 	std::unordered_map<std::string, Material> m_Materials;
 
 	TextureHashMaps m_textureHashMaps;
+
+	void provideNormalMapTexture(Material& material);
+	void provideMaskTexture(Material& material);
 };
 
