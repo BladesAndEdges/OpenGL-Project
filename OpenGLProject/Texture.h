@@ -32,6 +32,8 @@ enum class TextureFilterMode
 // --------------------------------------------------------------------------------
 enum class TextureFormat
 {
+	R8,
+	RG8,
 	RGB8,
 	RGBA8, 
 	DEPTH32
@@ -77,5 +79,8 @@ private:
 	GLenum translateFilterModeToOpenGLMinFilter(TextureFilterMode filterMode) const;
 	GLenum translateFilterModeToOpenGLMagFilter(TextureFilterMode filterMode) const;
 	GLenum translateFormatToOpenGLSizedFormat(TextureFormat format) const;
+	GLenum translateFormatToOpenGLInternalFormat(TextureFormat format) const;
+
+	TextureFormat chooseTextureSizedFormat(int numberOfChannels) const;
 };
 
