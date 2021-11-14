@@ -196,4 +196,16 @@ const Material * MaterialReader::getMaterial(const std::string & materialName) c
 	return &m_Materials.at(materialName);
 }
 
+void MaterialReader::provideNormalMapTexture(Material& material)
+{
+	const std::string path = R"(Meshes\sponza\textures\dummy_ddn.png)";
+	material.m_normalMapTexture = m_textureHashMaps.getTexture(path);
+}
+
+void MaterialReader::provideMaskTexture(Material& material)
+{
+	const std::string path = R"(Meshes\sponza\textures\dummy_mask.png)";
+	material.m_maskTexture = m_textureHashMaps.getTexture(path);
+}
+
 
