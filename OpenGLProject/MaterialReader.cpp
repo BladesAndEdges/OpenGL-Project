@@ -75,10 +75,9 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				//Texture texture(finalPath);
-				Texture texture(finalPath, TextureTarget::Texture2D); // Does the destructor destroy all textures?
+				Texture texture(finalPath, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 
-				m_textureHashMaps.addTexture(finalPath, texture);
+				m_textureHashMaps.addTexture(finalPath, std::move(texture));
 				currentMaterial.m_ambientTexture = m_textureHashMaps.getTexture(finalPath);
 
 				std::cout << "Loaded Ambient Texture: " << texturePath << std::endl;
@@ -99,10 +98,9 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				//Texture texture(finalPath);
-				Texture texture(finalPath, TextureTarget::Texture2D); // Does the destructor destroy all textures?
+				Texture texture(finalPath, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 
-				m_textureHashMaps.addTexture(finalPath, texture);
+				m_textureHashMaps.addTexture(finalPath, std::move(texture));
 				currentMaterial.m_diffuseTexture = m_textureHashMaps.getTexture(finalPath);
 
 				std::cout << "Loaded Diffuse Texture: " << texturePath << std::endl;
@@ -123,10 +121,9 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				//Texture texture(finalPath);
-				Texture texture(finalPath, TextureTarget::Texture2D); // Does the destructor destroy all textures?
+				Texture texture(finalPath, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 
-				m_textureHashMaps.addTexture(finalPath, texture);
+				m_textureHashMaps.addTexture(finalPath, std::move(texture));
 				currentMaterial.m_specularTexture = m_textureHashMaps.getTexture(finalPath);
 
 				std::cout << "Loaded Specular Texture: " << texturePath << std::endl;
@@ -147,10 +144,9 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				//Texture texture(finalPath);
-				Texture texture(finalPath, TextureTarget::Texture2D); // Does the destructor destroy all textures?
+				Texture texture(finalPath, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 
-				m_textureHashMaps.addTexture(finalPath, texture);
+				m_textureHashMaps.addTexture(finalPath, std::move(texture));
 				currentMaterial.m_normalMapTexture = m_textureHashMaps.getTexture(finalPath);
 
 				std::cout << "Loaded Normal Texture: " << texturePath << std::endl;
@@ -171,10 +167,9 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				//Texture texture(finalPath);
-				Texture texture(finalPath, TextureTarget::Texture2D);
+				Texture texture(finalPath, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 
-				m_textureHashMaps.addTexture(finalPath, texture);
+				m_textureHashMaps.addTexture(finalPath, std::move(texture));
 				currentMaterial.m_maskTexture = m_textureHashMaps.getTexture(finalPath);
 
 				std::cout << "Loaded Mask Texture: " << texturePath << std::endl;

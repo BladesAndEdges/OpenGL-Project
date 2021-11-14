@@ -22,6 +22,7 @@
 #include "Texture.h"
 #include "MeshReader.h"
 #include "Camera.h"
+#include "Framebuffer.h"
 
 #include <cstdint>
 #include <string>
@@ -243,9 +244,7 @@ int main()
 
 	//---------------------------------------------------------------------------------------------------------------------------------------
 	// Testing to see if the MeshReader Data can be rendered
-	//MeshReader mainModel(R"(Meshes\sponza\sponza.obj)", R"(Meshes\sponza\sponza.mtl)");
 	MeshReader mainModel(R"(Meshes\sponza\sponza.obj)", R"(Meshes\sponza\sponza.mtl)");
-	//MeshReader mainModel(R"(Meshes\sponza\cube.obj)", R"(Meshes\sponza\default.mtl)");
 
 	// Vertex Buffers and VAO
 	unsigned int modelVBO;
@@ -297,11 +296,9 @@ int main()
 	float frameTimeArray[128];
 	unsigned int frameNumber = 0;
 
-	//Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)");
-	//Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)");
-
-	Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", TextureTarget::Texture2D);
-	Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D);
+	Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, 
+																		TextureFilterMode::Point);
+	Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat,TextureFilterMode::Point);
 
 	// ImGui stuff
 	bool normalMapBool = true;
@@ -313,44 +310,22 @@ int main()
 	float zenithAngle = 0.0f;
 	float bus[3] = { 0.0f, 0.0f, 0.0f };
 
-	unsigned int depth_tex;
-	glGenTextures(1, &depth_tex);
-	glBindTexture(GL_TEXTURE_2D, depth_tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//NULL means reserve texture memory, but texels are undefined
-	//You can also try GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT24 for the internal format.
-	//If GL_DEPTH24_STENCIL8_EXT, go ahead and use it (GL_EXT_packed_depth_stencil)
-
 	int widthDepthMap, heightDepthMap;
 	glfwGetFramebufferSize(window, &widthDepthMap, &heightDepthMap);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, widthDepthMap, heightDepthMap, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
-
-
-	glObjectLabel(GL_TEXTURE, depth_tex, -1, "ShadowMap");
+	Texture shadowMap("ShadowMap", widthDepthMap, heightDepthMap, TextureTarget::Texture2D, TextureWrapMode::ClampEdge, 
+										TextureFilterMode::Point, TextureFormat::DEPTH32);
 
 	unsigned int fb;
-	glGenFramebuffers(1, &fb);
-	glBindFramebuffer(GL_FRAMEBUFFER, fb);
+ 	glCreateFramebuffers(1, &fb);
 
 	//Attach
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_tex, 0);
+	glNamedFramebufferTexture(fb, GL_DEPTH_ATTACHMENT, shadowMap.getName(), 0);
 
-	glDrawBuffer(GL_NONE);
-	glReadBuffer(GL_NONE);
-
-	GLenum status;
-	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	checkFramebufferStatus(status);
-
+	glGetError();
 
 	while (!glfwWindowShouldClose(window))
 	{
-		std::cout << camera.getWorldPosition().x << " " << camera.getWorldPosition().y << " " << camera.getWorldPosition().z << std::endl;
-
 		const float timerStartingPoint = (float)glfwGetTime();
 
 		glfwPollEvents();
@@ -411,8 +386,39 @@ int main()
 
 		glViewport(0, 0, camWidth, camHeight);
 
+
+		GLenum status;
+		status = glCheckNamedFramebufferStatus(fb, GL_FRAMEBUFFER);
+		checkFramebufferStatus(status);
+
+
+		glNamedFramebufferDrawBuffer(fb, GL_NONE);
+
+
+		status = glCheckNamedFramebufferStatus(fb, GL_FRAMEBUFFER);
+		checkFramebufferStatus(status);
+
+		glGetError();
+
+		glNamedFramebufferReadBuffer(fb, GL_NONE);
+
+		status = glCheckNamedFramebufferStatus(fb, GL_FRAMEBUFFER);
+		checkFramebufferStatus(status);
+
+		glGetError();
+
+		const GLfloat d = 1.0f;
+		glClearNamedFramebufferfv(fb, GL_DEPTH, 0, &d);
+
+		status = glCheckNamedFramebufferStatus(fb, GL_FRAMEBUFFER);
+		checkFramebufferStatus(status);
+
 		glBindFramebuffer(GL_FRAMEBUFFER, fb);
-		glClear(GL_DEPTH_BUFFER_BIT);
+
+		status = glCheckNamedFramebufferStatus(fb, GL_FRAMEBUFFER);
+		checkFramebufferStatus(status);
+
+
 
 		for (const Mesh& mesh : mainModel.getMeshes())
 		{
@@ -474,22 +480,16 @@ int main()
 			}
 
 
-			//glDrawElements(GL_TRIANGLES, mainModel.getIndexBuffer().size(), GL_UNSIGNED_INT, 0);
 			glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
-			//glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount); // For non-indexed mesh
 		}
 
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 		//ImGui::Begin("Shadow Map");
-		ImGui::Image((void*)(intptr_t)depth_tex, ImVec2(512.0f, 512.0f));
+		ImGui::Image((void*)(intptr_t)shadowMap.getName(), ImVec2(512.0f, 512.0f));
 		//ImGui::End();
 
-		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		checkFramebufferStatus(status);
 		//--------------------------------------------------------------------------------------------------------------------------------------
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDrawBuffer(GL_BACK);
-		glReadBuffer(GL_BACK);
 
 		int winWidth, winHeight;
 		glfwGetWindowSize(window, &winWidth, &winHeight);
@@ -567,10 +567,7 @@ int main()
 				dummyMask.useTexture(4);
 			}
 
-
-			//glDrawElements(GL_TRIANGLES, mainModel.getIndexBuffer().size(), GL_UNSIGNED_INT, 0);
 			glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
-			//glDrawArrays(GL_TRIANGLES, mesh.firstIndex, mesh.vertexCount); // For non-indexed mesh
 		}
 
 		// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
@@ -655,14 +652,13 @@ int main()
 		frameNumber++;
 	}
 
+	glDeleteFramebuffers(1, &fb);
+	//Bind 0, which means render to back buffer, as a result, fb is unbound
+
 	// Cleanup
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
-
-	glDeleteFramebuffers(1, &fb);
-	glDeleteTextures(1, &depth_tex);
-	//Bind 0, which means render to back buffer, as a result, fb is unbound
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
