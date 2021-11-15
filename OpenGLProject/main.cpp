@@ -277,7 +277,6 @@ int main()
 	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_tangent));
 	glEnableVertexAttribArray(3);
 
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	Shader meshTestShader(R"(Shaders\meshTestShader.vert)", R"(Shaders\meshTestShader.frag)");
 	//Upload sampler data
@@ -399,36 +398,15 @@ int main()
 			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Kd"), 1, value_ptr(mesh.material->m_diffuseColour));
 			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ks"), 1, value_ptr(mesh.material->m_specularColour));
 
-			//Ambient
-			if (mesh.material->m_ambientTexture != nullptr)
-			{
-				mesh.material->m_ambientTexture->useTexture(0);
-			}
-			else
-			{
-				dummyNormalMap.useTexture(0);
-			}
-
-			// Diffuse
-			if (mesh.material->m_diffuseTexture != nullptr)
-			{
-				mesh.material->m_diffuseTexture->useTexture(1);
-			}
-			else
-			{
-				dummyNormalMap.useTexture(1);
-			}
-
-			// Specular
-			if (mesh.material->m_specularTexture != nullptr)
-			{
-				mesh.material->m_specularTexture->useTexture(2);
-			}
-			else
-			{
-				dummyNormalMap.useTexture(2);
-			}
-
+			assert(mesh.material->m_ambientTexture != nullptr);
+			assert(mesh.material->m_diffuseTexture != nullptr);
+			assert(mesh.material->m_specularTexture != nullptr);
+			assert(mesh.material->m_normalMapTexture != nullptr);
+			assert(mesh.material->m_maskTexture != nullptr);
+			
+			mesh.material->m_ambientTexture->useTexture(0);
+			mesh.material->m_diffuseTexture->useTexture(1);
+			mesh.material->m_specularTexture->useTexture(2);
 			mesh.material->m_normalMapTexture->useTexture(3);
 			mesh.material->m_maskTexture->useTexture(4);
 
@@ -469,36 +447,15 @@ int main()
 			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Kd"), 1, value_ptr(mesh.material->m_diffuseColour));
 			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ks"), 1, value_ptr(mesh.material->m_specularColour));
 
-			//Ambient
-			if (mesh.material->m_ambientTexture != nullptr)
-			{
-				mesh.material->m_ambientTexture->useTexture(0);
-			}
-			else
-			{
-				dummyNormalMap.useTexture(0);
-			}
+			assert(mesh.material->m_ambientTexture != nullptr);
+			assert(mesh.material->m_diffuseTexture != nullptr);
+			assert(mesh.material->m_specularTexture != nullptr);
+			assert(mesh.material->m_normalMapTexture != nullptr);
+			assert(mesh.material->m_maskTexture != nullptr);
 
-			// Diffuse
-			if (mesh.material->m_diffuseTexture != nullptr)
-			{
-				mesh.material->m_diffuseTexture->useTexture(1);
-			}
-			else
-			{
-				dummyNormalMap.useTexture(1);
-			}
-
-			// Specular
-			if (mesh.material->m_specularTexture != nullptr)
-			{
-				mesh.material->m_specularTexture->useTexture(2);
-			}
-			else
-			{
-				dummyNormalMap.useTexture(2);
-			}
-
+			mesh.material->m_ambientTexture->useTexture(0);
+			mesh.material->m_diffuseTexture->useTexture(1);
+			mesh.material->m_specularTexture->useTexture(2);
 			mesh.material->m_normalMapTexture->useTexture(3);
 			mesh.material->m_maskTexture->useTexture(4);
 
