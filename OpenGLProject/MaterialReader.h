@@ -25,5 +25,8 @@ private:
 
 	void provideNormalMapTexture(Material& material);
 	void provideMaskTexture(Material& material);
+	void provideBlackTexture(Material& material, uint32_t id);
+
+	void completeTexture(Material& material);
 };
 

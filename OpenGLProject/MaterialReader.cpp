@@ -12,8 +12,12 @@ MaterialReader::MaterialReader()
 	Texture defaultMaskTexture(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat,
 		TextureFilterMode::Point);
 
+	Texture defaultBlackTexture(R"(Meshes\sponza\textures\black8x8.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat,
+		TextureFilterMode::Point);
+
 	m_textureHashMaps.addTexture(R"(Meshes\sponza\textures\dummy_ddn.png)", std::move(defaultNormalMap));
 	m_textureHashMaps.addTexture(R"(Meshes\sponza\textures\dummy_mask.png)", std::move(defaultMaskTexture));
+	m_textureHashMaps.addTexture(R"(Meshes\sponza\textures\black8x8.png)", std::move(defaultBlackTexture));
 }
 
 void MaterialReader::parseMaterialFile(const std::string & fileName)
@@ -38,8 +42,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 		{
 			if (!firstMaterial)
 			{
-				if (currentMaterial.m_normalMapTexture == nullptr) { provideNormalMapTexture(currentMaterial); };
-				if (currentMaterial.m_maskTexture == nullptr) { provideMaskTexture(currentMaterial); };
+				completeTexture(currentMaterial);
 				m_Materials.insert({ materialName, currentMaterial });
 			}
 
@@ -198,10 +201,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 		}
 	}
 
-	// The last material will get canceled out due to ending the while loop
-	if (currentMaterial.m_normalMapTexture == nullptr) { provideNormalMapTexture(currentMaterial); };
-	if (currentMaterial.m_maskTexture == nullptr) { provideMaskTexture(currentMaterial); };
-
+	completeTexture(currentMaterial);
 	m_Materials.insert({ materialName, currentMaterial }); 
 }
 
@@ -220,6 +220,43 @@ void MaterialReader::provideMaskTexture(Material& material)
 {
 	const std::string path = R"(Meshes\sponza\textures\dummy_mask.png)";
 	material.m_maskTexture = m_textureHashMaps.getTexture(path);
+}
+
+void MaterialReader::provideBlackTexture(Material & material, uint32_t id)
+{
+	assert(id >= 0);
+	assert(id <= 2);
+
+	const std::string path = R"(Meshes\sponza\textures\black8x8.png)";
+
+	switch (id)
+	{
+	case 0:
+		material.m_ambientTexture = m_textureHashMaps.getTexture(path);
+		break;
+
+	case 1:
+		material.m_diffuseTexture = m_textureHashMaps.getTexture(path);
+		break;
+
+	case 2: material.m_specularTexture = m_textureHashMaps.getTexture(path);
+		break;
+
+	default:
+		std::exception("Non-existant texture reference id used");
+		break;
+	}
+}
+
+void MaterialReader::completeTexture(Material & material)
+{
+	// Provide a black texture for missing light components
+	if (material.m_ambientTexture == nullptr) { provideBlackTexture(material, 0); };
+	if (material.m_diffuseTexture == nullptr) { provideBlackTexture(material, 1); };
+	if (material.m_specularTexture == nullptr) { provideBlackTexture(material, 2); };
+
+	if (material.m_normalMapTexture == nullptr) { provideNormalMapTexture(material); };
+	if (material.m_maskTexture == nullptr) { provideMaskTexture(material); };
 }
 
 
