@@ -316,13 +316,12 @@ int main()
 	Texture shadowMap("ShadowMap", widthDepthMap, heightDepthMap, TextureTarget::Texture2D, TextureWrapMode::ClampEdge, 
 										TextureFilterMode::Point, TextureFormat::DEPTH32);
 
-	unsigned int fb;
- 	glCreateFramebuffers(1, &fb);
+	Framebuffer fb;
+	fb.attachTexture(shadowMap, AttachmentType::DepthAttachment);
 
-	//Attach
-	glNamedFramebufferTexture(fb, GL_DEPTH_ATTACHMENT, shadowMap.getName(), 0);
+	GLenum status = glCheckNamedFramebufferStatus(fb.getName(), GL_FRAMEBUFFER);
 
-	glGetError();
+	assert(status == GL_FRAMEBUFFER_COMPLETE);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -386,39 +385,10 @@ int main()
 
 		glViewport(0, 0, camWidth, camHeight);
 
-
-		GLenum status;
-		status = glCheckNamedFramebufferStatus(fb, GL_FRAMEBUFFER);
-		checkFramebufferStatus(status);
-
-
-		glNamedFramebufferDrawBuffer(fb, GL_NONE);
-
-
-		status = glCheckNamedFramebufferStatus(fb, GL_FRAMEBUFFER);
-		checkFramebufferStatus(status);
-
-		glGetError();
-
-		glNamedFramebufferReadBuffer(fb, GL_NONE);
-
-		status = glCheckNamedFramebufferStatus(fb, GL_FRAMEBUFFER);
-		checkFramebufferStatus(status);
-
-		glGetError();
-
 		const GLfloat d = 1.0f;
-		glClearNamedFramebufferfv(fb, GL_DEPTH, 0, &d);
+		glClearNamedFramebufferfv(fb.getName(), GL_DEPTH, 0, &d);
 
-		status = glCheckNamedFramebufferStatus(fb, GL_FRAMEBUFFER);
-		checkFramebufferStatus(status);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, fb);
-
-		status = glCheckNamedFramebufferStatus(fb, GL_FRAMEBUFFER);
-		checkFramebufferStatus(status);
-
-
+		glBindFramebuffer(GL_FRAMEBUFFER, fb.getName());
 
 		for (const Mesh& mesh : mainModel.getMeshes())
 		{
@@ -459,26 +429,8 @@ int main()
 				dummyNormalMap.useTexture(2);
 			}
 
-			// Specular
-			if (mesh.material->m_normalMapTexture != nullptr)
-			{
-				mesh.material->m_normalMapTexture->useTexture(3);
-			}
-			else
-			{
-				dummyNormalMap.useTexture(3);
-			}
-
-			// Mask
-			if (mesh.material->m_maskTexture != nullptr)
-			{
-				mesh.material->m_maskTexture->useTexture(4);
-			}
-			else
-			{
-				dummyMask.useTexture(4);
-			}
-
+			mesh.material->m_normalMapTexture->useTexture(3);
+			mesh.material->m_maskTexture->useTexture(4);
 
 			glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
 		}
@@ -547,25 +499,8 @@ int main()
 				dummyNormalMap.useTexture(2);
 			}
 
-			// Specular
-			if (mesh.material->m_normalMapTexture != nullptr)
-			{
-				mesh.material->m_normalMapTexture->useTexture(3);
-			}
-			else
-			{
-				dummyNormalMap.useTexture(3);
-			}
-
-			// Mask
-			if (mesh.material->m_maskTexture != nullptr)
-			{
-				mesh.material->m_maskTexture->useTexture(4);
-			}
-			else
-			{
-				dummyMask.useTexture(4);
-			}
+			mesh.material->m_normalMapTexture->useTexture(3);
+			mesh.material->m_maskTexture->useTexture(4);
 
 			glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
 		}
@@ -652,8 +587,7 @@ int main()
 		frameNumber++;
 	}
 
-	glDeleteFramebuffers(1, &fb);
-	//Bind 0, which means render to back buffer, as a result, fb is unbound
+	delete &fb;
 
 	// Cleanup
 	ImGui_ImplOpenGL3_Shutdown();
