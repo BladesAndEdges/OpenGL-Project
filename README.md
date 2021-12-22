@@ -11,9 +11,6 @@ This is my current and on-going project. It is meant to be a playground for me t
 
 ## How To Run
 
-This project is created using a Windows machine and as such it is intended to run on Windows. 
-Additionally, it is a Visual Studio 2017 project, thus a version of Visual Studio should be available to run it.
-
 Download the project on your machine. Open the solution within your Visual Studio IDE and run the project.
 
 ## Features
