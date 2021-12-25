@@ -43,7 +43,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 		{
 			if (!firstMaterial)
 			{
-				completeTexture(currentMaterial);
+				completeMaterial(currentMaterial);
 				m_Materials.insert({ materialName, currentMaterial });
 			}
 
@@ -202,7 +202,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 		}
 	}
 
-	completeTexture(currentMaterial);
+	completeMaterial(currentMaterial);
 	m_Materials.insert({ materialName, currentMaterial }); 
 }
 
@@ -254,7 +254,7 @@ void MaterialReader::provideBlackTexture(Material & material, uint32_t id)
 }
 
 // --------------------------------------------------------------------------------
-void MaterialReader::completeTexture(Material & material)
+void MaterialReader::completeMaterial(Material & material)
 {
 	// Provide a black texture for missing light components
 	if (material.m_ambientTexture == nullptr) { provideBlackTexture(material, 0); };

@@ -31,6 +31,6 @@ private:
 	void provideMaskTexture(Material& material);
 	void provideBlackTexture(Material& material, uint32_t id);
 
-	void completeTexture(Material& material);
+	void completeMaterial(Material& material);
 };
 
