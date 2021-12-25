@@ -1,5 +1,6 @@
 #include "Shader.h"
 
+// --------------------------------------------------------------------------------
 Shader::Shader(const char * const vertexShaderPath, const char * const fragmentShaderPath)
 {
 	std::string vertexShaderSource = readShaderSourceCode(vertexShaderPath);
@@ -11,6 +12,7 @@ Shader::Shader(const char * const vertexShaderPath, const char * const fragmentS
 	linkShaders(vertexShader, fragmentShader);
 }
 
+// --------------------------------------------------------------------------------
 std::string Shader::readShaderSourceCode(const char * const file) const
 {
 	std::string contents;
@@ -24,6 +26,7 @@ std::string Shader::readShaderSourceCode(const char * const file) const
 	return contents;
 }
 
+// --------------------------------------------------------------------------------
 GLuint Shader::compileShader(const char* const sourceCode, GLenum shaderType) const
 {
 	GLuint id;
@@ -45,6 +48,7 @@ GLuint Shader::compileShader(const char* const sourceCode, GLenum shaderType) co
 	return id;
 }
 
+// --------------------------------------------------------------------------------
 void Shader::linkShaders(GLuint vertexShader, GLuint fragmentShader) 
 {
 
@@ -69,11 +73,13 @@ void Shader::linkShaders(GLuint vertexShader, GLuint fragmentShader)
 	glDeleteShader(fragmentShader);
 }
 
+// --------------------------------------------------------------------------------
 void Shader::useProgram() const
 {
 	glUseProgram(m_programID);
 }
 
+// --------------------------------------------------------------------------------
 GLuint Shader::getProgramID() const
 {
 	return m_programID;
