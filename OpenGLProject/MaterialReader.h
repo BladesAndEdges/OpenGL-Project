@@ -6,12 +6,16 @@
 
 #include "TextureHashMaps.h"
 
+// --------------------------------------------------------------------------------
 class MaterialReader
 {
 
 public:
 
 	MaterialReader();
+
+	MaterialReader(const MaterialReader&) = delete;
+	MaterialReader& operator=(const MaterialReader&) = delete;
 
 	void parseMaterialFile(const std::string& fileName);
 

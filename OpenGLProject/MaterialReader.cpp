@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 
-
+// --------------------------------------------------------------------------------
 MaterialReader::MaterialReader()
 {
 	Texture defaultNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat,
@@ -20,6 +20,7 @@ MaterialReader::MaterialReader()
 	m_textureHashMaps.addTexture(R"(Meshes\sponza\textures\black8x8.png)", std::move(defaultBlackTexture));
 }
 
+// --------------------------------------------------------------------------------
 void MaterialReader::parseMaterialFile(const std::string & fileName)
 {
 	std::ifstream ifs(fileName);
@@ -205,23 +206,27 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 	m_Materials.insert({ materialName, currentMaterial }); 
 }
 
+// --------------------------------------------------------------------------------
 const Material * MaterialReader::getMaterial(const std::string & materialName) const
 {
 	return &m_Materials.at(materialName);
 }
 
+// --------------------------------------------------------------------------------
 void MaterialReader::provideNormalMapTexture(Material& material)
 {
 	const std::string path = R"(Meshes\sponza\textures\dummy_ddn.png)";
 	material.m_normalMapTexture = m_textureHashMaps.getTexture(path);
 }
 
+// --------------------------------------------------------------------------------
 void MaterialReader::provideMaskTexture(Material& material)
 {
 	const std::string path = R"(Meshes\sponza\textures\dummy_mask.png)";
 	material.m_maskTexture = m_textureHashMaps.getTexture(path);
 }
 
+// --------------------------------------------------------------------------------
 void MaterialReader::provideBlackTexture(Material & material, uint32_t id)
 {
 	assert(id >= 0);
@@ -248,6 +253,7 @@ void MaterialReader::provideBlackTexture(Material & material, uint32_t id)
 	}
 }
 
+// --------------------------------------------------------------------------------
 void MaterialReader::completeTexture(Material & material)
 {
 	// Provide a black texture for missing light components
