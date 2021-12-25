@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_set>
 
+// --------------------------------------------------------------------------------
 struct Vertex
 {
 	float m_position[3];
@@ -21,6 +22,7 @@ struct Vertex
 
 bool operator==(const Vertex& lhs, const Vertex& rhs);
 
+// --------------------------------------------------------------------------------
 // class for hash function 
 struct KeyHasher
 {

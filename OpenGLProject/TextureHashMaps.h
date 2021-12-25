@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include "Texture.h"
 
+// --------------------------------------------------------------------------------
 class TextureHashMaps
 {
 private:
@@ -14,9 +15,10 @@ public:
 
 	TextureHashMaps();
 
+	TextureHashMaps(const TextureHashMaps&) = delete;
+	TextureHashMaps& operator=(const TextureHashMaps&) = delete;
+
 	void addTexture(const std::string& path, Texture&& texture);
 	const Texture* getTexture(const std::string& path) const;
-
-
 };
 

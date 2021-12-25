@@ -2,6 +2,7 @@
 
 #include "Material.h"
 
+// --------------------------------------------------------------------------------
 struct Mesh
 {
 	unsigned int firstIndex;

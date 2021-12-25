@@ -9,7 +9,7 @@
 #include <cstring>
 
 
-
+// --------------------------------------------------------------------------------
 struct UniformBuffer
 {
 	UniformBuffer();
@@ -26,6 +26,7 @@ struct UniformBuffer
 	uint32_t specularToggle;
 };
 
+// --------------------------------------------------------------------------------
 void copyMat4ToFloatArray(const glm::mat4& source, float destination[16]);
 void copyVec4ToFloatArray(const glm::vec4& source, float destination[4]);
 void copyBoolIntoBuffer(const bool source, bool& destination);

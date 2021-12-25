@@ -245,6 +245,8 @@ GLenum Texture::translateFormatToOpenGLInternalFormat(TextureFormat format) cons
 		break;
 	}
 }
+
+// --------------------------------------------------------------------------------
 TextureFormat Texture::chooseTextureSizedFormat(int numberOfChannels) const
 {
 	const TextureFormat colourFormats[4] =
