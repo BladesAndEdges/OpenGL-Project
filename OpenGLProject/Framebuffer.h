@@ -4,11 +4,13 @@
 #include <glad.h>
 #include "Texture.h"
 
+// --------------------------------------------------------------------------------
 enum class AttachmentType
 {
 	DepthAttachment
 };
 
+// --------------------------------------------------------------------------------
 class Framebuffer
 {
 
@@ -29,5 +31,6 @@ private:
 	GLenum translateAttachmentTypeToOpenGLAttachment(const AttachmentType& attachmentType) const;
 };
 
+// --------------------------------------------------------------------------------
 void checkFramebufferStatus(GLenum status);
 
