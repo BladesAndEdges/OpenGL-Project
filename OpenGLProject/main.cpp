@@ -222,7 +222,6 @@ int main()
 	uniformMatrixBlockIndex = glGetUniformBlockIndex(basicShader.getProgramID(), "sceneMatrices");
 	assert(uniformMatrixBlockIndex != GL_INVALID_INDEX);
 
-
 	/*
 	Returns a list of specified buffer object names.
 	These "names" are integers. They are not guarranteed
@@ -279,15 +278,6 @@ int main()
 
 
 	Shader meshTestShader(R"(Shaders\meshTestShader.vert)", R"(Shaders\meshTestShader.frag)");
-	//Upload sampler data
-	meshTestShader.useProgram();
-	meshTestShader.bindTextureToSampler(0, "ambientTextureSampler");
-	meshTestShader.bindTextureToSampler(1, "diffuseTextureSampler");
-	meshTestShader.bindTextureToSampler(2, "specularTextureSampler");
-	meshTestShader.bindTextureToSampler(3, "normalMapTextureSampler");
-	meshTestShader.bindTextureToSampler(4, "maskTextureSampler");
-	glUseProgram(0);
-
 	//-----------------------------------------------------------------------------------------------------------------------------------------
 
 	Camera camera(mainModel.getSceneCenter());
@@ -543,8 +533,6 @@ int main()
 
 		frameNumber++;
 	}
-
-	delete &fb;
 
 	// Cleanup
 	ImGui_ImplOpenGL3_Shutdown();
