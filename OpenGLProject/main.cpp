@@ -324,21 +324,17 @@ int main()
 		ImGui::NewFrame();
 
 		// ---------------------------------------------------------------------------------------------------------------------------
-		// Trying to rotate the Vector for the Sun
-		// this will be in it's own separate function eventually
-		glm::mat4 lightSourceOrientation = glm::mat4(1.0f);
-		glm::mat4 azimuthMatrix = glm::mat4(1.0f);
-		glm::mat4 zenithMatrix = glm::mat4(1.0f);
 
-		azimuthMatrix = glm::rotate(azimuthMatrix, glm::radians(azimuthAngle), glm::vec3(0.0f, 1.0f, 0.0f));
-		zenithMatrix = glm::rotate(zenithMatrix, glm::radians(zenithAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+		const glm::vec3 eulerAngles = glm::vec3(glm::radians(-zenithAngle), glm::radians(azimuthAngle), 0.0f);
+		const glm::quat lightSpaceToWorldQuaternion = glm::quat(eulerAngles);
 
-		lightSourceOrientation = azimuthMatrix * zenithMatrix;
+		const glm::vec3 fromLightVectorLightSpace = glm::vec3(0.0f, 0.0f, -1.0f);
+		const glm::vec3 toLightVectorLightSpace = -fromLightVectorLightSpace;
 
-		glm::vec4 lightSourceDirection = glm::vec4(0.0f, 1001.0f, 0.0f, 0.0f);
-		lightSourceDirection = lightSourceOrientation * lightSourceDirection;
+		const glm::vec3 toLightVectorWorldSpace = lightSpaceToWorldQuaternion * toLightVectorLightSpace;
+		const glm::vec3 normalizedToLightVectorWorldSpace = glm::normalize(toLightVectorWorldSpace);
 
-		copyVec4ToFloatArray(lightSourceDirection, uniformBuffer.lightSourceDirection);
+		copyVec4ToFloatArray(glm::vec4(normalizedToLightVectorWorldSpace, 1.0f), uniformBuffer.lightSourceDirection);
 		// ------------------------------------------------------------------------------------------------------------------------------
 
 		processCameraInput(camera, window);
