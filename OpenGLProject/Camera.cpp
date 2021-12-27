@@ -41,16 +41,30 @@ Camera::Camera(const glm::vec3 & cameraStartingPosition, float cameraWidth, floa
 
 // --------------------------------------------------------------------------------
 glm::mat4 Camera::createViewMatrix() const
+glm::mat4 Camera::createProjectionMatrix() const
 {
-	glm::mat4 viewMatrix;
+	glm::mat4 projectionMatrix;
 
-	glm::mat4 viewTranslationComponent = glm::translate(glm::mat4(1.0f), -m_worldPosition);
+	if (m_projectionType == ProjectionType::PERSPECTIVE)
+	{
+		projectionMatrix = glm::perspective(m_fov, m_width / m_height, m_near, m_far);
+	}
+	else
+	{
+		assert(m_projectionType == ProjectionType::ORTHOGRAPHIC);
 
-	glm::mat4 viewRotationComponent = glm::mat4(glm::inverse(m_worldOrientation));
+		const float halfWidth = m_width / 2.0f;
+		const float halfHeight = m_height / 2.0f;
 
-	viewMatrix = viewRotationComponent * viewTranslationComponent;
+		const float left = -halfWidth;
+		const float right = halfWidth;
+		const float top = -halfHeight;
+		const float bottom = halfHeight;
 
-	return viewMatrix;
+		projectionMatrix = glm::ortho(left, right, bottom, top, m_near, m_far);
+	}
+
+	return projectionMatrix;
 }
 
 // --------------------------------------------------------------------------------

@@ -20,6 +20,7 @@ public:
 	Camera& operator=(const Camera&) = delete;
 
 	glm::mat4 createViewMatrix() const;
+	glm::mat4 createProjectionMatrix() const;
 
 	glm::vec3 getWorldPosition() const;
 	glm::mat3 getWorldOrientation() const;
