@@ -164,7 +164,21 @@ float measureAverageFrameTime(const float frameTimeInMilisecods, unsigned int fr
 	return averageTime;
 }
 
-void renderScene()
+void updateWorldSpaceToLightVector(UniformBuffer& ubo, float zenith, float azimuth)
+{
+	const glm::vec3 eulerAngles = glm::vec3(glm::radians(-zenith), glm::radians(azimuth), 0.0f);
+	const glm::quat lightSpaceToWorldQuaternion = glm::quat(eulerAngles);
+
+	const glm::vec3 fromLightVectorLightSpace = glm::vec3(0.0f, 0.0f, -1.0f);
+	const glm::vec3 toLightVectorLightSpace = -fromLightVectorLightSpace;
+
+	const glm::vec3 toLightVectorWorldSpace = lightSpaceToWorldQuaternion * toLightVectorLightSpace;
+	const glm::vec3 normalizedToLightVectorWorldSpace = glm::normalize(toLightVectorWorldSpace);
+
+	copyVec4ToFloatArray(glm::vec4(normalizedToLightVectorWorldSpace, 1.0f), ubo.lightSourceDirection);
+}
+
+void renderScene(Camera, Framebuffer)
 {
 
 
