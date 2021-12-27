@@ -11,15 +11,14 @@ enum class ProjectionType
 	ORTHOGRAPHIC, 
 	PERSPECTIVE
 };
+
 // --------------------------------------------------------------------------------
 class Camera
 {
 
 public:
 
-	Camera();
-	Camera(const glm::vec3& cameraStartingPosition);
-	Camera(const glm::vec3& cameraStartingPosition, float cameraWidth, float cameraHeight, float cameraNearPlane, float cameraFarPlane);
+	Camera(ProjectionType projectionType, const glm::vec3& worldPosition, float width, float height, float near, float far, float fov);
 
 	Camera(const Camera&) = delete;
 	Camera& operator=(const Camera&) = delete;
@@ -38,12 +37,13 @@ private:
 	glm::vec3 m_worldPosition;
 	glm::mat3 m_worldOrientation;
 
+	ProjectionType m_projectionType;
 	// --------------------------------------------------------------------------------
 	// For Orthographic projection
-	float m_cameraWidth;
-	float m_cameraHeight;
-	float m_nearPlane;
-	float m_farPlane;
-
+	float m_width;
+	float m_height;
+	float m_near;
+	float m_far;
+	float m_fov;
 };
 
