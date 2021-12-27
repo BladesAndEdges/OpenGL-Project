@@ -6,6 +6,11 @@
 #include<gtc/matrix_transform.hpp>
 #pragma warning(pop)
 
+enum class ProjectionType
+{
+	ORTHOGRAPHIC, 
+	PERSPECTIVE
+};
 // --------------------------------------------------------------------------------
 class Camera
 {
