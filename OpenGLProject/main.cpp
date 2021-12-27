@@ -294,7 +294,13 @@ int main()
 	Shader meshTestShader(R"(Shaders\meshTestShader.vert)", R"(Shaders\meshTestShader.frag)");
 	//-----------------------------------------------------------------------------------------------------------------------------------------
 
-	Camera camera(mainModel.getSceneCenter());
+	int mainViewWidth, mainViewHeight;
+	glfwGetWindowSize(window, &mainViewWidth, &mainViewHeight);
+
+	Camera mainView = Camera::perspective(mainModel.getSceneCenter(), (float)mainViewWidth, 
+													(float)mainViewHeight, 0.1f, 1000.0f, 90.0f);
+
+	Camera shadowView = Camera::orthographic(mainView.getWorldPosition(), 1000.0f, 1000.0f, -100.0f, 100.0f);
 
 	float frameTimeArray[128];
 	unsigned int frameNumber = 0;
@@ -338,38 +344,26 @@ int main()
 		ImGui::NewFrame();
 
 		// ---------------------------------------------------------------------------------------------------------------------------
-
-		const glm::vec3 eulerAngles = glm::vec3(glm::radians(-zenithAngle), glm::radians(azimuthAngle), 0.0f);
-		const glm::quat lightSpaceToWorldQuaternion = glm::quat(eulerAngles);
-
-		const glm::vec3 fromLightVectorLightSpace = glm::vec3(0.0f, 0.0f, -1.0f);
-		const glm::vec3 toLightVectorLightSpace = -fromLightVectorLightSpace;
-
-		const glm::vec3 toLightVectorWorldSpace = lightSpaceToWorldQuaternion * toLightVectorLightSpace;
-		const glm::vec3 normalizedToLightVectorWorldSpace = glm::normalize(toLightVectorWorldSpace);
-
-		copyVec4ToFloatArray(glm::vec4(normalizedToLightVectorWorldSpace, 1.0f), uniformBuffer.lightSourceDirection);
+		updateWorldSpaceToLightVector(uniformBuffer, zenithAngle, azimuthAngle);
 		// ------------------------------------------------------------------------------------------------------------------------------
 
-		processCameraInput(camera, window);
+		processCameraInput(mainView, window);
 
 		glEnable(GL_DEPTH_TEST);
 
-		const glm::vec4 cameraWorldSpacePosition = glm::vec4(camera.getWorldPosition(), 0.0f);
+		const glm::vec4 cameraWorldSpacePosition = glm::vec4(mainView.getWorldPosition(), 0.0f);
 		copyVec4ToFloatArray(cameraWorldSpacePosition, uniformBuffer.worldSpaceCameraPosition);
 
 		glm::mat4 model = glm::mat4(1.0f);
 		copyMat4ToFloatArray(model, uniformBuffer.model);
 
-		glm::mat4 view = camera.createViewMatrix();
+		glm::mat4 view = mainView.createViewMatrix();
 		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
 
-		int windowWidth, windowHeight;
-		glfwGetWindowSize(window, &windowWidth, &windowHeight);
+		//Should be orthographic
+		glm::mat4 shadowViewProjectionMatrix = mainView.createProjectionMatrix();
 
-		glm::mat4 persProj = glm::perspective(glm::radians(90.0f), (float)windowWidth / (float)windowHeight, 0.1f, 1000.0f);
-
-		glm::mat4 viewProjection = persProj * view;
+		glm::mat4 viewProjection = shadowViewProjectionMatrix * view;
 		copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
 
 		meshTestShader.useProgram(); // Make sure the shader is being used before setting these textures
@@ -379,10 +373,10 @@ int main()
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		int camWidth, camHeight;
-		glfwGetFramebufferSize(window, &camWidth, &camHeight);
+		int framebufferWidth, framebufferHeight;
+		glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
 
-		glViewport(0, 0, camWidth, camHeight);
+		glViewport(0, 0, framebufferWidth, framebufferHeight);
 
 		const GLfloat d = 1.0f;
 		glClearNamedFramebufferfv(fb.getName(), GL_DEPTH, 0, &d);
@@ -423,15 +417,15 @@ int main()
 
 		int winWidth, winHeight;
 		glfwGetWindowSize(window, &winWidth, &winHeight);
-		glViewport(0, 0, windowWidth , winHeight);
+		glViewport(0, 0, winWidth , winHeight);
 
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Perspective
-		glm::mat4 perspectiveProjection = glm::perspective(glm::radians(90.0f), (float)windowWidth / (float)windowHeight, 0.1f, 1000.0f);
+		glm::mat4 mainViewProjectionMatrix = mainView.createProjectionMatrix();
 
-		viewProjection = perspectiveProjection * view;
+		viewProjection = mainViewProjectionMatrix * view;
 		copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
