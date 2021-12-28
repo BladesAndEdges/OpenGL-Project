@@ -16,6 +16,8 @@
 #pragma warning(push)
 #pragma warning(disable:4201)   
 #include<gtc/matrix_transform.hpp>
+#include<gtx/quaternion.hpp>
+
 #pragma warning(pop)
 
 #include "UniformBuffer.h"
