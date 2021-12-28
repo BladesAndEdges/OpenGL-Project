@@ -7,17 +7,17 @@
 #pragma warning(pop)
 
 #include <cstring>
-
+#include "Camera.h"
 
 // --------------------------------------------------------------------------------
 struct UniformBuffer
 {
 	UniformBuffer();
 
-	float worldSpaceCameraPosition[4]; // 4 * sizeof(float), 4 byte aligned
+	float worldSpaceCameraPosition[4];
 	float lightSourceDirection[4];
-	float model[16]; // 16 * sizeof(float), 4 byte aligned
-	float viewProjection[16]; // 16 * sizeof(float), 4 byte aligned
+	float model[16]; 
+	float viewProjection[16];
 
 	// 144 bytes
 	uint32_t normalMapToggle;
