@@ -166,7 +166,7 @@ float measureAverageFrameTime(const float frameTimeInMilisecods, unsigned int fr
 	return averageTime;
 }
 
-void updateWorldSpaceToLightVector(UniformBuffer& ubo, float zenith, float azimuth)
+glm::vec3 calculateWorldSpaceToLightVector(float zenith, float azimuth)
 {
 	const glm::vec3 eulerAngles = glm::vec3(glm::radians(-zenith), glm::radians(azimuth), 0.0f);
 	const glm::quat lightSpaceToWorldQuaternion = glm::quat(eulerAngles);
@@ -177,10 +177,20 @@ void updateWorldSpaceToLightVector(UniformBuffer& ubo, float zenith, float azimu
 	const glm::vec3 toLightVectorWorldSpace = lightSpaceToWorldQuaternion * toLightVectorLightSpace;
 	const glm::vec3 normalizedToLightVectorWorldSpace = glm::normalize(toLightVectorWorldSpace);
 
-	copyVec4ToFloatArray(glm::vec4(normalizedToLightVectorWorldSpace, 1.0f), ubo.lightSourceDirection);
+	return normalizedToLightVectorWorldSpace;
 }
 
-void renderScene(Camera, Framebuffer)
+void updateShadowView(Camera& shadowView, glm::vec3 position, float zenith, float azimuth)
+{
+	const glm::vec3 eulerAngles = glm::vec3(glm::radians(-zenith), glm::radians(azimuth), 0.0f);
+	const glm::quat lightSpaceToWorldQuaternion = glm::quat(eulerAngles);
+	const glm::mat3 orientation = glm::toMat3(lightSpaceToWorldQuaternion);
+
+	shadowView.setCameraWorldPosition(position);
+	shadowView.setCameraWorldOrientation(orientation);
+}
+
+void renderScene(const Camera& view, const UniformBuffer& viewUniformBuffer, const MeshReader& model, const Framebuffer& framebuffer)
 {
 
 
@@ -345,35 +355,28 @@ int main()
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		// ---------------------------------------------------------------------------------------------------------------------------
-		updateWorldSpaceToLightVector(uniformBuffer, zenithAngle, azimuthAngle);
-		// ------------------------------------------------------------------------------------------------------------------------------
-
 		processCameraInput(mainView, window);
 
 		glEnable(GL_DEPTH_TEST);
+		
+		//--------------------------------------------------------------------------------------------------------------------------------------
+		// Shadow Camera rendering
 
-		const glm::vec4 cameraWorldSpacePosition = glm::vec4(mainView.getWorldPosition(), 0.0f);
-		copyVec4ToFloatArray(cameraWorldSpacePosition, uniformBuffer.worldSpaceCameraPosition);
+		//const glm::vec4 mainViewWorldSpacePosition = glm::vec4(mainView.getWorldPosition(), 0.0f);
+		//copyVec4ToFloatArray(mainViewWorldSpacePosition, uniformBuffer.worldSpaceCameraPosition);
 
-		glm::mat4 model = glm::mat4(1.0f);
-		copyMat4ToFloatArray(model, uniformBuffer.model);
+		//glm::mat4 model = glm::mat4(1.0f);
+		//copyMat4ToFloatArray(model, uniformBuffer.model);
 
-		glm::mat4 view = mainView.createViewMatrix();
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
+		//glm::mat4 view = shadowView.createViewMatrix();
 
-		//Should be orthographic
-		glm::mat4 shadowViewProjectionMatrix = mainView.createProjectionMatrix();
+		//glm::mat4 shadowViewProjectionMatrix = shadowView.createProjectionMatrix();
 
-		glm::mat4 viewProjection = shadowViewProjectionMatrix * view;
-		copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
+		//glm::mat4 viewProjection = shadowViewProjectionMatrix * view;
+		//copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
 
 		meshTestShader.useProgram(); // Make sure the shader is being used before setting these textures
 		glBindVertexArray(modelVAO);
-
-		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
-		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 		int framebufferWidth, framebufferHeight;
 		glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
@@ -384,6 +387,14 @@ int main()
 		glClearNamedFramebufferfv(fb.getName(), GL_DEPTH, 0, &d);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, fb.getName());
+
+		updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
+		glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
+		updateUniformBuffer(uniformBuffer, shadowView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
+
+		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 		for (const Mesh& mesh : mainModel.getMeshes())
 		{
@@ -447,11 +458,13 @@ int main()
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Perspective
-		glm::mat4 mainViewProjectionMatrix = mainView.createProjectionMatrix();
+		//glm::mat4 mainViewProjectionMatrix = mainView.createProjectionMatrix();
 
-		viewProjection = mainViewProjectionMatrix * view;
-		copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
+		//viewProjection = mainViewProjectionMatrix * view;
+		//copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
+
+		worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
+		updateUniformBuffer(uniformBuffer, mainView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
