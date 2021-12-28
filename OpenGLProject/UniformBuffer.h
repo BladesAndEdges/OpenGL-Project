@@ -29,5 +29,6 @@ struct UniformBuffer
 // --------------------------------------------------------------------------------
 void copyMat4ToFloatArray(const glm::mat4& source, float destination[16]);
 void copyVec4ToFloatArray(const glm::vec4& source, float destination[4]);
-void copyBoolIntoBuffer(const bool source, bool& destination);
 
+void updateUniformBuffer(UniformBuffer& ubo, const Camera& camera, const glm::vec3& toLightDirectionWorldSpace,
+	bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle);
