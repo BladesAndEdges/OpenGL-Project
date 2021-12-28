@@ -414,6 +414,29 @@ int main()
 		//ImGui::End();
 
 		//--------------------------------------------------------------------------------------------------------------------------------------
+		// Main Camera rendering
+
+		//----------------------------------------------------------------------------------
+		// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+		if (show_demo_window)
+		{
+			ImGui::ShowDemoWindow(&show_demo_window);
+		}
+
+		ImGui::Begin("Debug Toggles");
+
+		ImGui::Checkbox("Normal Mapping", &normalMapBool);
+		ImGui::Checkbox("Ambient", &ambientBool);
+		ImGui::Checkbox("Diffuse", &diffuseBool);
+		ImGui::Checkbox("Specular", &specularBool);
+
+		ImGui::SliderFloat("Azimuth", &azimuthAngle, 0.0f, 360.0f);
+		ImGui::SliderFloat("Zenith", &zenithAngle, 0.0f, 90.0f);
+
+		ImGui::ColorEdit3("Light Colour", bus);
+
+		ImGui::End();
+		//----------------------------------------------------------------------------------
 
 		int winWidth, winHeight;
 		glfwGetWindowSize(window, &winWidth, &winHeight);
@@ -455,62 +478,6 @@ int main()
 
 			glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
 		}
-
-		// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-		if (show_demo_window)
-		{
-			ImGui::ShowDemoWindow(&show_demo_window);
-		}
-
-		// I probably do not need the copy, but can change the value in the uniform directly
-
-		ImGui::Begin("Debug Toggles");
-		ImGui::Checkbox("Normal Mapping", &normalMapBool);
-		if (normalMapBool)
-		{
-			uniformBuffer.normalMapToggle = 1;
-		}
-		else
-		{
-			uniformBuffer.normalMapToggle = 0;
-		}
-
-		ImGui::Checkbox("Ambient", &ambientBool);
-		if (ambientBool)
-		{
-			uniformBuffer.ambientToggle = 1;
-		}
-		else
-		{
-			uniformBuffer.ambientToggle = 0;
-		}
-
-		ImGui::Checkbox("Diffuse", &diffuseBool);
-		if (diffuseBool)
-		{
-			uniformBuffer.diffuseToggle = 1;
-		}
-		else
-		{
-			uniformBuffer.diffuseToggle = 0;
-		}
-
-		ImGui::Checkbox("Specular", &specularBool);
-		if (specularBool)
-		{
-			uniformBuffer.specularToggle = 1;
-		}
-		else
-		{
-			uniformBuffer.specularToggle = 0;
-		}
-
-		ImGui::SliderFloat("Azimuth", &azimuthAngle, 0.0f, 360.0f);
-		ImGui::SliderFloat("Zenith", &zenithAngle, 0.0f, 90.0f);
-
-		ImGui::ColorEdit3("Light Colour", bus);
-
-		ImGui::End();
 
 		// Rendering
 		ImGui::Render();
