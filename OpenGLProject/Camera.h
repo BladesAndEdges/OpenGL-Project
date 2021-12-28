@@ -18,10 +18,11 @@ class Camera
 
 public:
 
-	Camera(ProjectionType projectionType, const glm::vec3& worldPosition, float width, float height, float near, float far, float fov);
+	static Camera orthographic(const glm::vec3& worldPosition, float width, float height,
+												float near, float far);
 
-	Camera(const Camera&) = delete;
-	Camera& operator=(const Camera&) = delete;
+	static Camera perspective(const glm::vec3& worldPosition, float width, float height, 
+														float near, float far, float fov);
 
 	glm::mat4 createViewMatrix() const;
 	glm::mat4 createProjectionMatrix() const;
@@ -33,6 +34,8 @@ public:
 	void setCameraWorldOrientation(const glm::mat3& newWorldOrientation);
 
 private:
+
+	Camera(ProjectionType projectionType, const glm::vec3& worldPosition, float width, float height, float near, float far, float fov);
 
 	glm::vec3 m_worldPosition;
 	glm::mat3 m_worldOrientation;
