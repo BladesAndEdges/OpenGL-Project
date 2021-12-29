@@ -190,10 +190,30 @@ void updateShadowView(Camera& shadowView, glm::vec3 position, float zenith, floa
 	shadowView.setCameraWorldOrientation(orientation);
 }
 
-void renderScene(const Camera& view, const UniformBuffer& viewUniformBuffer, const MeshReader& model, const Framebuffer& framebuffer)
+void renderSceneFromView(const Shader& shader, const Camera&, const UniformBuffer&, const MeshReader& model, const Framebuffer&)
 {
+	for (const Mesh& mesh : model.getMeshes())
+	{
+		// Eventually will be separate in a UBO per material
+		glUniform1f(glGetUniformLocation(shader.getProgramID(), "material.Ns"), mesh.material->m_shininess);
+		glUniform3fv(glGetUniformLocation(shader.getProgramID(), "material.Ka"), 1, value_ptr(mesh.material->m_ambientColour));
+		glUniform3fv(glGetUniformLocation(shader.getProgramID(), "material.Kd"), 1, value_ptr(mesh.material->m_diffuseColour));
+		glUniform3fv(glGetUniformLocation(shader.getProgramID(), "material.Ks"), 1, value_ptr(mesh.material->m_specularColour));
 
+		assert(mesh.material->m_ambientTexture != nullptr);
+		assert(mesh.material->m_diffuseTexture != nullptr);
+		assert(mesh.material->m_specularTexture != nullptr);
+		assert(mesh.material->m_normalMapTexture != nullptr);
+		assert(mesh.material->m_maskTexture != nullptr);
 
+		mesh.material->m_ambientTexture->useTexture(0);
+		mesh.material->m_diffuseTexture->useTexture(1);
+		mesh.material->m_specularTexture->useTexture(2);
+		mesh.material->m_normalMapTexture->useTexture(3);
+		mesh.material->m_maskTexture->useTexture(4);
+
+		glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
+	}
 }
 
 int main()
@@ -362,19 +382,6 @@ int main()
 		//--------------------------------------------------------------------------------------------------------------------------------------
 		// Shadow Camera rendering
 
-		//const glm::vec4 mainViewWorldSpacePosition = glm::vec4(mainView.getWorldPosition(), 0.0f);
-		//copyVec4ToFloatArray(mainViewWorldSpacePosition, uniformBuffer.worldSpaceCameraPosition);
-
-		//glm::mat4 model = glm::mat4(1.0f);
-		//copyMat4ToFloatArray(model, uniformBuffer.model);
-
-		//glm::mat4 view = shadowView.createViewMatrix();
-
-		//glm::mat4 shadowViewProjectionMatrix = shadowView.createProjectionMatrix();
-
-		//glm::mat4 viewProjection = shadowViewProjectionMatrix * view;
-		//copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
-
 		meshTestShader.useProgram(); // Make sure the shader is being used before setting these textures
 		glBindVertexArray(modelVAO);
 
@@ -383,12 +390,13 @@ int main()
 
 		glViewport(0, 0, framebufferWidth, framebufferHeight);
 
-		const GLfloat d = 1.0f;
-		glClearNamedFramebufferfv(fb.getName(), GL_DEPTH, 0, &d);
+		const GLfloat depthClearValue = 1.0f;
+		glClearNamedFramebufferfv(fb.getName(), GL_DEPTH, 0, &depthClearValue);
+
+		updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, fb.getName());
 
-		updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
 		glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
 		updateUniformBuffer(uniformBuffer, shadowView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
 
@@ -457,11 +465,6 @@ int main()
 
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		//glm::mat4 mainViewProjectionMatrix = mainView.createProjectionMatrix();
-
-		//viewProjection = mainViewProjectionMatrix * view;
-		//copyMat4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
 
 		worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
 		updateUniformBuffer(uniformBuffer, mainView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
