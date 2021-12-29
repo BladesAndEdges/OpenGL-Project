@@ -404,29 +404,7 @@ int main()
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		for (const Mesh& mesh : mainModel.getMeshes())
-		{
-			//Upload the correct data for the Material???
-			//You should check if the return of the uniform location is -1 btw
-			glUniform1f(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ns"), mesh.material->m_shininess);
-			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ka"), 1, value_ptr(mesh.material->m_ambientColour));
-			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Kd"), 1, value_ptr(mesh.material->m_diffuseColour));
-			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ks"), 1, value_ptr(mesh.material->m_specularColour));
-
-			assert(mesh.material->m_ambientTexture != nullptr);
-			assert(mesh.material->m_diffuseTexture != nullptr);
-			assert(mesh.material->m_specularTexture != nullptr);
-			assert(mesh.material->m_normalMapTexture != nullptr);
-			assert(mesh.material->m_maskTexture != nullptr);
-			
-			mesh.material->m_ambientTexture->useTexture(0);
-			mesh.material->m_diffuseTexture->useTexture(1);
-			mesh.material->m_specularTexture->useTexture(2);
-			mesh.material->m_normalMapTexture->useTexture(3);
-			mesh.material->m_maskTexture->useTexture(4);
-
-			glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
-		}
+		renderSceneFromView(meshTestShader, shadowView, uniformBuffer, mainModel, fb);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -473,29 +451,9 @@ int main()
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		for (const Mesh& mesh : mainModel.getMeshes())
-		{
-			//Upload the correct data for the Material???
-			//You should check if the return of the uniform location is -1 btw
-			glUniform1f(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ns"), mesh.material->m_shininess);
-			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ka"), 1, value_ptr(mesh.material->m_ambientColour));
-			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Kd"), 1, value_ptr(mesh.material->m_diffuseColour));
-			glUniform3fv(glGetUniformLocation(meshTestShader.getProgramID(), "material.Ks"), 1, value_ptr(mesh.material->m_specularColour));
+		renderSceneFromView(meshTestShader, mainView, uniformBuffer, mainModel, fb);
 
-			assert(mesh.material->m_ambientTexture != nullptr);
-			assert(mesh.material->m_diffuseTexture != nullptr);
-			assert(mesh.material->m_specularTexture != nullptr);
-			assert(mesh.material->m_normalMapTexture != nullptr);
-			assert(mesh.material->m_maskTexture != nullptr);
-
-			mesh.material->m_ambientTexture->useTexture(0);
-			mesh.material->m_diffuseTexture->useTexture(1);
-			mesh.material->m_specularTexture->useTexture(2);
-			mesh.material->m_normalMapTexture->useTexture(3);
-			mesh.material->m_maskTexture->useTexture(4);
-
-			glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
-		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		// Rendering
 		ImGui::Render();
