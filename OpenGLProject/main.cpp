@@ -332,7 +332,7 @@ int main()
 	Camera mainView = Camera::perspective(mainModel.getSceneCenter(), (float)mainViewWidth, 
 													(float)mainViewHeight, 0.1f, 1000.0f, 90.0f);
 
-	Camera shadowView = Camera::orthographic(mainView.getWorldPosition(), 1000.0f, 1000.0f, -100.0f, 100.0f);
+	Camera shadowView = Camera::orthographic(mainView.getWorldPosition(), 1024.0f, 1024.0f, -100.0f, 100.0f);
 
 	float frameTimeArray[128];
 	unsigned int frameNumber = 0;
@@ -354,15 +354,19 @@ int main()
 	int widthDepthMap, heightDepthMap;
 	glfwGetFramebufferSize(window, &widthDepthMap, &heightDepthMap);
 
-	Texture shadowMap("ShadowMap", widthDepthMap, heightDepthMap, TextureTarget::Texture2D, TextureWrapMode::ClampEdge, 
+	// Shadow Map texture
+	Texture shadowMap("ShadowMap", 1024, 1024, TextureTarget::Texture2D, TextureWrapMode::ClampEdge, 
 										TextureFilterMode::Point, TextureFormat::DEPTH32);
 
-	Framebuffer fb;
-	fb.attachTexture(shadowMap, AttachmentType::DepthAttachment);
+	// Framebuffers
+	Framebuffer shadowMapFramebuffer = Framebuffer::customFramebuffer();
+	shadowMapFramebuffer.attachTexture(shadowMap, AttachmentType::DepthAttachment);
 
-	GLenum status = glCheckNamedFramebufferStatus(fb.getName(), GL_FRAMEBUFFER);
+	GLenum status = glCheckNamedFramebufferStatus(shadowMapFramebuffer.getName(), GL_FRAMEBUFFER);
 
 	assert(status == GL_FRAMEBUFFER_COMPLETE);
+
+	Framebuffer mainFramebuffer = Framebuffer::defaultFramebuffer();
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -388,14 +392,14 @@ int main()
 		int framebufferWidth, framebufferHeight;
 		glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
 
-		glViewport(0, 0, framebufferWidth, framebufferHeight);
+		glViewport(0, 0, 1024, 1024);
 
 		const GLfloat depthClearValue = 1.0f;
-		glClearNamedFramebufferfv(fb.getName(), GL_DEPTH, 0, &depthClearValue);
+		glClearNamedFramebufferfv(shadowMapFramebuffer.getName(), GL_DEPTH, 0, &depthClearValue);
 
 		updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, fb.getName());
+		glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFramebuffer.getName());
 
 		glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
 		updateUniformBuffer(uniformBuffer, shadowView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
@@ -404,7 +408,7 @@ int main()
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		renderSceneFromView(meshTestShader, shadowView, uniformBuffer, mainModel, fb);
+		renderSceneFromView(meshTestShader, shadowView, uniformBuffer, mainModel, shadowMapFramebuffer);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -451,7 +455,7 @@ int main()
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		renderSceneFromView(meshTestShader, mainView, uniformBuffer, mainModel, fb);
+		renderSceneFromView(meshTestShader, mainView, uniformBuffer, mainModel, mainFramebuffer);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
