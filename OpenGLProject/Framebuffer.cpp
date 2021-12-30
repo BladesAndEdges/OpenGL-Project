@@ -1,13 +1,33 @@
 #include "Framebuffer.h"
 
 // --------------------------------------------------------------------------------
-Framebuffer::Framebuffer()
+Framebuffer Framebuffer::defaultFramebuffer()
 {
-	glCreateFramebuffers(1, &m_name);
+	Framebuffer defaultFramebuffer;
+	defaultFramebuffer.m_name = 0;
 
-	glNamedFramebufferDrawBuffer(m_name, GL_NONE);
+	return defaultFramebuffer;
+}
 
-	glNamedFramebufferReadBuffer(m_name, GL_NONE);
+// --------------------------------------------------------------------------------
+Framebuffer Framebuffer::customFramebuffer()
+{
+	Framebuffer customFramebuffer;
+
+	glCreateFramebuffers(1, &customFramebuffer.m_name);
+
+	glNamedFramebufferDrawBuffer(customFramebuffer.m_name, GL_NONE);
+
+	glNamedFramebufferReadBuffer(customFramebuffer.m_name, GL_NONE);
+
+	return customFramebuffer;
+}
+
+// --------------------------------------------------------------------------------
+Framebuffer::Framebuffer(Framebuffer && other) 
+	: m_name(other.m_name)
+{
+	other.m_name = 0;
 }
 
 // --------------------------------------------------------------------------------
@@ -32,6 +52,11 @@ void Framebuffer::attachTexture(const Texture & texture, const AttachmentType & 
 GLuint Framebuffer::getName() const
 {
 	return m_name;
+}
+
+// --------------------------------------------------------------------------------
+Framebuffer::Framebuffer()
+{
 }
 
 // --------------------------------------------------------------------------------

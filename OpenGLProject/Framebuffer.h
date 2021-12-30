@@ -16,15 +16,25 @@ class Framebuffer
 
 public:
 
-	Framebuffer();
+	static Framebuffer defaultFramebuffer();
+	static Framebuffer customFramebuffer();
+	 
+	Framebuffer(const Framebuffer&) = delete;
+	Framebuffer& operator=(const Framebuffer&) = delete;
 
+	Framebuffer(Framebuffer&& other);
+
+	// Should this be private?
 	~Framebuffer();
+
 
 	void attachTexture(const Texture& texture, const AttachmentType& attachmentType);
 
 	GLuint getName() const;
 
 private:
+
+	Framebuffer();
 
 	GLuint m_name;
 
