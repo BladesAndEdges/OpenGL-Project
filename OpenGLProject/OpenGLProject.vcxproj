@@ -83,16 +83,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\MikkTSpace;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\imgui\backends;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\imgui;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Dependencies\stb;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\glm\glm;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Dependencies\glad\include\glad;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalLibraryDirectories>C:\Users\danie\source\repos\OpenGLProject\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>GLFW.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ImGui.lib;MikkTSpace.lib;GLFW.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -126,7 +127,33 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Dependencies\glad\src\glad.c" />
+    <ClCompile Include="Face.cpp" />
+    <ClCompile Include="Framebuffer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="MaterialReader.cpp" />
+    <ClCompile Include="MeshReader.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TextureHashMaps.cpp" />
+    <ClCompile Include="UniformBuffer.cpp" />
+    <ClCompile Include="Vertex.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Face.h" />
+    <ClInclude Include="Framebuffer.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="MaterialReader.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshReader.h" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="TextureHashMaps.h" />
+    <ClInclude Include="UniformBuffer.h" />
+    <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
