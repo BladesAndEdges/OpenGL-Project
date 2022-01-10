@@ -10,3 +10,6 @@
 [submodule "OpenGLProject/Submodules/MikkTSpace"]
 	path = OpenGLProject/Submodules/MikkTSpace
 	url = https://github.com/mmikk/MikkTSpace.git
+[submodule "OpenGLProject/Submodules/stb"]
+	path = OpenGLProject/Submodules/stb
+	url = https://github.com/nothings/stb.git
