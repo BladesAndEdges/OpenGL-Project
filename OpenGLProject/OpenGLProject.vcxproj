@@ -87,7 +87,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\MikkTSpace;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\imgui\backends;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\imgui;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Dependencies\stb;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\glm\glm;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Dependencies\glad\include\glad;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\MikkTSpace;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\imgui\backends;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\imgui;$(ProjectDir)Submodules\stb;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\glm\glm;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Dependencies\glad\include\glad;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
