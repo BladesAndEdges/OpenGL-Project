@@ -314,8 +314,9 @@ int main()
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
 	// Setup Dear ImGui style
-	ImGui::StyleColorsDark();
+	/*ImGui::StyleColorsDark();*/
 	//ImGui::StyleColorsClassic();
+	imguiStyleSetting();
 
 	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -468,7 +469,7 @@ int main()
 
 		updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
 		glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, shadowView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
+		updateUniformBuffer(uniformBuffer, shadowView, shadowView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
@@ -518,13 +519,15 @@ int main()
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
+		updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
 		worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, mainView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
+		updateUniformBuffer(uniformBuffer, mainView, shadowView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+		glBindTextureUnit(5, shadowMap.getName());
 
 		renderSceneFromView(meshTestShader, mainView, uniformBuffer, mainModel, mainFramebuffer);
 

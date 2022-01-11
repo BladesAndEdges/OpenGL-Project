@@ -12,7 +12,7 @@ layout(std140) uniform sceneMatrices
 	vec4 lightSourceDirection;
 	mat4 model;
 	mat4 viewProjection;
-	//mat4 worldToShadowMap;
+	mat4 worldToShadowMap;
 	
 	bool normalMapToggle;
 	bool ambientToggle;

@@ -24,7 +24,7 @@ layout(std140) uniform sceneMatrices
 	vec4 lightSourceDirection; // Already normalized
 	mat4 model;
 	mat4 viewProjection;
-	//mat4 worldToShadowMap;
+	mat4 worldToShadowMap;
 	
 	// Rule 1: Both the size and alignment are the size of the type in basic machine units.
 	bool normalMapToggle;
@@ -43,21 +43,9 @@ uniform Material material;
 
 float near = 0.1f; 
 float far  = 10000.0f; 
-  
-float LinearizeDepth(float depth) 
-{
-    float z = depth * 2.0 - 1.0; // back to NDC 
-    return (2.0 * near * far) / (far + near - z * (far - near));	
-}
-
-
 
 void main()
 {
-	// Understand which values you care about it
-	// Undersatnd which textures correspond to the alpha mask
-	// Use them here, not all of the textures need a discard
-	// Dummy texture all white to bind if a texture does not need a mask
 	if(texture(maskTextureSampler, out_textureCoordinate).r < 0.5f) discard;
 	
 	vec3 shadingNormal = vec3(0.0f, 0.0f, 0.0f);
