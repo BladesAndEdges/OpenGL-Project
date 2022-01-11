@@ -443,11 +443,16 @@ int main()
 
 		int winWidth, winHeight;
 		glfwGetWindowSize(window, &winWidth, &winHeight);
+
+		mainView.setCameraWidth((float)winWidth);
+		mainView.setCameraHeight((float)winHeight);
+
 		glViewport(0, 0, winWidth , winHeight);
 
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		//updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
 		worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
 		updateUniformBuffer(uniformBuffer, mainView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
 
