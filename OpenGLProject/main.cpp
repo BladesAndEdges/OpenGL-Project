@@ -259,13 +259,13 @@ int main()
 	glFrontFace(GL_CCW);
 	glCullFace(GL_BACK);
 
-	Shader basicShader("Shaders\\basicShader.vert", "Shaders\\basicShader.frag");
+	Shader meshTestShader(R"(Shaders\meshTestShader.vert)", R"(Shaders\meshTestShader.frag)");
 
 	//UBO
 	UniformBuffer uniformBuffer;
 
 	unsigned int uniformMatrixBlockIndex;
-	uniformMatrixBlockIndex = glGetUniformBlockIndex(basicShader.getProgramID(), "sceneMatrices");
+	uniformMatrixBlockIndex = glGetUniformBlockIndex(meshTestShader.getProgramID(), "sceneMatrices");
 	assert(uniformMatrixBlockIndex != GL_INVALID_INDEX);
 
 	/*
@@ -322,8 +322,6 @@ int main()
 	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_tangent));
 	glEnableVertexAttribArray(3);
 
-
-	Shader meshTestShader(R"(Shaders\meshTestShader.vert)", R"(Shaders\meshTestShader.frag)");
 	//-----------------------------------------------------------------------------------------------------------------------------------------
 
 	int mainViewWidth, mainViewHeight;
