@@ -1,0 +1,47 @@
+The textures used for the sponza (Excluding the 8x8 pixel files I created myself)
+come from two sources. Most of them are the original files accompanying the 
+Crytek Sponza model. However, some of them were created by Sascha Willems, 
+and some modifications were made to certain files. These changes made are 
+declared below, and the links to the original copyright files is there, as well.
+
+The changes I did to these files is use an online converter to simply change 
+the files from it's original format of .dds to .png, which is what I wished to
+use in the project.
+
+Link to Sascha Willem's Vulkan Sponza:
+https://github.com/SaschaWillems/VulkanSponza
+
+--------------------------------------------------------------------------------------------
+
+The MIT license accompanying his project: 
+https://github.com/SaschaWillems/VulkanSponza/blob/master/LICENSE.md
+
+The MIT License (MIT)
+
+Copyright (c) 2016 Sascha Willems
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+--------------------------------------------------------------------------------------------
+
+Statement of the changes made within the texture folder for the sponza:
+https://github.com/SaschaWillems/VulkanSponza/blob/master/data/copyright_blend_dae.txt
+
+License for the updated Crytek Sponza model in blender format (sponza.blend and sponza.dae)
+
+Based on the updated Crytek model by Morgan McGuire (available at http://graphics.cs.williams.edu/data/meshes.xml)
+
+Original model © 2010 by Frank Meinl, Crytek
+
+Changes by me (Sascha Willems) for use in a Vulkan demo:
+- Converted to a blender scene file (and exported to a collada .dae)
+	- Added normal and specular maps
+	- Set alpha flags to easily distinguish transparent mats in loader
+- Created normal maps for several surfaces that were lacking them
+- Converted all files to dds format (BC2)
+
+see copyright.txt for original copyright info
