@@ -22,16 +22,20 @@ void copyVec4ToFloatArray(const glm::vec4 & source, float destination[4])
 	}
 }
 
-void updateUniformBuffer(UniformBuffer & ubo, const Camera & camera, const glm::vec3& toLightDirectionWorldSpace, bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle)
+void updateUniformBuffer(UniformBuffer & ubo, const Camera & mainView, const glm::vec3& toLightDirectionWorldSpace, bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle)
 {
-	const glm::vec4 worldSpacePosition = glm::vec4(camera.getWorldPosition(), 1.0f);
+	const glm::vec4 worldSpacePosition = glm::vec4(mainView.getWorldPosition(), 1.0f);
 
 	const glm::vec4 toLightDirectionWS = glm::vec4(toLightDirectionWorldSpace, 1.0f);
 
 	const glm::mat4 model = glm::mat4(1.0f);
-	const glm::mat4 view = camera.createViewMatrix();
-	const glm::mat4 projection = camera.createProjectionMatrix();
+	const glm::mat4 view = mainView.createViewMatrix();
+	const glm::mat4 projection = mainView.createProjectionMatrix();
 	const glm::mat4 viewProjection = projection * view;
+
+	//const glm::mat4 shadowMapViewMatrix = shadowMapView.createViewMatrix();
+	//const glm::mat4 shadowMapProjectionMatrix = shadowMapView.createProjectionMatrix();
+	//const glm::mat4 shadowMapViewProjection = shadowMapProjectionMatrix * shadowMapViewMatrix;
 
 	// Copy over values to the UBO
 	copyVec4ToFloatArray(worldSpacePosition, ubo.worldSpaceCameraPosition);
@@ -39,6 +43,7 @@ void updateUniformBuffer(UniformBuffer & ubo, const Camera & camera, const glm::
 
 	copyMat4ToFloatArray(model, ubo.model);
 	copyMat4ToFloatArray(viewProjection, ubo.viewProjection);
+	/*copyMat4ToFloatArray(shadowMapViewProjection, ubo.worldToShadowMap);*/
 
 	ubo.normalMapToggle = (nmToggle) ? 1 : 0;;
 	ubo.ambientToggle = (ambToggle) ? 1 : 0;
