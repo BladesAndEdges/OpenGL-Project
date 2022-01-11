@@ -77,6 +77,16 @@ void Camera::setCameraWorldOrientation(const glm::mat3 & newWorldOrientation)
 	m_worldOrientation = newWorldOrientation;
 }
 
+void Camera::setCameraWidth(float width)
+{
+	m_width = width;
+}
+
+void Camera::setCameraHeight(float height)
+{
+	m_height = height;
+}
+
 Camera::Camera(ProjectionType projectionType, const glm::vec3 & worldPosition, float width, float height,
 	float near, float far, float fov) : m_projectionType(projectionType),
 	m_worldPosition(worldPosition),

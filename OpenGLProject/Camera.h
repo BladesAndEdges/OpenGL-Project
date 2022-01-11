@@ -33,6 +33,9 @@ public:
 	void setCameraWorldPosition(const glm::vec3& newWorldPosition);
 	void setCameraWorldOrientation(const glm::mat3& newWorldOrientation);
 
+	void setCameraWidth(float width);
+	void setCameraHeight(float height);
+
 private:
 
 	Camera(ProjectionType projectionType, const glm::vec3& worldPosition, float width, float height, float near, float far, float fov);
