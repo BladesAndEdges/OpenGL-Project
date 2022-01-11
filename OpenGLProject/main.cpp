@@ -330,7 +330,7 @@ int main()
 	Camera mainView = Camera::perspective(mainModel.getSceneCenter(), (float)mainViewWidth, 
 													(float)mainViewHeight, 0.1f, 1000.0f, 90.0f);
 
-	Camera shadowView = Camera::orthographic(mainView.getWorldPosition(), 1024.0f, 1024.0f, -100.0f, 100.0f);
+	Camera shadowView = Camera::orthographic(mainView.getWorldPosition(), 64.0f, 64.0f, -100.0f, 100.0f);
 
 	float frameTimeArray[128];
 	unsigned int frameNumber = 0;
