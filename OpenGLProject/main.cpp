@@ -190,7 +190,7 @@ void updateShadowView(Camera& shadowView, glm::vec3 position, float zenith, floa
 	shadowView.setCameraWorldOrientation(orientation);
 }
 
-void renderSceneFromView(const Shader& shader, const Camera&, const UniformBuffer&, const MeshReader& model, const Framebuffer&)
+void renderSceneFromView(const Shader& shader, const Camera&,  const UniformBuffer&, const MeshReader& model, const Framebuffer&)
 {
 	for (const Mesh& mesh : model.getMeshes())
 	{
@@ -349,9 +349,6 @@ int main()
 	float zenithAngle = 0.0f;
 	float bus[3] = { 0.0f, 0.0f, 0.0f };
 
-	int widthDepthMap, heightDepthMap;
-	glfwGetFramebufferSize(window, &widthDepthMap, &heightDepthMap);
-
 	// Shadow Map texture
 	Texture shadowMap("ShadowMap", 1024, 1024, TextureTarget::Texture2D, TextureWrapMode::ClampEdge, 
 										TextureFilterMode::Point, TextureFormat::DEPTH32);
@@ -395,10 +392,9 @@ int main()
 		const GLfloat depthClearValue = 1.0f;
 		glClearNamedFramebufferfv(shadowMapFramebuffer.getName(), GL_DEPTH, 0, &depthClearValue);
 
-		updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
-
 		glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFramebuffer.getName());
 
+		updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
 		glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
 		updateUniformBuffer(uniformBuffer, shadowView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
 
