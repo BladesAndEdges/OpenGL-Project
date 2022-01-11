@@ -6,7 +6,7 @@ in vec2 out_textureCoordinate;
 in vec4 out_Tangent;
 in vec3 vn;
 
-out vec4 FragColour;
+out vec3 FragColour;
 
 struct Material
 {
@@ -16,61 +16,96 @@ struct Material
 	float Ns;
 };
 
+
+
 layout(std140) uniform sceneMatrices
 {
 	vec4 worldCameraPosition;
+	vec4 lightSourceDirection; // Already normalized
 	mat4 model;
 	mat4 viewProjection;
+	//mat4 worldToShadowMap;
+	
+	// Rule 1: Both the size and alignment are the size of the type in basic machine units.
+	bool normalMapToggle;
+	bool ambientToggle;
+	bool diffuseToggle;
+	bool specularToggle;
 }ubo;
 
-uniform sampler2D ambientTextureSampler;
-uniform sampler2D diffuseTextureSampler;
-uniform sampler2D specularTextureSampler;
-uniform sampler2D normalMapTextureSampler;
+layout(binding = 0) uniform sampler2D ambientTextureSampler;
+layout(binding = 1) uniform sampler2D diffuseTextureSampler;
+layout(binding = 2) uniform sampler2D specularTextureSampler;
+layout(binding = 3) uniform sampler2D normalMapTextureSampler;
+layout(binding = 4) uniform sampler2D maskTextureSampler;
 
 uniform Material material;
+
+float near = 0.1f; 
+float far  = 10000.0f; 
+  
+float LinearizeDepth(float depth) 
+{
+    float z = depth * 2.0 - 1.0; // back to NDC 
+    return (2.0 * near * far) / (far + near - z * (far - near));	
+}
+
 
 
 void main()
 {
-	if(texture(ambientTextureSampler, out_textureCoordinate).a < 0.5f) discard;
-	if(texture(diffuseTextureSampler, out_textureCoordinate).a < 0.5f) discard;
-	if(texture(specularTextureSampler, out_textureCoordinate).a < 0.5f) discard;
+	// Understand which values you care about it
+	// Undersatnd which textures correspond to the alpha mask
+	// Use them here, not all of the textures need a discard
+	// Dummy texture all white to bind if a texture does not need a mask
+	if(texture(maskTextureSampler, out_textureCoordinate).r < 0.5f) discard;
+	
+	vec3 shadingNormal = vec3(0.0f, 0.0f, 0.0f);
 	
 	//Normal map computation
-	vec4 tangentSpaceNormal = ((texture(normalMapTextureSampler, out_textureCoordinate) * 2.0f) -1.0f);
-	
-	vec3 bitangent = out_Tangent.w * cross(vn, vec3(out_Tangent.xyz)); 
-	
-	vec3 vNout = normalize( tangentSpaceNormal.x * out_Tangent.xyz + tangentSpaceNormal.y * bitangent + tangentSpaceNormal.z * vn);
+	if(ubo.normalMapToggle)
+	{
+		vec4 tangentSpaceNormal = ((texture(normalMapTextureSampler, out_textureCoordinate) * 2.0f) -1.0f);
+		vec3 bitangent = out_Tangent.w * cross(vn, vec3(out_Tangent.xyz)); 
+		vec3 vNout = normalize( tangentSpaceNormal.x * out_Tangent.xyz + tangentSpaceNormal.y * bitangent + tangentSpaceNormal.z * vn);
+		shadingNormal = vNout;
+	}
+	else
+	{
+		shadingNormal = normalize(out_worldSpaceNormal);
+	}
 	
 	//Intensities
 	const vec3 ambientIntensity = vec3(0.8f, 0.8f, 0.8f);
 	const vec3 lightSourceIntensity = vec3(0.723f, 0.535f, 0.1293f);
 	
-	const vec3 worldSpaceLightVector = vec3(1060.0f, 2700.0f, -83.0f);
-	
 	//Normalize
-	const vec3 normalizedWorldSpaceLightVector = normalize(worldSpaceLightVector);
-	const vec3 normalizedWorldSpaceNormal = normalize(vNout);
-	//const vec3 normalizedWorldSpaceNormal = normalize(out_worldSpaceNormal);
 	const vec3 normalizedToCameraDirection = normalize(ubo.worldCameraPosition.xyz);
-	const vec3 normalizedFragmentToLightDirection = normalize(worldSpaceLightVector - out_worldSpaceFragment);
 	
 	//Ambient
-	const vec4 ambient = vec4(ambientIntensity, 1.0f) * vec4(material.Ka, 1.0f) * texture(ambientTextureSampler, out_textureCoordinate);
+	vec3 ambient = vec3(0.0f, 0.0f, 0.0f);
+	if(ubo.ambientToggle)
+	{
+		ambient = ambientIntensity * material.Ka * texture(ambientTextureSampler, out_textureCoordinate).rgb;
+	}
 	
 	//Diffuse
-	const float cosTheta = max(dot(normalizedFragmentToLightDirection, normalizedWorldSpaceNormal), 0.0f);
-	const vec4 diffuse = (vec4(0.5f, 0.5f, 0.5f, 1.0f) * vec4(material.Kd, 1.0f)) * texture(diffuseTextureSampler, out_textureCoordinate)* cosTheta;
+	vec3 diffuse = vec3(0.0f, 0.0f, 0.0f);
+	if(ubo.diffuseToggle)
+	{
+		const float cosTheta = max(dot(ubo.lightSourceDirection.xyz, shadingNormal), 0.0f);
+		diffuse = lightSourceIntensity * material.Kd * texture(diffuseTextureSampler, out_textureCoordinate).rgb * cosTheta;
+	}
 	
 	//Specular
-	const vec3 fragmentToCameraDirection = normalize(ubo.worldCameraPosition.xyz - out_worldSpaceFragment);
+	vec3 specular = vec3(0.0f, 0.0f, 0.0f);
+	if(ubo.specularToggle)
+	{
+		const vec3 fragmentToCameraDirection = normalize(ubo.worldCameraPosition.xyz - out_worldSpaceFragment);
+		const vec3 reflectedVector = normalize(reflect(-ubo.lightSourceDirection.xyz, shadingNormal));
+		const float highlight = pow(max(dot(fragmentToCameraDirection, reflectedVector), 0.0f), material.Ns);
+		specular = lightSourceIntensity * material.Ks * texture(specularTextureSampler, out_textureCoordinate).rgb * highlight;
+	}
 	
-	const vec3 reflectedVector = normalize(reflect(-normalizedFragmentToLightDirection, normalizedWorldSpaceNormal));
-	
-	const float highlight = pow(max(dot(fragmentToCameraDirection, reflectedVector), 0.0f), material.Ns);
-	const vec4 specular = (vec4(0.5f, 0.5f, 0.5f, 1.0f) * vec4(material.Ks, 1.0f)) * texture(specularTextureSampler, out_textureCoordinate) * highlight;
-
     FragColour = ambient + diffuse + specular;
 } 
