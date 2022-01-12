@@ -39,10 +39,9 @@ layout(binding = 2) uniform sampler2D specularTextureSampler;
 layout(binding = 3) uniform sampler2D normalMapTextureSampler;
 layout(binding = 4) uniform sampler2D maskTextureSampler;
 
-uniform Material material;
+layout(binding = 5) uniform sampler2D shadowMap;
 
-float near = 0.1f; 
-float far  = 10000.0f; 
+uniform Material material;
 
 void main()
 {
@@ -95,5 +94,21 @@ void main()
 		specular = lightSourceIntensity * material.Ks * texture(specularTextureSampler, out_textureCoordinate).rgb * highlight;
 	}
 	
-    FragColour = ambient + diffuse + specular;
+	
+	// SAMPLING THE SHADOW MAP
+	const vec4 homogeneousShadowMapSpaceFragment = ubo.worldToShadowMap * vec4(out_worldSpaceFragment, 1.0f);
+	const vec3 cartesianShadowMapFragment = homogeneousShadowMapSpaceFragment.xyz / homogeneousShadowMapSpaceFragment.w;
+	const vec3 shadowMapSpaceFragment = vec3(cartesianShadowMapFragment.x, cartesianShadowMapFragment.y, 
+											cartesianShadowMapFragment.z);
+	
+	// The values are mapped from [-1, 1] in xy, and z to [0,1] in xy, and z.
+	const float currentFragmentDepth = shadowMapSpaceFragment.z * 0.5f + 0.5f;
+	const vec2 currentFragmentDepthTextureCoords = shadowMapSpaceFragment.xy * 0.5f + 0.5f;
+	
+	// Sample the shadow map at the xy coordinates of the current fragment tested.
+	const float shadowMapDepthValue = texture(shadowMap, currentFragmentDepthTextureCoords).r;
+	
+	const float inShadow = (currentFragmentDepth - 0.0005 > shadowMapDepthValue) ? 0.0f : 1.0f;
+	
+    FragColour = ambient + (inShadow * (diffuse + specular));
 } 
