@@ -383,7 +383,7 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, modelVBO);
 	glBufferData(GL_ARRAY_BUFFER, mainModel.getIndexedVertexBuffer().size() * sizeof(Vertex), mainModel.getIndexedVertexBuffer().data(), GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,  sizeof(Vertex), (void*)offsetof(Vertex, m_position));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_position));
 	glEnableVertexAttribArray(0);
 
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_textureCoordinate));
@@ -400,17 +400,17 @@ int main()
 	int mainViewWidth, mainViewHeight;
 	glfwGetWindowSize(window, &mainViewWidth, &mainViewHeight);
 
-	Camera mainView = Camera::perspective(mainModel.getSceneCenter(), (float)mainViewWidth, 
-													(float)mainViewHeight, 0.1f, 1000.0f, 90.0f);
+	Camera mainView = Camera::perspective(mainModel.getSceneCenter(), (float)mainViewWidth,
+		(float)mainViewHeight, 0.1f, 1000.0f, 90.0f);
 
 	Camera shadowView = Camera::orthographic(mainView.getWorldPosition(), 64.0f, 64.0f, -100.0f, 100.0f);
 
 	float frameTimeArray[128];
 	unsigned int frameNumber = 0;
 
-	Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, 
-																		TextureFilterMode::Point);
-	Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat,TextureFilterMode::Point);
+	Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat,
+		TextureFilterMode::Point);
+	Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point);
 
 	// ImGui stuff
 	bool normalMapBool = true;
@@ -423,21 +423,39 @@ int main()
 	float bus[3] = { 0.0f, 0.0f, 0.0f };
 
 	// Shadow Map texture
-	Texture shadowMap("ShadowMap", 2048, 2048, TextureTarget::Texture2D, TextureWrapMode::ClampEdge, 
-										TextureFilterMode::Point, TextureFormat::DEPTH32);
+	Texture* shadowMap = nullptr;
+	bool shadowMapHasChangedSize = false;
+	static int shadowMapSizeID = 0; // Here we store our selection data as an index.
 
+	// Will this break ???
 	// Framebuffers
 	Framebuffer shadowMapFramebuffer = Framebuffer::customFramebuffer();
-	shadowMapFramebuffer.attachTexture(shadowMap, AttachmentType::DepthAttachment);
-
-	GLenum status = glCheckNamedFramebufferStatus(shadowMapFramebuffer.getName(), GL_FRAMEBUFFER);
-
-	assert(status == GL_FRAMEBUFFER_COMPLETE);
 
 	Framebuffer mainFramebuffer = Framebuffer::defaultFramebuffer();
 
 	while (!glfwWindowShouldClose(window))
 	{
+
+		if ((shadowMap == nullptr) || shadowMapHasChangedSize)
+		{
+			if (shadowMapHasChangedSize)
+			{
+				shadowMapHasChangedSize = !shadowMapHasChangedSize;
+			}
+
+			const int shadowMapSizes[6] = { 128, 256, 512, 1024, 2048, 4096 };
+
+			delete shadowMap;
+			shadowMap = new Texture("ShadowMap", shadowMapSizes[shadowMapSizeID], shadowMapSizes[shadowMapSizeID], TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
+				TextureFilterMode::Point, TextureFormat::DEPTH32);
+		}
+
+		shadowMapFramebuffer.attachTexture(*shadowMap, AttachmentType::DepthAttachment);
+
+		GLenum status = glCheckNamedFramebufferStatus(shadowMapFramebuffer.getName(), GL_FRAMEBUFFER);
+
+		assert(status == GL_FRAMEBUFFER_COMPLETE);
+
 		const float timerStartingPoint = (float)glfwGetTime();
 
 		glfwPollEvents();
@@ -460,7 +478,7 @@ int main()
 		int framebufferWidth, framebufferHeight;
 		glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
 
-		glViewport(0, 0, 1024, 1024);
+		glViewport(0, 0, shadowMap->getWidth(), shadowMap->getHeight());
 
 		const GLfloat depthClearValue = 1.0f;
 		glClearNamedFramebufferfv(shadowMapFramebuffer.getName(), GL_DEPTH, 0, &depthClearValue);
@@ -480,7 +498,7 @@ int main()
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		//ImGui::Begin("Shadow Map");
-		ImGui::Image((void*)(intptr_t)shadowMap.getName(), ImVec2(512.0f, 512.0f));
+		ImGui::Image((void*)(intptr_t)shadowMap->getName(), ImVec2(512.0f, 512.0f));
 		//ImGui::End();
 
 		//--------------------------------------------------------------------------------------------------------------------------------------
@@ -550,7 +568,7 @@ int main()
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		glBindTextureUnit(5, shadowMap.getName());
+		glBindTextureUnit(5, shadowMap->getName());
 
 		renderSceneFromView(meshTestShader, mainView, uniformBuffer, mainModel, mainFramebuffer);
 
