@@ -505,6 +505,30 @@ int main()
 
 		ImGui::ColorEdit3("Light Colour", bus);
 
+		// ImGui 
+		static ImGuiComboFlags flags = 0;
+		const char* items[] = { "128x128", "256x256", "512x512", "1024x1024", "2048x2048", "4096x4096"};
+
+		const char* combo_preview_value = items[shadowMapSizeID];  // Pass in the preview value visible before opening the combo (it could be anything)
+		
+		if (ImGui::BeginCombo("combo 1", combo_preview_value, flags))
+		{
+			for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+			{
+				const bool is_selected = (shadowMapSizeID == n);
+				if (ImGui::Selectable(items[n], is_selected))
+				{
+					shadowMapSizeID = n;
+					shadowMapHasChangedSize = !shadowMapHasChangedSize;
+				}
+
+				// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+				if (is_selected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+
 		ImGui::End();
 		//----------------------------------------------------------------------------------
 
