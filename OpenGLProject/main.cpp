@@ -423,7 +423,7 @@ int main()
 	float bus[3] = { 0.0f, 0.0f, 0.0f };
 
 	// Shadow Map texture
-	Texture shadowMap("ShadowMap", 1024, 1024, TextureTarget::Texture2D, TextureWrapMode::ClampEdge, 
+	Texture shadowMap("ShadowMap", 2048, 2048, TextureTarget::Texture2D, TextureWrapMode::ClampEdge, 
 										TextureFilterMode::Point, TextureFormat::DEPTH32);
 
 	// Framebuffers
@@ -519,7 +519,6 @@ int main()
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
 		worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
 		updateUniformBuffer(uniformBuffer, mainView, shadowView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
 
