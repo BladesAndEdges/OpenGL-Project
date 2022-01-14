@@ -417,6 +417,7 @@ int main()
 	bool ambientBool = true;
 	bool diffuseBool = true;
 	bool specularBool = true;
+	bool pcfBool = false;
 
 	float azimuthAngle = 0.0f;
 	float zenithAngle = 0.0f;
@@ -426,8 +427,8 @@ int main()
 	Texture* shadowMap = nullptr;
 	bool shadowMapHasChangedSize = false;
 	static int shadowMapSizeID = 0; // Here we store our selection data as an index.
+	const int shadowMapSizes[6] = { 128, 256, 512, 1024, 2048, 4096 };
 
-	// Will this break ???
 	// Framebuffers
 	Framebuffer shadowMapFramebuffer = Framebuffer::customFramebuffer();
 
@@ -442,8 +443,6 @@ int main()
 			{
 				shadowMapHasChangedSize = !shadowMapHasChangedSize;
 			}
-
-			const int shadowMapSizes[6] = { 128, 256, 512, 1024, 2048, 4096 };
 
 			delete shadowMap;
 			shadowMap = new Texture("ShadowMap", shadowMapSizes[shadowMapSizeID], shadowMapSizes[shadowMapSizeID], TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
@@ -487,7 +486,7 @@ int main()
 
 		updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
 		glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, shadowView, shadowView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
+		updateUniformBuffer(uniformBuffer, shadowView, shadowView, worldSpaceToLightVector, (uint32_t)(shadowMapSizes[shadowMapSizeID]), pcfBool, normalMapBool, ambientBool, diffuseBool, specularBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
@@ -517,6 +516,7 @@ int main()
 		ImGui::Checkbox("Ambient", &ambientBool);
 		ImGui::Checkbox("Diffuse", &diffuseBool);
 		ImGui::Checkbox("Specular", &specularBool);
+		ImGui::Checkbox("PCF", &pcfBool);
 
 		ImGui::SliderFloat("Azimuth", &azimuthAngle, 0.0f, 360.0f);
 		ImGui::SliderFloat("Zenith", &zenithAngle, 0.0f, 90.0f);
@@ -529,7 +529,7 @@ int main()
 
 		const char* combo_preview_value = items[shadowMapSizeID];  // Pass in the preview value visible before opening the combo (it could be anything)
 		
-		if (ImGui::BeginCombo("combo 1", combo_preview_value, flags))
+		if (ImGui::BeginCombo("SM Resolution", combo_preview_value, flags))
 		{
 			for (int n = 0; n < IM_ARRAYSIZE(items); n++)
 			{
@@ -562,7 +562,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, mainView, shadowView, worldSpaceToLightVector, normalMapBool, ambientBool, diffuseBool, specularBool);
+		updateUniformBuffer(uniformBuffer, mainView, shadowView, worldSpaceToLightVector, (uint32_t)(shadowMapSizes[shadowMapSizeID]), pcfBool,   normalMapBool, ambientBool, diffuseBool, specularBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
