@@ -22,7 +22,8 @@ void copyVec4ToFloatArray(const glm::vec4 & source, float destination[4])
 	}
 }
 
-void updateUniformBuffer(UniformBuffer & ubo, const Camera & mainView, const Camera & shadowMapView, const glm::vec3& toLightDirectionWorldSpace, bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle)
+void updateUniformBuffer(UniformBuffer & ubo, const Camera & mainView, const Camera & shadowMapView, const glm::vec3& toLightDirectionWorldSpace, 
+							uint32_t shadowMapTexels, bool pcfToggle, bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle)
 {
 	const glm::vec4 worldSpacePosition = glm::vec4(mainView.getWorldPosition(), 1.0f);
 
@@ -45,7 +46,10 @@ void updateUniformBuffer(UniformBuffer & ubo, const Camera & mainView, const Cam
 	copyMat4ToFloatArray(viewProjection, ubo.viewProjection);
 	copyMat4ToFloatArray(shadowMapViewProjection, ubo.worldToShadowMap);
 
-	ubo.normalMapToggle = (nmToggle) ? 1 : 0;;
+	ubo.shadowMapTexelCount = shadowMapTexels;
+	ubo.pcfToggle = (pcfToggle) ? 1 : 0;
+
+	ubo.normalMapToggle = (nmToggle) ? 1 : 0;
 	ubo.ambientToggle = (ambToggle) ? 1 : 0;
 	ubo.diffuseToggle = (diffToggle) ? 1 : 0;
 	ubo.specularToggle = (specToggle) ? 1 : 0;
