@@ -27,6 +27,10 @@ layout(std140) uniform sceneMatrices
 	mat4 worldToShadowMap;
 	
 	// Rule 1: Both the size and alignment are the size of the type in basic machine units.
+	
+	uint shadowMapTexelCount;
+	
+	bool pcfToggle;
 	bool normalMapToggle;
 	bool ambientToggle;
 	bool diffuseToggle;
@@ -42,6 +46,41 @@ layout(binding = 4) uniform sampler2D maskTextureSampler;
 layout(binding = 5) uniform sampler2D shadowMap;
 
 uniform Material material;
+
+float computeInShadowRatio(bool pcfEnabled, uint smTexelCount, vec3 shadowMapFragment)
+{	
+	// The values are mapped from [-1, 1] in xy, and z to [0,1] in xy, and z.
+	const float currentFragmentDepth = shadowMapFragment.z * 0.5f + 0.5f;
+	const vec2 currentFragmentDepthTextureCoords = shadowMapFragment.xy * 0.5f + 0.5f;
+	
+	float ratio = 1.0f;
+	const float texelSize = 1.0f / float(smTexelCount);
+	
+	if(pcfEnabled)
+	{
+		float total = 0.0f;
+		const int radius = 1;
+		
+		for(int x = -radius; x < radius; x++)
+		{
+			for(int y = -radius; y < radius; y++)
+			{
+				const vec2 offset = vec2(x * texelSize, y * texelSize);
+				const float shadowMapDepthValue = texture(shadowMap, currentFragmentDepthTextureCoords + offset).r;
+				total += (currentFragmentDepth - 0.0005 > shadowMapDepthValue) ? 0.0f : 1.0f;
+			}
+		}
+		
+		ratio = total / 9.0f;
+	}
+	else
+	{
+		const float shadowMapDepthValue = texture(shadowMap, currentFragmentDepthTextureCoords).r;
+		ratio = (currentFragmentDepth - 0.0005 > shadowMapDepthValue) ? 0.0f : 1.0f;
+	}
+	
+	return ratio;
+};
 
 void main()
 {
@@ -101,14 +140,6 @@ void main()
 	const vec3 shadowMapSpaceFragment = vec3(cartesianShadowMapFragment.x, cartesianShadowMapFragment.y, 
 											cartesianShadowMapFragment.z);
 	
-	// The values are mapped from [-1, 1] in xy, and z to [0,1] in xy, and z.
-	const float currentFragmentDepth = shadowMapSpaceFragment.z * 0.5f + 0.5f;
-	const vec2 currentFragmentDepthTextureCoords = shadowMapSpaceFragment.xy * 0.5f + 0.5f;
-	
-	// Sample the shadow map at the xy coordinates of the current fragment tested.
-	const float shadowMapDepthValue = texture(shadowMap, currentFragmentDepthTextureCoords).r;
-	
-	const float inShadow = (currentFragmentDepth - 0.0005 > shadowMapDepthValue) ? 0.0f : 1.0f;
-	
-    FragColour = ambient + (inShadow * (diffuse + specular));
+	const float inShadowRatio = computeInShadowRatio(ubo.pcfToggle, ubo.shadowMapTexelCount, shadowMapSpaceFragment);
+    FragColour = ambient + (inShadowRatio * (diffuse + specular));
 } 

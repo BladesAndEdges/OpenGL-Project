@@ -9,16 +9,22 @@ layout (location = 3) in vec4 in_Tangent;
 layout(std140) uniform sceneMatrices
 {
 	vec4 worldCameraPosition;
-	vec4 lightSourceDirection;
+	vec4 lightSourceDirection; // Already normalized
 	mat4 model;
 	mat4 viewProjection;
 	mat4 worldToShadowMap;
 	
+	// Rule 1: Both the size and alignment are the size of the type in basic machine units.
+	
+	uint shadowMapTexelCount;
+	
+	bool pcfToggle;
 	bool normalMapToggle;
 	bool ambientToggle;
 	bool diffuseToggle;
 	bool specularToggle;
 }ubo;
+
 
 out vec3 out_worldSpaceNormal;
 out vec3 out_worldSpaceFragment;
