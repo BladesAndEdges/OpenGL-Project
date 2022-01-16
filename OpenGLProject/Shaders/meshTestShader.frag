@@ -43,43 +43,16 @@ layout(binding = 2) uniform sampler2D specularTextureSampler;
 layout(binding = 3) uniform sampler2D normalMapTextureSampler;
 layout(binding = 4) uniform sampler2D maskTextureSampler;
 
-layout(binding = 5) uniform sampler2D shadowMap;
+layout(binding = 5) uniform sampler2DShadow shadowMap;
 
 uniform Material material;
 
 float computeInShadowRatio(bool pcfEnabled, uint smTexelCount, vec3 shadowMapFragment)
 {	
-	// The values are mapped from [-1, 1] in xy, and z to [0,1] in xy, and z.
-	const float currentFragmentDepth = shadowMapFragment.z * 0.5f + 0.5f;
-	const vec2 currentFragmentDepthTextureCoords = shadowMapFragment.xy * 0.5f + 0.5f;
+	vec3 currentFragmentDepthTextureCoords = shadowMapFragment * 0.5f + 0.5f;
+	currentFragmentDepthTextureCoords.z -= 0.0005;
 	
-	float ratio = 1.0f;
-	const float texelSize = 1.0f / float(smTexelCount);
-	
-	if(pcfEnabled)
-	{
-		float total = 0.0f;
-		const int radius = 1;
-		
-		for(int x = -radius; x < radius; x++)
-		{
-			for(int y = -radius; y < radius; y++)
-			{
-				const vec2 offset = vec2(x * texelSize, y * texelSize);
-				const float shadowMapDepthValue = texture(shadowMap, currentFragmentDepthTextureCoords + offset).r;
-				total += (currentFragmentDepth - 0.0005 > shadowMapDepthValue) ? 0.0f : 1.0f;
-			}
-		}
-		
-		ratio = total / 9.0f;
-	}
-	else
-	{
-		const float shadowMapDepthValue = texture(shadowMap, currentFragmentDepthTextureCoords).r;
-		ratio = (currentFragmentDepth - 0.0005 > shadowMapDepthValue) ? 0.0f : 1.0f;
-	}
-	
-	return ratio;
+	return texture(shadowMap, currentFragmentDepthTextureCoords).r;
 };
 
 void main()
