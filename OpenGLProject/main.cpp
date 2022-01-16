@@ -326,6 +326,7 @@ int main()
 	bool show_demo_window = true;
 
 	glEnable(GL_DEBUG_OUTPUT);
+	//glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(MessageCallback, 0);
 
 	glEnable(GL_CULL_FACE);
