@@ -190,8 +190,14 @@ void updateShadowView(Camera& shadowView, glm::vec3 position, float zenith, floa
 	shadowView.setCameraWorldOrientation(orientation);
 }
 
-void renderSceneFromView(const Shader& shader, const Camera&,  const UniformBuffer&, const MeshReader& model, const Framebuffer&)
+void renderSceneFromView(const Shader& shader, const Camera&,  const UniformBuffer&, const MeshReader& model, const Framebuffer& framebuffer, 
+								const Texture* shadowMap)
 {
+
+	shadowMap->useTexture(5);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.getName());
+
 	for (const Mesh& mesh : model.getMeshes())
 	{
 		// Eventually will be separate in a UBO per material
@@ -214,6 +220,8 @@ void renderSceneFromView(const Shader& shader, const Camera&,  const UniformBuff
 
 		glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
 	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void imguiStyleSetting()
@@ -334,6 +342,7 @@ int main()
 	glCullFace(GL_BACK);
 
 	Shader meshTestShader(R"(Shaders\meshTestShader.vert)", R"(Shaders\meshTestShader.frag)");
+	Shader depthOnlyPassShader(R"(Shaders\depthOnlyPass.vert)", R"(Shaders\depthOnlyPass.frag)");
 
 	//UBO
 	UniformBuffer uniformBuffer;
