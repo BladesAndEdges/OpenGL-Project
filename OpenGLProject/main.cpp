@@ -459,7 +459,7 @@ int main()
 
 			delete shadowMap;
 			shadowMap = new Texture("ShadowMap", shadowMapSizes[shadowMapSizeID], shadowMapSizes[shadowMapSizeID], TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
-				TextureFilterMode::Point, TextureFormat::DEPTH32);
+				TextureFilterMode::Bilinear, TextureFormat::DEPTH32, TextureComparisonMode::LessEqual);
 		}
 
 		shadowMapFramebuffer.attachTexture(*shadowMap, AttachmentType::DepthAttachment);
@@ -484,7 +484,7 @@ int main()
 		//--------------------------------------------------------------------------------------------------------------------------------------
 		// Shadow Camera rendering
 
-		meshTestShader.useProgram(); // Make sure the shader is being used before setting these textures
+		depthOnlyPassShader.useProgram(); // Make sure the shader is being used before setting these textures
 		glBindVertexArray(modelVAO);
 
 		int framebufferWidth, framebufferHeight;
@@ -495,8 +495,6 @@ int main()
 		const GLfloat depthClearValue = 1.0f;
 		glClearNamedFramebufferfv(shadowMapFramebuffer.getName(), GL_DEPTH, 0, &depthClearValue);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFramebuffer.getName());
-
 		updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
 		glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
 		updateUniformBuffer(uniformBuffer, shadowView, shadowView, worldSpaceToLightVector, (uint32_t)(shadowMapSizes[shadowMapSizeID]), pcfBool, normalMapBool, ambientBool, diffuseBool, specularBool);
@@ -505,13 +503,7 @@ int main()
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		renderSceneFromView(meshTestShader, shadowView, uniformBuffer, mainModel, shadowMapFramebuffer);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		//ImGui::Begin("Shadow Map");
-		ImGui::Image((void*)(intptr_t)shadowMap->getName(), ImVec2(512.0f, 512.0f));
-		//ImGui::End();
+		renderSceneFromView(depthOnlyPassShader, shadowView, uniformBuffer, mainModel, shadowMapFramebuffer, shadowMapDummy);
 
 		//--------------------------------------------------------------------------------------------------------------------------------------
 		// Main Camera rendering
@@ -563,6 +555,9 @@ int main()
 		ImGui::End();
 		//----------------------------------------------------------------------------------
 
+		meshTestShader.useProgram();
+		glBindVertexArray(modelVAO);
+
 		int winWidth, winHeight;
 		glfwGetWindowSize(window, &winWidth, &winHeight);
 
@@ -581,11 +576,7 @@ int main()
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		glBindTextureUnit(5, shadowMap->getName());
-
-		renderSceneFromView(meshTestShader, mainView, uniformBuffer, mainModel, mainFramebuffer);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		renderSceneFromView(meshTestShader, mainView, uniformBuffer, mainModel, mainFramebuffer, shadowMap);
 
 		// Rendering
 		ImGui::Render();
