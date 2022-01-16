@@ -430,6 +430,9 @@ int main()
 	static int shadowMapSizeID = 0; // Here we store our selection data as an index.
 	const int shadowMapSizes[6] = { 128, 256, 512, 1024, 2048, 4096 };
 
+	Texture* shadowMapDummy = new Texture("ShadowMapDummy", shadowMapSizes[shadowMapSizeID], shadowMapSizes[shadowMapSizeID], TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
+		TextureFilterMode::Bilinear, TextureFormat::DEPTH32, TextureComparisonMode::LessEqual);
+
 	// Framebuffers
 	Framebuffer shadowMapFramebuffer = Framebuffer::customFramebuffer();
 
