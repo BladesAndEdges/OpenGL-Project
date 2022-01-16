@@ -242,7 +242,25 @@ GLenum Texture::translateFormatToOpenGLInternalFormat(TextureFormat format) cons
 	default:
 		assert(false);
 		return 0;
-		break;
+	}
+}
+
+// --------------------------------------------------------------------------------
+GLenum Texture::translateComparisonModeToOpenGL(TextureComparisonMode comparionMode) const
+{
+	switch (comparionMode)
+	{
+	case TextureComparisonMode::LessEqual: return GL_LEQUAL;
+	case TextureComparisonMode::GreaterEqual: return GL_GEQUAL;
+	case TextureComparisonMode::Less: return GL_LESS;
+	case TextureComparisonMode::Greater: return GL_GREATER;
+	case TextureComparisonMode::Equal: return GL_EQUAL;
+	case TextureComparisonMode::NotEqual: return GL_NOTEQUAL;
+	case TextureComparisonMode::Always: return GL_ALWAYS;
+	case TextureComparisonMode::Never: return GL_NEVER;
+	default:
+		assert(false);
+		return 0;
 	}
 }
 
