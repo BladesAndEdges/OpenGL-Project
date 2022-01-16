@@ -63,7 +63,8 @@ public:
 		TextureFilterMode filterMode);
 
 	Texture(const std::string& label, uint32_t width,  uint32_t height, TextureTarget target
-									, TextureWrapMode wrapMode, TextureFilterMode filterMode, TextureFormat format);
+									, TextureWrapMode wrapMode, TextureFilterMode filterMode, 
+										TextureFormat format, TextureComparisonMode comparisonMode);
 
 	~Texture();
 
@@ -94,6 +95,7 @@ private:
 	GLenum translateFilterModeToOpenGLMagFilter(TextureFilterMode filterMode) const;
 	GLenum translateFormatToOpenGLSizedFormat(TextureFormat format) const;
 	GLenum translateFormatToOpenGLInternalFormat(TextureFormat format) const;
+	GLenum translateComparisonModeToOpenGL(TextureComparisonMode comparionMode) const;
 
 	TextureFormat chooseTextureSizedFormat(int numberOfChannels) const;
 };

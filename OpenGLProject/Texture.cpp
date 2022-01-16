@@ -57,7 +57,7 @@ Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMo
 
 // --------------------------------------------------------------------------------
 Texture::Texture(const std::string& label, uint32_t width, uint32_t height, TextureTarget target,
-	TextureWrapMode wrapMode, TextureFilterMode filterMode, TextureFormat format)
+	TextureWrapMode wrapMode, TextureFilterMode filterMode, TextureFormat format, TextureComparisonMode comparisonMode)
 {
 	const GLenum glTarget = translateTargetToOpenGL(target);
 	const GLenum glWrapMode = translateWrapModeToOpenGL(wrapMode);
@@ -79,6 +79,12 @@ Texture::Texture(const std::string& label, uint32_t width, uint32_t height, Text
 	glTextureParameteri(m_name, GL_TEXTURE_WRAP_T, glWrapMode);
 	glTextureParameteri(m_name, GL_TEXTURE_MIN_FILTER, glMinFilterMode);
 	glTextureParameteri(m_name, GL_TEXTURE_MAG_FILTER, glMagFilterMode);
+
+	if (comparisonMode != TextureComparisonMode::None)
+	{
+		glTextureParameteri(m_name, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+		glTextureParameteri(m_name, GL_TEXTURE_COMPARE_FUNC, translateComparisonModeToOpenGL(comparisonMode));
+	}
 }
 
 // --------------------------------------------------------------------------------
