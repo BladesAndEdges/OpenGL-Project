@@ -40,6 +40,20 @@ enum class TextureFormat
 };
 
 // --------------------------------------------------------------------------------
+enum class TextureComparisonMode
+{
+	None, 
+	LessEqual,
+	GreaterEqual,
+	Less,
+	Greater,
+	Equal,
+	NotEqual,
+	Always,
+	Never
+};
+
+// --------------------------------------------------------------------------------
 class Texture
 {
 
