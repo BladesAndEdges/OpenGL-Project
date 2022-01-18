@@ -433,6 +433,9 @@ int main()
 	float zenithAngle = 0.0f;
 	float bus[3] = { 0.0f, 0.0f, 0.0f };
 
+	float radiusInTexels = 0.0f;
+	float poissonRotation = 0.0f;
+
 	// Shadow Map texture
 	Texture* shadowMap = nullptr;
 	bool shadowMapHasChangedSize = false;
@@ -495,9 +498,13 @@ int main()
 		const GLfloat depthClearValue = 1.0f;
 		glClearNamedFramebufferfv(shadowMapFramebuffer.getName(), GL_DEPTH, 0, &depthClearValue);
 
+		const float texelSize = 1.0f / (float)(shadowMap->getWidth());
+		const float offsetScale = radiusInTexels * texelSize;
+
 		updateShadowView(shadowView, mainView.getWorldPosition(), zenithAngle, azimuthAngle);
 		glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, shadowView, shadowView, worldSpaceToLightVector, (uint32_t)(shadowMapSizes[shadowMapSizeID]), pcfBool, normalMapBool, ambientBool, diffuseBool, specularBool);
+		updateUniformBuffer(uniformBuffer, shadowView, shadowView, worldSpaceToLightVector,  offsetScale, poissonRotation,
+											pcfBool, normalMapBool, ambientBool, diffuseBool, specularBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
@@ -552,6 +559,9 @@ int main()
 			ImGui::EndCombo();
 		}
 
+		ImGui::SliderFloat("PCF Texel Radius", &radiusInTexels, 0.0f, 100.0f);
+		ImGui::SliderFloat("Poisson Disk Rotation", &poissonRotation, 0.0f, 1.0f);
+
 		ImGui::End();
 		//----------------------------------------------------------------------------------
 
@@ -569,8 +579,10 @@ int main()
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		
 		worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, mainView, shadowView, worldSpaceToLightVector, (uint32_t)(shadowMapSizes[shadowMapSizeID]), pcfBool,   normalMapBool, ambientBool, diffuseBool, specularBool);
+		updateUniformBuffer(uniformBuffer, mainView, shadowView, worldSpaceToLightVector,  offsetScale, poissonRotation,
+									pcfBool,   normalMapBool, ambientBool, diffuseBool, specularBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
