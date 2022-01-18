@@ -16,7 +16,8 @@ layout(std140) uniform sceneMatrices
 	
 	// Rule 1: Both the size and alignment are the size of the type in basic machine units.
 	
-	uint shadowMapTexelCount;
+	float offsetScale;
+	float poissonRotationValue;
 	
 	bool pcfToggle;
 	bool normalMapToggle;
