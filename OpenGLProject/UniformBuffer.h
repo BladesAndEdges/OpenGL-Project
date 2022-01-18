@@ -20,6 +20,9 @@ struct UniformBuffer
 	float viewProjection[16];
 	float worldToShadowMap[16];
 
+	float offsetScale;
+	float poissonRotationValue;
+
 	// 144 bytes
 	uint32_t shadowMapTexelCount;
 	uint32_t pcfToggle;
@@ -33,5 +36,5 @@ struct UniformBuffer
 void copyMat4ToFloatArray(const glm::mat4& source, float destination[16]);
 void copyVec4ToFloatArray(const glm::vec4& source, float destination[4]);
 
-void updateUniformBuffer(UniformBuffer& ubo, const Camera& mainView, const Camera& shadowMapView, const glm::vec3& toLightDirectionWorldSpace,
-	uint32_t shadowMapTexels, bool pcfToggle, bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle);
+void updateUniformBuffer(UniformBuffer& ubo, const Camera& mainView, const Camera& shadowMapView, const glm::vec3& toLightDirectionWorldSpace, 
+	float offScale, float poissinRot,  bool pcfToggle, bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle);
