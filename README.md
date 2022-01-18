@@ -18,6 +18,7 @@ Download the project on your machine. Open the solution within your Visual Studi
 - Phong Lighting
 - Custom Mesh Loader capable of handling large models with different materials.
 - Normal Mapping
+- Shadow Mapping with PCF using Interleaved Gradient Noise
 
 ## Camera Controls
 
