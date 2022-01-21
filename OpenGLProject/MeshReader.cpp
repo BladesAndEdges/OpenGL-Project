@@ -349,9 +349,9 @@ glm::vec3 MeshReader::computeSceneCenter()
 	// Start from 1 since the initial vertex is used as a starting value
 	for (unsigned int vertex = 1; vertex < m_indexedVertexBuffer.size(); vertex++)
 	{
-		float vertexX = m_indexedVertexBuffer[vertex].m_position[0];
-		float vertexY = m_indexedVertexBuffer[vertex].m_position[1];
-		float vertexZ = m_indexedVertexBuffer[vertex].m_position[2];
+		const float vertexX = m_indexedVertexBuffer[vertex].m_position[0];
+		const float vertexY = m_indexedVertexBuffer[vertex].m_position[1];
+		const float vertexZ = m_indexedVertexBuffer[vertex].m_position[2];
 
 		if (vertexX < minX)
 		{
