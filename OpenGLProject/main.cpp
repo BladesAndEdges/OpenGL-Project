@@ -605,6 +605,10 @@ int main()
 
 		renderSceneFromView(meshTestShader, mainView, uniformBuffer, mainModel, mainFramebuffer, shadowMap);
 
+		shadowMapDebugShader.useProgram();
+		glBindTextureUnit(0, shadowMap->getName());
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
 		// Rendering
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
