@@ -61,7 +61,7 @@ Texture::Texture(const std::string& label, uint32_t width, uint32_t height, Text
 {
 	const GLenum glTarget = translateTargetToOpenGL(target);
 	const GLenum glWrapMode = translateWrapModeToOpenGL(wrapMode);
-	const GLenum glMinFilterMode = translateFilterModeToOpenGLMinFilter(filterMode);
+	const GLenum glMinFilterMode = translateFilterModeToOpenGLMinFilter(filterMode); // Min Filter may need to be GL_NEAREST FOR SOME CASES
 	const GLenum glMagFilterMode = translateFilterModeToOpenGLMagFilter(filterMode);
 	const GLenum glSizedFormat = translateFormatToOpenGLSizedFormat(format);
 

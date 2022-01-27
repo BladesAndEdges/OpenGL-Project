@@ -606,8 +606,26 @@ int main()
 		renderSceneFromView(meshTestShader, mainView, uniformBuffer, mainModel, mainFramebuffer, shadowMap);
 
 		shadowMapDebugShader.useProgram();
+
+		GLuint nonComparisonShadowSampler;
+		glGenSamplers(1, &nonComparisonShadowSampler);
+
+		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+
+		glBindSampler(0, nonComparisonShadowSampler);
+
 		glBindTextureUnit(0, shadowMap->getName());
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 
 		// Rendering
 		ImGui::Render();
