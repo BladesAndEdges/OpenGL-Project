@@ -27,6 +27,8 @@ public:
 	glm::mat4 createViewMatrix() const;
 	glm::mat4 createProjectionMatrix() const;
 
+	void getFrustumCornersInWorldSpace(float nearPlane, float farPlane, glm::vec3* frustumCorners) const;
+
 	glm::vec3 getWorldPosition() const;
 	glm::mat3 getWorldOrientation() const;
 
@@ -40,12 +42,13 @@ private:
 
 	Camera(ProjectionType projectionType, const glm::vec3& worldPosition, float width, float height, float near, float far, float fov);
 
+	void computeFrustumPlaneCornersInWorldSpace(float planeDistance, glm::vec3* planeCornersStart) const;
+
 	glm::vec3 m_worldPosition;
 	glm::mat3 m_worldOrientation;
 
 	ProjectionType m_projectionType;
-	// --------------------------------------------------------------------------------
-	// For Orthographic projection
+
 	float m_width;
 	float m_height;
 	float m_near;

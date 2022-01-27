@@ -54,6 +54,13 @@ glm::mat4 Camera::createProjectionMatrix() const
 }
 
 // --------------------------------------------------------------------------------
+void Camera::getFrustumCornersInWorldSpace(float nearPlane, float farPlane, glm::vec3 * frustumCorners) const
+{
+	computeFrustumPlaneCornersInWorldSpace(nearPlane, frustumCorners);
+	computeFrustumPlaneCornersInWorldSpace(farPlane, frustumCorners + 4);
+}
+
+// --------------------------------------------------------------------------------
 glm::vec3 Camera::getWorldPosition() const
 {
 	return m_worldPosition;
@@ -102,4 +109,19 @@ Camera::Camera(ProjectionType projectionType, const glm::vec3 & worldPosition, f
 	orientation = glm::rotate(orientation, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	m_worldOrientation = glm::mat3(orientation);
+}
+
+// --------------------------------------------------------------------------------
+void Camera::computeFrustumPlaneCornersInWorldSpace(float planeDistance, glm::vec3 * planeCornersStart) const
+{
+	// Compute width and height of the plane in view space
+	float halfWidth = planeDistance * tanf(glm::radians(m_fov) / 2.0f);
+	float halfHeight = halfWidth / (m_width / m_height);
+
+	const glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), m_worldPosition);
+
+	planeCornersStart[0] = glm::vec3(translationMatrix * glm::vec4(m_worldOrientation * glm::vec3(-halfWidth, -halfHeight, planeDistance), 1.0f));
+	planeCornersStart[1] = glm::vec3(translationMatrix * glm::vec4(m_worldOrientation * glm::vec3(halfWidth, -halfHeight, planeDistance), 1.0f));
+	planeCornersStart[2] = glm::vec3(translationMatrix * glm::vec4(m_worldOrientation * glm::vec3(halfWidth, halfHeight, planeDistance), 1.0f));
+	planeCornersStart[3] = glm::vec3(translationMatrix * glm::vec4(m_worldOrientation * glm::vec3(-halfWidth, halfHeight, planeDistance), 1.0f));
 }
