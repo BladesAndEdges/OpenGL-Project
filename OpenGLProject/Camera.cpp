@@ -54,10 +54,29 @@ glm::mat4 Camera::createProjectionMatrix() const
 }
 
 // --------------------------------------------------------------------------------
-void Camera::getFrustumCornersInWorldSpace(float nearPlane, float farPlane, glm::vec3 * frustumCorners) const
+void Camera::getFrustumCornersInWorldSpace(glm::vec3 * frustumCorners) const
 {
-	computeFrustumPlaneCornersInWorldSpace(nearPlane, frustumCorners);
-	computeFrustumPlaneCornersInWorldSpace(farPlane, frustumCorners + 4);
+	computeFrustumPlaneCornersInWorldSpace(m_near, frustumCorners);
+	computeFrustumPlaneCornersInWorldSpace(m_far, frustumCorners + 4);
+}
+
+// --------------------------------------------------------------------------------
+glm::vec3 Camera::getWorldSpaceFrustumCenter() const
+{
+	glm::vec3 frustumCorners[8];
+	computeFrustumPlaneCornersInWorldSpace(m_near, frustumCorners);
+	computeFrustumPlaneCornersInWorldSpace(m_far, frustumCorners + 4);
+
+	glm::vec3 min = frustumCorners[0];
+	glm::vec3 max = min;
+
+	for (uint32_t corner = 1; corner < 8; corner++)
+	{
+		min = glm::min(min, frustumCorners[corner]);
+		max = glm::max(max, frustumCorners[corner]);
+	}
+
+	return ((min + max) / 2.0f);
 }
 
 // --------------------------------------------------------------------------------
@@ -86,11 +105,13 @@ void Camera::setCameraWorldOrientation(const glm::mat3 & newWorldOrientation)
 
 void Camera::setCameraWidth(float width)
 {
+	assert(width != 0.0f);
 	m_width = width;
 }
 
 void Camera::setCameraHeight(float height)
 {
+	assert(height != 0.0f);
 	m_height = height;
 }
 
