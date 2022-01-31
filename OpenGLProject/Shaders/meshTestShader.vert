@@ -14,12 +14,9 @@ layout(std140) uniform sceneMatrices
 	mat4 viewProjection;
 	mat4 worldToShadowMap;
 	
-	// Rule 1: Both the size and alignment are the size of the type in basic machine units.
-	
 	float offsetScale;
-	float poissonRotationValue;
+	float boundingBoxDimensions;
 	
-	bool pcfToggle;
 	bool normalMapToggle;
 	bool ambientToggle;
 	bool diffuseToggle;

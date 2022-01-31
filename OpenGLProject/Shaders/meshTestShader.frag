@@ -20,7 +20,7 @@ struct Material
 
 layout(std140) uniform sceneMatrices
 {
-	vec4 worldCameraPosition;
+	vec4 worldCameraPosition; // Change this to a vec3
 	vec4 lightSourceDirection; // Already normalized
 	mat4 model;
 	mat4 viewProjection;
@@ -28,9 +28,8 @@ layout(std140) uniform sceneMatrices
 	
 	// Rule 1: Both the size and alignment are the size of the type in basic machine units.
 	float offsetScale;
-	float poissonRotationValue;
+	float boundingBoxDimensions;
 	
-	bool pcfToggle;
 	bool normalMapToggle;
 	bool ambientToggle;
 	bool diffuseToggle;
@@ -47,13 +46,16 @@ layout(binding = 5) uniform sampler2DShadow shadowMap;
 
 uniform Material material;
 
+// --------------------------------------------------------------------------------
 float interleavedGradientNoise()
 {
 	vec3 magic = vec3(0.06711056f, 0.00583715f, 52.9829189f);
 	return fract(magic.z * fract(dot(gl_FragCoord.xy, magic.xy)));
 };
 
-float computeInShadowRatio(bool pcfEnabled, float offsetScale, float poissonRotation, vec3 shadowMapFragment)
+// --------------------------------------------------------------------------------
+float computeInShadowRatio(float offsetScale, vec3 shadowMapFragment, const vec3 mainCameraWorldPosition, 
+											const vec3 fragmentWorldPosition, float boundingBoxDimensions)
 {	
 
 	const vec2 sampleOffsets[8]=vec2[8](
@@ -65,31 +67,42 @@ float computeInShadowRatio(bool pcfEnabled, float offsetScale, float poissonRota
 	vec2(-0.0000, 0.3750),
 	vec2(-0.1768, -0.1768),
 	vec2(0.1250, 0.0000)
-);
+	);
+	
+	const vec3 mainCameraToFragment = fragmentWorldPosition - mainCameraWorldPosition;
+	const float mainCameraToFragmentMagnitude = length(mainCameraToFragment);
+	const bool renderShadows = (mainCameraToFragmentMagnitude <= boundingBoxDimensions);
 
-	vec3 currentFragmentDepthTextureCoords = shadowMapFragment * 0.5f + 0.5f;
-	currentFragmentDepthTextureCoords.z -= 0.0005;
-	
-	
-	float total = 0.0f;
-	
-	for(uint offset = 0; offset < sampleOffsets.length(); offset++)
+	if(renderShadows)
 	{
-		const float rotation = 2.0f * PI * interleavedGradientNoise();
+		vec3 currentFragmentDepthTextureCoords = shadowMapFragment * 0.5f + 0.5f;
+		currentFragmentDepthTextureCoords.z -= 0.0005;
 		
-		float sineRotation = sin(rotation);
-		float cosineRotation = cos(rotation);
+		float total = 0.0f;
 		
-		const mat2 rotationMatrix = mat2( vec2(cosineRotation, sineRotation), 
+		for(uint offset = 0; offset < sampleOffsets.length(); offset++)
+		{
+			const float rotation = 2.0f * PI * interleavedGradientNoise();
+		
+			float sineRotation = sin(rotation);
+			float cosineRotation = cos(rotation);
+		
+			const mat2 rotationMatrix = mat2( vec2(cosineRotation, sineRotation), 
 											vec2(-sineRotation, cosineRotation));
 											
-		const vec2 shadowMapOffset = currentFragmentDepthTextureCoords.xy + (rotationMatrix * (offsetScale * sampleOffsets[offset]));
-		total += texture(shadowMap, vec3(shadowMapOffset, currentFragmentDepthTextureCoords.z)).r;
-	}
+			const vec2 shadowMapOffset = currentFragmentDepthTextureCoords.xy + (rotationMatrix * (offsetScale * sampleOffsets[offset]));
+			total += texture(shadowMap, vec3(shadowMapOffset, currentFragmentDepthTextureCoords.z)).r;
+		}
 	
-	return total / 8.0f;
+		return total / 8.0f;
+	}
+	else
+	{
+		return 0.0f;
+	}
 };
 
+// --------------------------------------------------------------------------------
 void main()
 {
 
@@ -149,6 +162,7 @@ void main()
 	const vec3 shadowMapSpaceFragment = vec3(cartesianShadowMapFragment.x, cartesianShadowMapFragment.y, 
 											cartesianShadowMapFragment.z);
 	
-	const float inShadowRatio = computeInShadowRatio(ubo.pcfToggle, ubo.offsetScale, ubo.poissonRotationValue, shadowMapSpaceFragment);
-    FragColour = ambient + (inShadowRatio * (diffuse + specular));
+
+	const float inShadowRatio = computeInShadowRatio(ubo.offsetScale, shadowMapSpaceFragment, ubo.worldCameraPosition.xyz, out_worldSpaceFragment, ubo.boundingBoxDimensions);
+	FragColour = ambient + (inShadowRatio * (diffuse + specular));
 } 
