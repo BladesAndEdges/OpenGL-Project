@@ -92,6 +92,18 @@ glm::mat3 Camera::getWorldOrientation() const
 }
 
 // --------------------------------------------------------------------------------
+float Camera::getNearPlane() const
+{
+	return m_near;
+}
+
+// --------------------------------------------------------------------------------
+float Camera::getFarPlane() const
+{
+	return m_far;
+}
+
+// --------------------------------------------------------------------------------
 void Camera::setCameraWorldPosition(const glm::vec3 & newWorldPosition)
 {
 	m_worldPosition = newWorldPosition;

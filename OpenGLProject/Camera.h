@@ -27,10 +27,13 @@ public:
 	glm::mat4 createViewMatrix() const;
 	glm::mat4 createProjectionMatrix() const;
 
-	void getFrustumCornersInWorldSpace(float nearPlane, float farPlane, glm::vec3* frustumCorners) const;
+	void computeFrustumPlaneCornersInWorldSpace(float planeDistance, glm::vec3* frustumCorners) const;
+
 
 	glm::vec3 getWorldPosition() const;
 	glm::mat3 getWorldOrientation() const;
+	float getNearPlane() const;
+	float getFarPlane() const;
 
 	void setCameraWorldPosition(const glm::vec3& newWorldPosition);
 	void setCameraWorldOrientation(const glm::mat3& newWorldOrientation);
