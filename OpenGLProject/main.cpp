@@ -186,15 +186,35 @@ glm::vec3 calculateWorldSpaceToLightVector(float zenith, float azimuth)
 }
 
 // --------------------------------------------------------------------------------
-void updateShadowView(Camera& shadowView, glm::vec3 position, float width, float height, float zenith, float azimuth)
+void updateShadowView(const Camera& mainView, Camera& shadowView, float zenith, float azimuth, float shadowDrawDistance, float& dimension)
 {
 	const glm::vec3 eulerAngles = glm::vec3(glm::radians(-zenith), glm::radians(azimuth), 0.0f);
 	const glm::quat lightSpaceToWorldQuaternion = glm::quat(eulerAngles);
 	const glm::mat3 orientation = glm::toMat3(lightSpaceToWorldQuaternion);
 
-	shadowView.setCameraWidth(width);
-	shadowView.setCameraHeight(height);
-	shadowView.setCameraWorldPosition(position);
+	glm::vec3 worldSpaceMainViewBounds[8];
+	mainView.computeFrustumPlaneCornersInWorldSpace(mainView.getNearPlane(), worldSpaceMainViewBounds);
+	mainView.computeFrustumPlaneCornersInWorldSpace(shadowDrawDistance, worldSpaceMainViewBounds + 4);
+
+	glm::vec3 min = orientation * worldSpaceMainViewBounds[0];
+	glm::vec3 max = min;
+
+	for (uint32_t corner = 1; corner < 8; corner++)
+	{
+		const glm::vec3 point = orientation * worldSpaceMainViewBounds[corner];
+
+		min = glm::min(min, point);
+		max = glm::max(max, point);
+	}
+
+	const glm::vec2 cascadeDimension = glm::vec2(max - min);
+ 	const glm::vec3 cascadeCenterWorldSpace = glm::transpose(orientation) * ((min + max) / 2.0f);
+
+	dimension = (cascadeDimension.x > cascadeDimension.y) ? cascadeDimension.x : cascadeDimension.y;
+
+	shadowView.setCameraWidth(dimension);
+	shadowView.setCameraHeight(dimension);
+	shadowView.setCameraWorldPosition(cascadeCenterWorldSpace);
 	shadowView.setCameraWorldOrientation(orientation);
 }
 
@@ -342,8 +362,6 @@ int main()
 	const char* glsl_version = "#version 450 core";
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
-	bool show_demo_window = true;
-
 	glEnable(GL_DEBUG_OUTPUT);
 	//glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(MessageCallback, 0);
@@ -426,7 +444,7 @@ int main()
 		(float)mainViewHeight, 0.1f, 100.0f, 90.0f);
 
 	float cascadeDimension = 1.0f;
-	Camera shadowView = Camera::orthographic(mainView.getWorldPosition(), cascadeDimension, cascadeDimension, -100.0f, 100.0f);
+	Camera shadowView = Camera::orthographic(glm::vec3(0.0f, 0.0f, 0.0f), cascadeDimension, cascadeDimension, -100.0f, 100.0f);
 
 	float frameTimeArray[128];
 	unsigned int frameNumber = 0;
@@ -440,14 +458,13 @@ int main()
 	bool ambientBool = true;
 	bool diffuseBool = true;
 	bool specularBool = true;
-	bool pcfBool = false;
 
 	float azimuthAngle = 0.0f;
 	float zenithAngle = 0.0f;
 	float bus[3] = { 0.0f, 0.0f, 0.0f };
 
 	float radiusInTexels = 0.0f;
-	float poissonRotation = 0.0f;
+	float shadowDrawDistance = 20.0f;
 
 	// Shadow Map texture
 	Texture* shadowMap = nullptr;
@@ -514,10 +531,11 @@ int main()
 		const float texelSize = 1.0f / (float)(shadowMap->getWidth());
 		const float offsetScale = radiusInTexels * texelSize;
 
-		updateShadowView(shadowView, mainView.getWorldPosition(), 64.0f, 64.0f, zenithAngle, azimuthAngle);
+		float boundingBoxDimensions;
+		updateShadowView(mainView, shadowView, zenithAngle, azimuthAngle, shadowDrawDistance, boundingBoxDimensions);
 		glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, shadowView, shadowView, worldSpaceToLightVector,  offsetScale, poissonRotation,
-											pcfBool, normalMapBool, ambientBool, diffuseBool, specularBool);
+		updateUniformBuffer(uniformBuffer, shadowView, shadowView, worldSpaceToLightVector,  offsetScale, boundingBoxDimensions,
+										 normalMapBool, ambientBool, diffuseBool, specularBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
@@ -592,8 +610,8 @@ int main()
 		meshTestShader.useProgram();
 
 		worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, mainView, shadowView, worldSpaceToLightVector,  offsetScale, poissonRotation,
-									pcfBool,   normalMapBool, ambientBool, diffuseBool, specularBool);
+		updateUniformBuffer(uniformBuffer, mainView, shadowView, worldSpaceToLightVector,  offsetScale, boundingBoxDimensions,
+									   normalMapBool, ambientBool, diffuseBool, specularBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
@@ -617,11 +635,7 @@ int main()
 		glBindTextureUnit(0, shadowMap->getName());
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+		glBindSampler(0, 0);
 
 		// Rendering
 		ImGui::Render();
