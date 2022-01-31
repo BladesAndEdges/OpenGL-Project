@@ -1,12 +1,12 @@
 #version 450
 
 const vec3 quadPositions[6]=vec3[6](
-	vec3(-1.0f, 1.0f, 0.0f),
-	vec3(-1.0f, 0.6f, 0.0f),
-	vec3(-0.6f, 0.6f, 0.0f),
-	vec3(-0.6f, 0.6f, 0.0f),
-	vec3(-0.6f, 1.0f, 0.0f),
-	vec3(-1.0f, 1.0f, 0.0f)
+	vec3(-1.0f, 1.0f, -1.0f),
+	vec3(-1.0f, 0.6f, -1.0f),
+	vec3(-0.6f, 0.6f, -1.0f),
+	vec3(-0.6f, 0.6f, -1.0f),
+	vec3(-0.6f, 1.0f, -1.0f),
+	vec3(-1.0f, 1.0f, -1.0f)
 );
 
 	const vec2 quadTextureCoordinates[6]=vec2[6](
