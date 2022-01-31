@@ -23,7 +23,7 @@ void copyVec4ToFloatArray(const glm::vec4 & source, float destination[4])
 }
 
 void updateUniformBuffer(UniformBuffer & ubo, const Camera & mainView, const Camera & shadowMapView, const glm::vec3& toLightDirectionWorldSpace, 
-	float offScale, float poissonRot, bool pcfToggle, bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle)
+	float offScale, float boundingBoxDimensions, bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle)
 {
 	const glm::vec4 worldSpacePosition = glm::vec4(mainView.getWorldPosition(), 1.0f);
 
@@ -47,8 +47,7 @@ void updateUniformBuffer(UniformBuffer & ubo, const Camera & mainView, const Cam
 	copyMat4ToFloatArray(shadowMapViewProjection, ubo.worldToShadowMap);
 
 	ubo.offsetScale = offScale;
-	ubo.poissonRotationValue = poissonRot;
-	ubo.pcfToggle = (pcfToggle) ? 1 : 0;
+	ubo.boundingBoxDimensions = boundingBoxDimensions;
 
 	ubo.normalMapToggle = (nmToggle) ? 1 : 0;
 	ubo.ambientToggle = (ambToggle) ? 1 : 0;
