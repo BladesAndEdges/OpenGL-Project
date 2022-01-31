@@ -528,12 +528,12 @@ int main()
 		//--------------------------------------------------------------------------------------------------------------------------------------
 		// Main Camera rendering
 
-		//----------------------------------------------------------------------------------
-		// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-		if (show_demo_window)
-		{
-			ImGui::ShowDemoWindow(&show_demo_window);
-		}
+		////----------------------------------------------------------------------------------
+		//// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+		//if (show_demo_window)
+		//{
+		//	ImGui::ShowDemoWindow(&show_demo_window);
+		//}
 
 		ImGui::Begin("Debug Toggles");
 
@@ -541,12 +541,9 @@ int main()
 		ImGui::Checkbox("Ambient", &ambientBool);
 		ImGui::Checkbox("Diffuse", &diffuseBool);
 		ImGui::Checkbox("Specular", &specularBool);
-		ImGui::Checkbox("PCF", &pcfBool);
 
 		ImGui::SliderFloat("Azimuth", &azimuthAngle, 0.0f, 360.0f);
 		ImGui::SliderFloat("Zenith", &zenithAngle, 0.0f, 90.0f);
-
-		ImGui::ColorEdit3("Light Colour", bus);
 
 		// ImGui 
 		static ImGuiComboFlags flags = 0;
@@ -573,8 +570,7 @@ int main()
 		}
 
 		ImGui::SliderFloat("PCF Texel Radius", &radiusInTexels, 0.0f, 100.0f);
-		ImGui::SliderFloat("Poisson Disk Rotation", &poissonRotation, 0.0f, 1.0f);
-		ImGui::SliderFloat("Cascade Dimension", &cascadeDimension, 0.0f, 100.0f);
+		ImGui::SliderFloat("Shadow Draw Distance", &shadowDrawDistance, 1.0f, 200.0f);
 
 		ImGui::End();
 		//----------------------------------------------------------------------------------
