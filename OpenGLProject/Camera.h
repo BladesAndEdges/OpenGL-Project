@@ -45,8 +45,6 @@ private:
 
 	Camera(ProjectionType projectionType, const glm::vec3& worldPosition, float width, float height, float near, float far, float fov);
 
-	void computeFrustumPlaneCornersInWorldSpace(float planeDistance, glm::vec3* planeCornersStart) const;
-
 	glm::vec3 m_worldPosition;
 	glm::mat3 m_worldOrientation;
 
