@@ -56,6 +56,15 @@ float interleavedGradientNoise()
 };
 
 // --------------------------------------------------------------------------------
+float computeShadowStrength(float maximumDrawDistance, float fadingStartDistance, float fragmentDistance)
+{
+	// y = mx + b;
+	float slope = (0.0f - 1.0f) / (maximumDrawDistance - fadingStartDistance);
+	float b = 1.0f - slope * fadingStartDistance;
+
+	return clamp(slope * fragmentDistance + b, 0.0f, 1.0f);
+}
+// --------------------------------------------------------------------------------
 float computeInShadowRatio(float offsetScale, vec3 shadowMapFragment, const vec3 mainCameraWorldPosition, 
 											const vec3 fragmentWorldPosition, float boundingBoxDimensions)
 {	
