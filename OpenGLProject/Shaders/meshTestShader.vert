@@ -15,12 +15,15 @@ layout(std140) uniform sceneMatrices
 	mat4 worldToShadowMap;
 	
 	float offsetScale;
-	float boundingBoxDimensions;
+	float shadowDrawDistance;
+	float shadowFadeStartDistance;
 	
 	bool normalMapToggle;
 	bool ambientToggle;
 	bool diffuseToggle;
 	bool specularToggle;
+	
+	bool cascadeDrawDistanceToggle;
 }ubo;
 
 

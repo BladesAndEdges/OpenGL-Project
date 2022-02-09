@@ -26,14 +26,16 @@ layout(std140) uniform sceneMatrices
 	mat4 viewProjection;
 	mat4 worldToShadowMap;
 	
-	// Rule 1: Both the size and alignment are the size of the type in basic machine units.
 	float offsetScale;
-	float boundingBoxDimensions;
+	float shadowDrawDistance;
+	float shadowFadeStartDistance;
 	
 	bool normalMapToggle;
 	bool ambientToggle;
 	bool diffuseToggle;
 	bool specularToggle;
+	
+	bool cascadeDrawDistanceToggle;
 }ubo;
 
 layout(binding = 0) uniform sampler2D ambientTextureSampler;
@@ -165,4 +167,23 @@ void main()
 
 	const float inShadowRatio = computeInShadowRatio(ubo.offsetScale, shadowMapSpaceFragment, ubo.worldCameraPosition.xyz, out_worldSpaceFragment, ubo.boundingBoxDimensions);
 	FragColour = ambient + (inShadowRatio * (diffuse + specular));
+} 	if(ubo.cascadeDrawDistanceToggle)
+	{
+		const vec3 mainCameraToFragment = out_worldSpaceFragment - ubo.worldCameraPosition.xyz;
+		const float mainCameraToFragmentMagnitude = length(mainCameraToFragment);
+		const bool inDrawingDistance = (mainCameraToFragmentMagnitude <= ubo.shadowDrawDistance);
+		
+		if(inDrawingDistance)
+		{
+			FragColour = vec3(1.0f, 0.0f, 0.0f);
+		}
+		else
+		{
+			FragColour = ambient + (inShadowRatio * (diffuse + specular));
+		}
+	}
+	else
+	{
+		FragColour = ambient + (inShadowRatio * (diffuse + specular));
+	}
 } 
