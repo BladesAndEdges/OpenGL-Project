@@ -22,8 +22,9 @@ void copyVec4ToFloatArray(const glm::vec4 & source, float destination[4])
 	}
 }
 
+// --------------------------------------------------------------------------------
 void updateUniformBuffer(UniformBuffer & ubo, const Camera & mainView, const Camera & shadowMapView, const glm::vec3& toLightDirectionWorldSpace, 
-	float offScale, float boundingBoxDimensions, bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle)
+	float offScale, float shadowDrawDistance, float shadowFadeStart, bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle, bool cascadeDrawDistanceToggle)
 {
 	const glm::vec4 worldSpacePosition = glm::vec4(mainView.getWorldPosition(), 1.0f);
 
@@ -47,12 +48,15 @@ void updateUniformBuffer(UniformBuffer & ubo, const Camera & mainView, const Cam
 	copyMat4ToFloatArray(shadowMapViewProjection, ubo.worldToShadowMap);
 
 	ubo.offsetScale = offScale;
-	ubo.boundingBoxDimensions = boundingBoxDimensions;
+	ubo.shadowDrawDistance = shadowDrawDistance;
+	ubo.shadowFadeStartDistance = shadowFadeStart * shadowDrawDistance;
 
 	ubo.normalMapToggle = (nmToggle) ? 1 : 0;
 	ubo.ambientToggle = (ambToggle) ? 1 : 0;
 	ubo.diffuseToggle = (diffToggle) ? 1 : 0;
 	ubo.specularToggle = (specToggle) ? 1 : 0;
+
+	ubo.cascadeDrawDistanceOverlayToggle = (cascadeDrawDistanceToggle) ? 1 : 0;
 }
 
 // --------------------------------------------------------------------------------
@@ -62,7 +66,7 @@ void copyBoolIntoBuffer(const bool source, bool& destination)
 }
 
 // --------------------------------------------------------------------------------
-UniformBuffer::UniformBuffer() : normalMapToggle(1), ambientToggle(1), diffuseToggle(1), specularToggle(1),
-lightSourceDirection{ 0.0f, 1001.0f, 0.0f, 0.0f }
+UniformBuffer::UniformBuffer() : lightSourceDirection{ 0.0f, 1001.0f, 0.0f, 0.0f }, normalMapToggle(1), ambientToggle(1), diffuseToggle(1), 
+	specularToggle(1), cascadeDrawDistanceOverlayToggle(0)
 {
 }
