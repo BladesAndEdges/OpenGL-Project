@@ -24,11 +24,10 @@ public:
 
 	Framebuffer(Framebuffer&& other);
 
-	// Should this be private?
 	~Framebuffer();
 
 
-	void attachTexture(const Texture& texture, const AttachmentType& attachmentType);
+	void attachTexture(TextureTarget target, const Texture& texture, const AttachmentType& attachmentType, uint32_t layer);
 
 	GLuint getName() const;
 

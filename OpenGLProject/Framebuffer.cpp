@@ -41,11 +41,18 @@ Framebuffer::~Framebuffer()
 }
 
 // --------------------------------------------------------------------------------
-void Framebuffer::attachTexture(const Texture & texture, const AttachmentType & attachmentType)
-{
+void Framebuffer::attachTexture(TextureTarget target, const Texture & texture, const AttachmentType & attachmentType, uint32_t layer)
+{	
 	GLenum glAttachmentType = translateAttachmentTypeToOpenGLAttachment(attachmentType);
 
-	glNamedFramebufferTexture(m_name, glAttachmentType, texture.getName(), 0);
+	if (target == TextureTarget::Texture2D)
+	{
+		glNamedFramebufferTexture(m_name, glAttachmentType, texture.getName(), 0);
+	}
+	else if (target == TextureTarget::ArrayTexture2D)
+	{
+		glNamedFramebufferTextureLayer(m_name, glAttachmentType, texture.getName(), 0, layer);
+	}
 }
 
 // --------------------------------------------------------------------------------
