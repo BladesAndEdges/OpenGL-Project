@@ -480,6 +480,15 @@ int main()
 
 	Framebuffer mainFramebuffer = Framebuffer::defaultFramebuffer();
 
+	// Non-Comparison Sampler
+	GLuint nonComparisonShadowSampler;
+	glGenSamplers(1, &nonComparisonShadowSampler);
+
+	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 	while (!glfwWindowShouldClose(window))
 	{
 
