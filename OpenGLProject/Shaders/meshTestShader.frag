@@ -173,11 +173,11 @@ void main()
 	const vec3 cartesianShadowMapFragment = homogeneousShadowMapSpaceFragment.xyz / homogeneousShadowMapSpaceFragment.w;
 	const vec3 shadowMapSpaceFragment = vec3(cartesianShadowMapFragment.x, cartesianShadowMapFragment.y, 
 											cartesianShadowMapFragment.z);
+											
+	const float inShadowRatio = computeInShadowRatio(ubo.offsetScale, shadowMapSpaceFragment, ubo.worldCameraPosition.xyz, out_worldSpaceFragment, 
+																				ubo.shadowDrawDistance, ubo.shadowFadeStartDistance);
 	
-
-	const float inShadowRatio = computeInShadowRatio(ubo.offsetScale, shadowMapSpaceFragment, ubo.worldCameraPosition.xyz, out_worldSpaceFragment, ubo.boundingBoxDimensions);
-	FragColour = ambient + (inShadowRatio * (diffuse + specular));
-} 	if(ubo.cascadeDrawDistanceToggle)
+	if(ubo.cascadeDrawDistanceToggle)
 	{
 		const vec3 mainCameraToFragment = out_worldSpaceFragment - ubo.worldCameraPosition.xyz;
 		const float mainCameraToFragmentMagnitude = length(mainCameraToFragment);
