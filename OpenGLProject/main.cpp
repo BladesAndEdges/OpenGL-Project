@@ -459,21 +459,23 @@ int main()
 	bool diffuseBool = true;
 	bool specularBool = true;
 
+	//Overlay booleans;
+	bool cascadeDrawDistanceOverlayBool = false;
+
 	float azimuthAngle = 0.0f;
 	float zenithAngle = 0.0f;
 	float bus[3] = { 0.0f, 0.0f, 0.0f };
 
 	float radiusInTexels = 0.0f;
 	float shadowDrawDistance = 20.0f;
+	float shadowFadeStart =  - 0.80f; // Fade 80 percent into the shadowDrawDistance
+	uint32_t cascadeCount = 4;
 
 	// Shadow Map texture
 	Texture* shadowMap = nullptr;
 	bool shadowMapHasChangedSize = false;
-	static int shadowMapSizeID = 0; // Here we store our selection data as an index.
+	static int shadowMapSizeID = 3; 
 	const int shadowMapSizes[6] = { 128, 256, 512, 1024, 2048, 4096 };
-
-	Texture* shadowMapDummy = new Texture("ShadowMapDummy", shadowMapSizes[shadowMapSizeID], shadowMapSizes[shadowMapSizeID], TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
-		TextureFilterMode::Bilinear, TextureFormat::DEPTH32, TextureComparisonMode::LessEqual);
 
 	// Framebuffers
 	Framebuffer shadowMapFramebuffer = Framebuffer::customFramebuffer();
