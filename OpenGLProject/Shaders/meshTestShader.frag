@@ -64,9 +64,10 @@ float computeShadowStrength(float maximumDrawDistance, float fadingStartDistance
 
 	return clamp(slope * fragmentDistance + b, 0.0f, 1.0f);
 }
+
 // --------------------------------------------------------------------------------
 float computeInShadowRatio(float offsetScale, vec3 shadowMapFragment, const vec3 mainCameraWorldPosition, 
-											const vec3 fragmentWorldPosition, float boundingBoxDimensions)
+											const vec3 fragmentWorldPosition, float maximumShadowDrawDistance, float shadowFadeStartDistance)
 {	
 
 	const vec2 sampleOffsets[8]=vec2[8](
@@ -82,7 +83,7 @@ float computeInShadowRatio(float offsetScale, vec3 shadowMapFragment, const vec3
 	
 	const vec3 mainCameraToFragment = fragmentWorldPosition - mainCameraWorldPosition;
 	const float mainCameraToFragmentMagnitude = length(mainCameraToFragment);
-	const bool renderShadows = (mainCameraToFragmentMagnitude <= boundingBoxDimensions);
+	const bool renderShadows = (mainCameraToFragmentMagnitude <= maximumShadowDrawDistance);
 
 	if(renderShadows)
 	{
