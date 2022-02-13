@@ -56,9 +56,13 @@ Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMo
 }
 
 // --------------------------------------------------------------------------------
-Texture::Texture(const std::string& label, uint32_t width, uint32_t height, TextureTarget target,
+Texture::Texture(const std::string& label, uint32_t width, uint32_t height, uint32_t depth, TextureTarget target,
 	TextureWrapMode wrapMode, TextureFilterMode filterMode, TextureFormat format, TextureComparisonMode comparisonMode)
 {
+	assert(width > 0);
+	assert(height > 0);
+	assert(depth > 0);
+
 	const GLenum glTarget = translateTargetToOpenGL(target);
 	const GLenum glWrapMode = translateWrapModeToOpenGL(wrapMode);
 	const GLenum glMinFilterMode = translateFilterModeToOpenGLMinFilter(filterMode); // Min Filter may need to be GL_NEAREST FOR SOME CASES
@@ -70,8 +74,19 @@ Texture::Texture(const std::string& label, uint32_t width, uint32_t height, Text
 
 	m_width = width;
 	m_height = height;
+	m_depth = depth;
 
-	glTextureStorage2D(m_name, 1, glSizedFormat, m_width, m_height);
+
+
+	if (glTarget == GL_TEXTURE_2D_ARRAY) 
+	{
+		glTextureStorage3D(m_name, 1, glSizedFormat, m_width, m_height, m_depth);
+	}
+	else
+	{
+		assert(glTarget == GL_TEXTURE_2D);
+		glTextureStorage2D(m_name, 1, glSizedFormat, m_width, m_height);
+	}
 
 	glObjectLabel(GL_TEXTURE, m_name, -1, label.c_str());
 
@@ -137,7 +152,8 @@ GLenum Texture::translateTargetToOpenGL(TextureTarget target) const
 	{
 	case TextureTarget::Texture2D:
 		return GL_TEXTURE_2D;
-
+	case TextureTarget::ArrayTexture2D:
+		return GL_TEXTURE_2D_ARRAY;
 	default:
 		assert(false);
 		return 0;

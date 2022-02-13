@@ -10,7 +10,8 @@
 // --------------------------------------------------------------------------------
 enum class TextureTarget
 {
-	Texture2D
+	Texture2D, 
+	ArrayTexture2D
 };
 
 // --------------------------------------------------------------------------------
@@ -62,9 +63,10 @@ public:
 	Texture(const std::string& source, TextureTarget target, TextureWrapMode wrapMode,
 		TextureFilterMode filterMode);
 
-	Texture(const std::string& label, uint32_t width,  uint32_t height, TextureTarget target
+	Texture(const std::string& label, uint32_t width,  uint32_t height, uint32_t depth, TextureTarget target
 									, TextureWrapMode wrapMode, TextureFilterMode filterMode, 
 										TextureFormat format, TextureComparisonMode comparisonMode);
+
 
 	~Texture();
 
@@ -87,6 +89,7 @@ private:
 	GLuint m_name;
 	uint32_t m_width;
 	uint32_t m_height;
+	uint32_t m_depth;
 
 	// --------------------------------------------------------------------------------
 	GLenum translateTargetToOpenGL(TextureTarget target) const;
