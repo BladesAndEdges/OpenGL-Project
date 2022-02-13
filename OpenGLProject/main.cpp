@@ -491,6 +491,7 @@ int main()
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+
 	while (!glfwWindowShouldClose(window))
 	{
 
@@ -502,11 +503,11 @@ int main()
 			}
 
 			delete shadowMap;
-			shadowMap = new Texture("ShadowMap", shadowMapSizes[shadowMapSizeID], shadowMapSizes[shadowMapSizeID], TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
+			shadowMap = new Texture("ShadowMap", shadowMapSizes[shadowMapSizeID], shadowMapSizes[shadowMapSizeID], cascadeCount,  TextureTarget::ArrayTexture2D, TextureWrapMode::ClampEdge,
 				TextureFilterMode::Bilinear, TextureFormat::DEPTH32, TextureComparisonMode::LessEqual);
 		}
 
-		shadowMapFramebuffer.attachTexture(*shadowMap, AttachmentType::DepthAttachment);
+		shadowMapFramebuffer.attachTexture(TextureTarget::ArrayTexture2D, *shadowMap, AttachmentType::DepthAttachment, 3);
 
 		GLenum status = glCheckNamedFramebufferStatus(shadowMapFramebuffer.getName(), GL_FRAMEBUFFER);
 
@@ -545,24 +546,30 @@ int main()
 		float boundingBoxDimensions;
 		updateShadowView(mainView, shadowView, zenithAngle, azimuthAngle, shadowDrawDistance, boundingBoxDimensions);
 		glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, shadowView, shadowView, worldSpaceToLightVector,  offsetScale, boundingBoxDimensions,
-										 normalMapBool, ambientBool, diffuseBool, specularBool);
+		updateUniformBuffer(uniformBuffer, shadowView, shadowView, worldSpaceToLightVector,  offsetScale, shadowDrawDistance,
+								shadowFadeStart, normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		renderSceneFromView(depthOnlyPassShader, shadowView, uniformBuffer, mainModel, shadowMapFramebuffer, shadowMapDummy);
+		renderSceneFromView(depthOnlyPassShader, shadowView, uniformBuffer, mainModel, shadowMapFramebuffer, shadowMap);
 
 		//--------------------------------------------------------------------------------------------------------------------------------------
 		// Main Camera rendering
 
-		////----------------------------------------------------------------------------------
-		//// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-		//if (show_demo_window)
-		//{
-		//	ImGui::ShowDemoWindow(&show_demo_window);
-		//}
+		bool show_demo_window = true;
+
+		//----------------------------------------------------------------------------------
+		// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+		if (show_demo_window)
+		{
+			ImGui::ShowDemoWindow(&show_demo_window);
+		}
+
+		ImGui::Begin("Overlays");
+		ImGui::Checkbox("Cascade Draw Distance", &cascadeDrawDistanceOverlayBool);
+		ImGui::End();
 
 		ImGui::Begin("Debug Toggles");
 
@@ -600,6 +607,7 @@ int main()
 
 		ImGui::SliderFloat("PCF Texel Radius", &radiusInTexels, 0.0f, 100.0f);
 		ImGui::SliderFloat("Shadow Draw Distance", &shadowDrawDistance, 1.0f, 200.0f);
+		ImGui::SliderFloat("Shadow Fade Start", &shadowFadeStart, 0.0f, 1.0f);
 
 		ImGui::End();
 		//----------------------------------------------------------------------------------
@@ -621,8 +629,8 @@ int main()
 		meshTestShader.useProgram();
 
 		worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, mainView, shadowView, worldSpaceToLightVector,  offsetScale, boundingBoxDimensions,
-									   normalMapBool, ambientBool, diffuseBool, specularBool);
+		updateUniformBuffer(uniformBuffer, mainView, shadowView, worldSpaceToLightVector,  offsetScale, shadowDrawDistance,
+								shadowFadeStart, normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
@@ -632,19 +640,10 @@ int main()
 
 		shadowMapDebugShader.useProgram();
 
-		GLuint nonComparisonShadowSampler;
-		glGenSamplers(1, &nonComparisonShadowSampler);
-
-		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-
 		glBindSampler(0, nonComparisonShadowSampler);
 
 		glBindTextureUnit(0, shadowMap->getName());
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, cascadeCount);
 
 		glBindSampler(0, 0);
 

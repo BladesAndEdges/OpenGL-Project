@@ -44,7 +44,7 @@ layout(binding = 2) uniform sampler2D specularTextureSampler;
 layout(binding = 3) uniform sampler2D normalMapTextureSampler;
 layout(binding = 4) uniform sampler2D maskTextureSampler;
 
-layout(binding = 5) uniform sampler2DShadow shadowMap;
+layout(binding = 5) uniform sampler2DArrayShadow shadowMap;
 
 uniform Material material;
 
@@ -103,14 +103,18 @@ float computeInShadowRatio(float offsetScale, vec3 shadowMapFragment, const vec3
 											vec2(-sineRotation, cosineRotation));
 											
 			const vec2 shadowMapOffset = currentFragmentDepthTextureCoords.xy + (rotationMatrix * (offsetScale * sampleOffsets[offset]));
-			total += texture(shadowMap, vec3(shadowMapOffset, currentFragmentDepthTextureCoords.z)).r;
+			const vec3 shadowTextureCoordinates = vec3(shadowMapOffset, currentFragmentDepthTextureCoords.z);
+			total += texture(shadowMap, vec4(shadowTextureCoordinates, 61231231231231231231231.0f)).r; // something is wrong here 
 		}
-	
-		return total / 8.0f;
+		
+		float shadowStrength = computeShadowStrength(maximumShadowDrawDistance, shadowFadeStartDistance, mainCameraToFragmentMagnitude);
+		float fragmentShadowedRatio = total / 8.0f;
+		
+		return mix(1.0f, fragmentShadowedRatio, shadowStrength);
 	}
 	else
 	{
-		return 0.0f;
+		return 1.0f;
 	}
 };
 
