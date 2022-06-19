@@ -1,7 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 
 #define ArraySize(x) sizeof(x)/sizeof(x[0]);
-
 #include<iostream>
 
 #include "imgui.h"
@@ -25,6 +24,7 @@
 #include "MeshReader.h"
 #include "Camera.h"
 #include "Framebuffer.h"
+#include "Cascade.h"
 
 #include <cstdint>
 #include <string>
@@ -94,7 +94,6 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 	{
-		//Probably not fixed, but work in progress
 		const glm::vec3 wRight = camera.getWorldOrientation() * glm::vec3(1.0f, 0.0f, 0.0f);
 		const glm::vec3 wUp = camera.getWorldOrientation() * glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -186,15 +185,15 @@ glm::vec3 calculateWorldSpaceToLightVector(float zenith, float azimuth)
 }
 
 // --------------------------------------------------------------------------------
-void updateShadowView(const Camera& mainView, Camera& shadowView, float zenith, float azimuth, float shadowDrawDistance, float& dimension)
+void updateShadowView(const Camera& mainView, Camera& shadowView, float zenith, float azimuth, float cascadeStartDistance, float cascadeEndDistance)
 {
 	const glm::vec3 eulerAngles = glm::vec3(glm::radians(-zenith), glm::radians(azimuth), 0.0f);
 	const glm::quat lightSpaceToWorldQuaternion = glm::quat(eulerAngles);
 	const glm::mat3 orientation = glm::toMat3(lightSpaceToWorldQuaternion);
 
 	glm::vec3 worldSpaceMainViewBounds[8];
-	mainView.computeFrustumPlaneCornersInWorldSpace(mainView.getNearPlane(), worldSpaceMainViewBounds);
-	mainView.computeFrustumPlaneCornersInWorldSpace(shadowDrawDistance, worldSpaceMainViewBounds + 4);
+	mainView.computeFrustumPlaneCornersInWorldSpace(cascadeStartDistance, worldSpaceMainViewBounds);
+	mainView.computeFrustumPlaneCornersInWorldSpace(cascadeEndDistance, worldSpaceMainViewBounds + 4);
 
 	glm::vec3 min = orientation * worldSpaceMainViewBounds[0];
 	glm::vec3 max = min;
@@ -210,7 +209,7 @@ void updateShadowView(const Camera& mainView, Camera& shadowView, float zenith, 
 	const glm::vec2 cascadeDimension = glm::vec2(max - min);
  	const glm::vec3 cascadeCenterWorldSpace = glm::transpose(orientation) * ((min + max) / 2.0f);
 
-	dimension = (cascadeDimension.x > cascadeDimension.y) ? cascadeDimension.x : cascadeDimension.y;
+	const float dimension = (cascadeDimension.x > cascadeDimension.y) ? cascadeDimension.x : cascadeDimension.y;
 
 	shadowView.setCameraWidth(dimension);
 	shadowView.setCameraHeight(dimension);
@@ -467,19 +466,21 @@ int main()
 	float bus[3] = { 0.0f, 0.0f, 0.0f };
 
 	float radiusInTexels = 0.0f;
-	float shadowDrawDistance = 20.0f;
-	float shadowFadeStart =  - 0.80f; // Fade 80 percent into the shadowDrawDistance
-	uint32_t cascadeCount = 4;
+	float maximumShadowDrawDistance = 100.0f;
+	float fadingRegionStart = -0.90f; // Fade 80 percent into the shadowDrawDistance
 
 	// Shadow Map texture
 	Texture* shadowMap = nullptr;
 	bool shadowMapHasChangedSize = false;
-	static int shadowMapSizeID = 3; 
-	const int shadowMapSizes[6] = { 128, 256, 512, 1024, 2048, 4096 };
+	static int shadowMapSizeID = 3;
+	const uint32_t shadowMapSizes[6] = { 128, 256, 512, 1024, 2048, 4096 };
+	static int cascadesCountID = 0;
 
-	// Framebuffers
+	std::vector<Cascade> cascades;
+	uint32_t activeCascadesCount = 4;
+	bool cascadesVectorHasChangedSize = false;
+
 	Framebuffer shadowMapFramebuffer = Framebuffer::customFramebuffer();
-
 	Framebuffer mainFramebuffer = Framebuffer::defaultFramebuffer();
 
 	// Non-Comparison Sampler
@@ -494,24 +495,53 @@ int main()
 
 	while (!glfwWindowShouldClose(window))
 	{
-
-		if ((shadowMap == nullptr) || shadowMapHasChangedSize)
+		// Shadow Map == nullptr only for frame 0; And for a moment whilst deleted (?)
+		if ( (shadowMap == nullptr) || (activeCascadesCount != (uint32_t)cascades.size() ) || ((uint32_t)shadowMapSizes[shadowMapSizeID] != shadowMap->getWidth()) )
 		{
-			if (shadowMapHasChangedSize)
-			{
-				shadowMapHasChangedSize = !shadowMapHasChangedSize;
-			}
-
+			// Recreate the Shadow Map
 			delete shadowMap;
-			shadowMap = new Texture("ShadowMap", shadowMapSizes[shadowMapSizeID], shadowMapSizes[shadowMapSizeID], cascadeCount,  TextureTarget::ArrayTexture2D, TextureWrapMode::ClampEdge,
-				TextureFilterMode::Bilinear, TextureFormat::DEPTH32, TextureComparisonMode::LessEqual);
+			shadowMap = new Texture("ShadowMap", shadowMapSizes[shadowMapSizeID], shadowMapSizes[shadowMapSizeID], activeCascadesCount, TextureTarget::ArrayTexture2D,
+				TextureWrapMode::ClampEdge, TextureFilterMode::Bilinear, TextureFormat::DEPTH32, TextureComparisonMode::LessEqual);
+
+			// Update Cascades
+			cascades.clear();
+
+			while ((uint32_t)cascades.size() < activeCascadesCount)
+			{
+				cascades.emplace_back(shadowMap, (uint32_t)cascades.size());
+			}
 		}
 
-		shadowMapFramebuffer.attachTexture(TextureTarget::ArrayTexture2D, *shadowMap, AttachmentType::DepthAttachment, 3);
+		for (const Cascade& cascade : cascades)
+		{
+			assert(cascade.getShadowMap()->getHeight() == shadowMapSizes[shadowMapSizeID]);
+			assert(cascade.getShadowMap()->getWidth() == shadowMapSizes[shadowMapSizeID]);
+			assert(cascades.size() == activeCascadesCount);
+		}
 
-		GLenum status = glCheckNamedFramebufferStatus(shadowMapFramebuffer.getName(), GL_FRAMEBUFFER);
+		//// Make sure the shadow map dimension are up to date.
+		//if ((shadowMap == nullptr) || shadowMapHasChangedSize)
+		//{
+		//	shadowMapHasChangedSize = false;
+		//	delete shadowMap;
+		//	shadowMap = new Texture("ShadowMap", shadowMapSizes[shadowMapSizeID], shadowMapSizes[shadowMapSizeID], activeCascadesCount,  TextureTarget::ArrayTexture2D, TextureWrapMode::ClampEdge,
+		//		TextureFilterMode::Bilinear, TextureFormat::DEPTH32, TextureComparisonMode::LessEqual);
+		//}
 
-		assert(status == GL_FRAMEBUFFER_COMPLETE);
+		//// Probably not updating the cascades
+		//// Make sure the amount of cascades are up to date
+		//if ((cascades.size() == 0) || cascadesVectorHasChangedSize)
+		//{
+		//	cascadesVectorHasChangedSize = false;
+
+		//	cascades.clear();
+
+		//	for (uint32_t cascadeIndex = 0; cascadeIndex < activeCascadesCount; cascadeIndex++)
+		//	{
+		//		// Set the Id of the layer to look from the Array texture equal to the id within the vector
+		//		cascades.emplace_back(shadowMap, cascadeIndex); 
+		//	}
+		//}
 
 		const float timerStartingPoint = (float)glfwGetTime();
 
@@ -532,32 +562,76 @@ int main()
 		depthOnlyPassShader.useProgram(); // Make sure the shader is being used before setting these textures
 		glBindVertexArray(modelVAO);
 
-		int framebufferWidth, framebufferHeight;
-		glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
+		// Max is 200
+		// 0 - 0.25, 0.25 - 0.50, 0.50 - 0.75, 0.75 - 1.0f
+		const float cascadeSplitDistances[8] =
+		{
+			0.0f, (0.25f * maximumShadowDrawDistance),
+			(0.25f * maximumShadowDrawDistance), (0.5f * maximumShadowDrawDistance),
+			(0.5f * maximumShadowDrawDistance), (0.75f * maximumShadowDrawDistance),
+			(0.75f * maximumShadowDrawDistance), (1.0f * maximumShadowDrawDistance),
+		};
 
-		glViewport(0, 0, shadowMap->getWidth(), shadowMap->getHeight());
+		float offsetScale = 0.0f;
+		uint32_t cascadeIndex = 0;
 
-		const GLfloat depthClearValue = 1.0f;
-		glClearNamedFramebufferfv(shadowMapFramebuffer.getName(), GL_DEPTH, 0, &depthClearValue);
+		// Depth Pass(es);
+		for (Cascade& cascade : cascades)
+		{
 
-		const float texelSize = 1.0f / (float)(shadowMap->getWidth());
-		const float offsetScale = radiusInTexels * texelSize;
+			int framebufferWidth, framebufferHeight;
+			glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
 
-		float boundingBoxDimensions;
-		updateShadowView(mainView, shadowView, zenithAngle, azimuthAngle, shadowDrawDistance, boundingBoxDimensions);
-		glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, shadowView, shadowView, worldSpaceToLightVector,  offsetScale, shadowDrawDistance,
-								shadowFadeStart, normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
+			const uint32_t width = cascade.getShadowMap()->getWidth();
+			const uint32_t height = cascade.getShadowMap()->getHeight();
+			glViewport(0, 0, cascade.getShadowMap()->getWidth(), cascade.getShadowMap()->getHeight());
 
-		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
-		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+			const GLfloat clearValue = 1.0f;
+			glClearNamedFramebufferfv(cascade.getFramebuffer().getName(), GL_DEPTH, 0, &clearValue);
 
-		renderSceneFromView(depthOnlyPassShader, shadowView, uniformBuffer, mainModel, shadowMapFramebuffer, shadowMap);
+			const float texelSize = 1.0f / (float)(cascade.getShadowMap()->getWidth());
+			offsetScale = radiusInTexels * texelSize;
+
+			uint32_t cascadeSplitDistanceIndex = cascadeIndex * 2;
+			updateShadowView(mainView, cascade.getCascadeView(), zenithAngle, azimuthAngle, cascadeSplitDistances[cascadeSplitDistanceIndex], cascadeSplitDistances[cascadeSplitDistanceIndex + 1]);
+
+			glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
+			updateUniformBuffer(uniformBuffer, cascade.getCascadeView(), cascade.getCascadeView(), worldSpaceToLightVector, offsetScale, maximumShadowDrawDistance, fadingRegionStart, 
+				normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
+
+			glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
+			glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
+			glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+			renderSceneFromView(depthOnlyPassShader, cascade.getCascadeView(), uniformBuffer, mainModel, cascade.getFramebuffer(), cascade.getShadowMap());
+
+			cascadeIndex++;
+		}
+
+		//int framebufferWidth, framebufferHeight;
+		//glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
+
+		//glViewport(0, 0, shadowMap->getWidth(), shadowMap->getHeight());
+
+		//const GLfloat depthClearValue = 1.0f;
+		//glClearNamedFramebufferfv(shadowMapFramebuffer.getName(), GL_DEPTH, 0, &depthClearValue);
+
+		//const float texelSize = 1.0f / (float)(shadowMap->getWidth());
+		//const float offsetScale = radiusInTexels * texelSize;
+
+		//updateShadowView(mainView, shadowView, zenithAngle, azimuthAngle, shadowDrawDistance);
+		//glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
+		//updateUniformBuffer(uniformBuffer, shadowView, shadowView, worldSpaceToLightVector,  offsetScale, shadowDrawDistance,
+		//						shadowFadeStart, normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
+
+		//glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
+		//glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
+		//glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+		//renderSceneFromView(depthOnlyPassShader, shadowView, uniformBuffer, mainModel, shadowMapFramebuffer, shadowMap);
 
 		//--------------------------------------------------------------------------------------------------------------------------------------
 		// Main Camera rendering
-
 		bool show_demo_window = true;
 
 		//----------------------------------------------------------------------------------
@@ -582,17 +656,17 @@ int main()
 		ImGui::SliderFloat("Zenith", &zenithAngle, 0.0f, 90.0f);
 
 		// ImGui 
-		static ImGuiComboFlags flags = 0;
-		const char* items[] = { "128x128", "256x256", "512x512", "1024x1024", "2048x2048", "4096x4096"};
+		static ImGuiComboFlags shadowMapDimensionsFlag = 0;
+		const char* possibleShadowMapDimensions[] = { "128x128", "256x256", "512x512", "1024x1024", "2048x2048", "4096x4096"};
 
-		const char* combo_preview_value = items[shadowMapSizeID];  // Pass in the preview value visible before opening the combo (it could be anything)
+		const char* combo_preview_value = possibleShadowMapDimensions[shadowMapSizeID];  // Pass in the preview value visible before opening the combo (it could be anything)
 		
-		if (ImGui::BeginCombo("SM Resolution", combo_preview_value, flags))
+		if (ImGui::BeginCombo("SM Resolution", combo_preview_value, shadowMapDimensionsFlag))
 		{
-			for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+			for (int n = 0; n < IM_ARRAYSIZE(possibleShadowMapDimensions); n++)
 			{
 				const bool is_selected = (shadowMapSizeID == n);
-				if (ImGui::Selectable(items[n], is_selected))
+				if (ImGui::Selectable(possibleShadowMapDimensions[n], is_selected))
 				{
 					shadowMapSizeID = n;
 					shadowMapHasChangedSize = !shadowMapHasChangedSize;
@@ -606,8 +680,34 @@ int main()
 		}
 
 		ImGui::SliderFloat("PCF Texel Radius", &radiusInTexels, 0.0f, 100.0f);
-		ImGui::SliderFloat("Shadow Draw Distance", &shadowDrawDistance, 1.0f, 200.0f);
-		ImGui::SliderFloat("Shadow Fade Start", &shadowFadeStart, 0.0f, 1.0f);
+		ImGui::SliderFloat("Shadow Draw Distance", &maximumShadowDrawDistance, 1.0f, 200.0f);
+		ImGui::SliderFloat("Shadow Fade Start", &fadingRegionStart, 0.0f, 1.0f);
+		
+		// ------------------------------------------- Shadow Map Cascades ------------------------------------------------------------------
+		static ImGuiComboFlags shadowCascadesCountFlags = 0;
+		const char* possibleCascadeCount[] = { "1", "2", "4" };
+
+		const char* cascadeCountPreviewValue = possibleCascadeCount[cascadesCountID];  // Pass in the preview value visible before opening the combo (it could be anything)
+
+		if (ImGui::BeginCombo("Number Of Cascades", cascadeCountPreviewValue, shadowCascadesCountFlags))
+		{
+			for (int n = 0; n < IM_ARRAYSIZE(possibleCascadeCount); n++)
+			{
+				const bool is_selected = (cascadesCountID == n);
+				if (ImGui::Selectable(possibleCascadeCount[n], is_selected))
+				{
+					cascadesCountID = n;
+					cascadesVectorHasChangedSize = !cascadesVectorHasChangedSize;
+					activeCascadesCount = atoi(possibleCascadeCount[cascadesCountID]);
+				}
+
+				// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+				if (is_selected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+
 
 		ImGui::End();
 		//----------------------------------------------------------------------------------
@@ -628,9 +728,9 @@ int main()
 
 		meshTestShader.useProgram();
 
-		worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, mainView, shadowView, worldSpaceToLightVector,  offsetScale, shadowDrawDistance,
-								shadowFadeStart, normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
+		const glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
+		updateUniformBuffer(uniformBuffer, mainView, shadowView, worldSpaceToLightVector,  offsetScale, maximumShadowDrawDistance,
+								fadingRegionStart, normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
@@ -643,7 +743,7 @@ int main()
 		glBindSampler(0, nonComparisonShadowSampler);
 
 		glBindTextureUnit(0, shadowMap->getName());
-		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, cascadeCount);
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, activeCascadesCount);
 
 		glBindSampler(0, 0);
 
