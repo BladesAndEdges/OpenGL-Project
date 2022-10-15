@@ -1,5 +1,7 @@
 #include "UniformBuffer.h"
 
+#define MAXIMUM_NUM_OF_CASCADES 4
+
 // --------------------------------------------------------------------------------
 void copyMat4ToFloatArray(const glm::mat4 & source, float destination[16])
 {
@@ -38,6 +40,16 @@ void updateUniformBuffer(UniformBuffer & ubo, const Camera & mainView, const Cam
 	const glm::mat4 shadowMapViewMatrix = shadowMapView.createViewMatrix();
 	const glm::mat4 shadowMapProjectionMatrix = shadowMapView.createProjectionMatrix();
 	const glm::mat4 shadowMapViewProjection = shadowMapProjectionMatrix * shadowMapViewMatrix;
+
+	// Go over and assign the starting distances for each cascade.
+	// Assume you always got 4 cascades, might change, might not. 
+	// We won't ever consider more than 4 cascades either way, best might be to 
+	// take it as a #define to avoid magic numbers
+	for (uint32_t cascadeId = 0; cascadeId < MAXIMUM_NUM_OF_CASCADES; cascadeId++)
+	{
+		const float cascadeCoverageInPercent = 0.25f;
+		ubo.cascadeSplitsStartDistances[cascadeId] = (cascadeId * cascadeCoverageInPercent) * shadowDrawDistance;
+	}
 
 	// Copy over values to the UBO
 	copyVec4ToFloatArray(worldSpacePosition, ubo.worldSpaceCameraPosition);

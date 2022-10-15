@@ -20,6 +20,7 @@ struct UniformBuffer
 	float viewProjection[16];
 	float worldToShadowMap[16];
 
+	float cascadeSplitsStartDistances[4];
 	float offsetScale;
 	float shadowDrawDistance;
 	float shadowFadeStartDistance;

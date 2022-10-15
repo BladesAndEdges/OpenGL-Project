@@ -26,6 +26,7 @@ layout(std140) uniform sceneMatrices
 	mat4 viewProjection;
 	mat4 worldToShadowMap;
 	
+	vec4 cascadeSplitsStartDistances;
 	float offsetScale;
 	float shadowDrawDistance;
 	float shadowFadeStartDistance;
@@ -66,10 +67,34 @@ float computeShadowStrength(float maximumDrawDistance, float fadingStartDistance
 }
 
 // --------------------------------------------------------------------------------
+uint pickCascadeSplit(const float fragmentDistance, const vec4 cascadeSplitStartDistances, const float maxShadowDrawDistance)
+{
+	// Cascades[0] is redundant and should be removed. First cascade always starts at 0.
+	// 4th cascade always ends at maxShadowDrawDistance.
+	if(fragmentDistance <= cascadeSplitStartDistances[1])
+	{
+		return 0;
+	}
+	else if(fragmentDistance <= cascadeSplitStartDistances[2])
+	{
+		return 1;
+	}
+	else if(fragmentDistance <= cascadeSplitStartDistances[3])
+	{
+		return 2;
+	}
+	else
+	{
+		return 3;
+	}
+}
+
+// --------------------------------------------------------------------------------
 float computeInShadowRatio(float offsetScale, vec3 shadowMapFragment, const vec3 mainCameraWorldPosition, 
 											const vec3 fragmentWorldPosition, float maximumShadowDrawDistance, float shadowFadeStartDistance)
 {	
 
+//#if 0
 	const vec2 sampleOffsets[8]=vec2[8](
 	vec2(-0.7071, 0.7071),
 	vec2(-0.0000, -0.8750),
@@ -103,8 +128,29 @@ float computeInShadowRatio(float offsetScale, vec3 shadowMapFragment, const vec3
 											vec2(-sineRotation, cosineRotation));
 											
 			const vec2 shadowMapOffset = currentFragmentDepthTextureCoords.xy + (rotationMatrix * (offsetScale * sampleOffsets[offset]));
-			const vec3 shadowTextureCoordinates = vec3(shadowMapOffset, currentFragmentDepthTextureCoords.z);
-			total += texture(shadowMap, vec4(shadowTextureCoordinates, 61231231231231231231231.0f)).r; // something is wrong here 
+			
+			// I believe somewhere around here, I'll have to check and determine which layer is to be sampled from. 
+			// The draw distance would play a role, but I believe atm I have a global draw distances, instead this might need to be 
+			// the percentages specified in the cpu side array. Like layer 0 being 0-25% * maxDrawDistance etc. 
+			// you can then do something like this: 
+			
+			/*
+				if(target.DrawDistance < someThreshold)
+				{
+					cascadeLayer = 0;
+				}
+				...
+			//	else
+				//{
+					//cascadeLayer = 3;
+				//}
+			*/
+			
+			// The fade region was mentionedd by George. I believe he means that it's to be a per-cascade fade distance. 
+			// Say a const uint in percentage. The last 10% of the area the cascade encompasses is the fade region.
+			// How do you sample that area ?
+			const vec3 shadowTextureCoordinates = vec3(shadowMapOffset, currentFragmentDepthTextureCoords.z); // The 3.0 is most likely the layer to sample from., why is it not stored in P.w ?
+			total += texture(shadowMap, vec4(shadowTextureCoordinates, 3.0f)).r;			
 		}
 		
 		float shadowStrength = computeShadowStrength(maximumShadowDrawDistance, shadowFadeStartDistance, mainCameraToFragmentMagnitude);
@@ -116,6 +162,9 @@ float computeInShadowRatio(float offsetScale, vec3 shadowMapFragment, const vec3
 	{
 		return 1.0f;
 	}
+//#else
+	return 0.0f;
+//#endif
 };
 
 // --------------------------------------------------------------------------------

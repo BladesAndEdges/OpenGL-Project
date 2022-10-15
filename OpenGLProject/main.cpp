@@ -67,7 +67,6 @@ void GLAPIENTRY MessageCallback(GLenum, GLenum type, GLuint, GLenum severity, GL
 	default:
 		break;
 	}
-
 }
 
 // --------------------------------------------------------------------------------
@@ -102,7 +101,6 @@ void processCameraInput(Camera& camera, GLFWwindow* window)
 
 		const float deltaX = g_previousCursorX - xCursorPos;
 		const glm::mat3 yawRotation = glm::mat3(glm::rotate(glm::mat4(1.0f), glm::radians(deltaX), up)); 
-
 		const glm::mat3 finalRotation =   yawRotation * camera.getWorldOrientation() * pitchRotation;
 
 		camera.setCameraWorldOrientation(finalRotation);
@@ -221,7 +219,7 @@ void updateShadowView(const Camera& mainView, Camera& shadowView, float zenith, 
 void renderSceneFromView(const Shader& shader, const Camera&,  const UniformBuffer&, const MeshReader& model, const Framebuffer& framebuffer, 
 								const Texture* shadowMap)
 {
-
+	assert(shadowMap != nullptr);
 	shadowMap->useTexture(5);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.getName());
@@ -442,9 +440,6 @@ int main()
 	Camera mainView = Camera::perspective(mainModel.getSceneCenter(), (float)mainViewWidth,
 		(float)mainViewHeight, 0.1f, 100.0f, 90.0f);
 
-	float cascadeDimension = 1.0f;
-	Camera shadowView = Camera::orthographic(glm::vec3(0.0f, 0.0f, 0.0f), cascadeDimension, cascadeDimension, -100.0f, 100.0f);
-
 	float frameTimeArray[128];
 	unsigned int frameNumber = 0;
 
@@ -474,11 +469,9 @@ int main()
 	bool shadowMapHasChangedSize = false;
 	static int shadowMapSizeID = 3;
 	const uint32_t shadowMapSizes[6] = { 128, 256, 512, 1024, 2048, 4096 };
-	static int cascadesCountID = 0;
 
 	std::vector<Cascade> cascades;
 	uint32_t activeCascadesCount = 4;
-	bool cascadesVectorHasChangedSize = false;
 
 	Framebuffer shadowMapFramebuffer = Framebuffer::customFramebuffer();
 	Framebuffer mainFramebuffer = Framebuffer::defaultFramebuffer();
@@ -518,30 +511,6 @@ int main()
 			assert(cascade.getShadowMap()->getWidth() == shadowMapSizes[shadowMapSizeID]);
 			assert(cascades.size() == activeCascadesCount);
 		}
-
-		//// Make sure the shadow map dimension are up to date.
-		//if ((shadowMap == nullptr) || shadowMapHasChangedSize)
-		//{
-		//	shadowMapHasChangedSize = false;
-		//	delete shadowMap;
-		//	shadowMap = new Texture("ShadowMap", shadowMapSizes[shadowMapSizeID], shadowMapSizes[shadowMapSizeID], activeCascadesCount,  TextureTarget::ArrayTexture2D, TextureWrapMode::ClampEdge,
-		//		TextureFilterMode::Bilinear, TextureFormat::DEPTH32, TextureComparisonMode::LessEqual);
-		//}
-
-		//// Probably not updating the cascades
-		//// Make sure the amount of cascades are up to date
-		//if ((cascades.size() == 0) || cascadesVectorHasChangedSize)
-		//{
-		//	cascadesVectorHasChangedSize = false;
-
-		//	cascades.clear();
-
-		//	for (uint32_t cascadeIndex = 0; cascadeIndex < activeCascadesCount; cascadeIndex++)
-		//	{
-		//		// Set the Id of the layer to look from the Array texture equal to the id within the vector
-		//		cascades.emplace_back(shadowMap, cascadeIndex); 
-		//	}
-		//}
 
 		const float timerStartingPoint = (float)glfwGetTime();
 
@@ -684,21 +653,20 @@ int main()
 		ImGui::SliderFloat("Shadow Fade Start", &fadingRegionStart, 0.0f, 1.0f);
 		
 		// ------------------------------------------- Shadow Map Cascades ------------------------------------------------------------------
-		static ImGuiComboFlags shadowCascadesCountFlags = 0;
-		const char* possibleCascadeCount[] = { "1", "2", "4" };
+		char cascadeCountScratch[2];
+		cascadeCountScratch[0] = '0' + char(activeCascadesCount);
+		cascadeCountScratch[1] = '\0';
 
-		const char* cascadeCountPreviewValue = possibleCascadeCount[cascadesCountID];  // Pass in the preview value visible before opening the combo (it could be anything)
-
-		if (ImGui::BeginCombo("Number Of Cascades", cascadeCountPreviewValue, shadowCascadesCountFlags))
+		if (ImGui::BeginCombo("Number Of Cascades", cascadeCountScratch, 0))
 		{
-			for (int n = 0; n < IM_ARRAYSIZE(possibleCascadeCount); n++)
+			for (uint32_t n = 1; n <= 4; n++)
 			{
-				const bool is_selected = (cascadesCountID == n);
-				if (ImGui::Selectable(possibleCascadeCount[n], is_selected))
+				const bool is_selected = (activeCascadesCount == n);
+				cascadeCountScratch[0] = '0' + char(n);
+
+				if (ImGui::Selectable(cascadeCountScratch, is_selected))
 				{
-					cascadesCountID = n;
-					cascadesVectorHasChangedSize = !cascadesVectorHasChangedSize;
-					activeCascadesCount = atoi(possibleCascadeCount[cascadesCountID]);
+					activeCascadesCount = n;
 				}
 
 				// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
@@ -726,10 +694,8 @@ int main()
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		meshTestShader.useProgram();
-
 		const glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, mainView, shadowView, worldSpaceToLightVector,  offsetScale, maximumShadowDrawDistance,
+		updateUniformBuffer(uniformBuffer, mainView, cascades[0].getCascadeView(), worldSpaceToLightVector,  offsetScale, maximumShadowDrawDistance,
 								fadingRegionStart, normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);

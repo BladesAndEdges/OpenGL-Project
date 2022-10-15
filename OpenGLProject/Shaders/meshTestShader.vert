@@ -5,15 +5,15 @@ layout (location = 1) in vec2 in_TextureCoordinate;
 layout (location = 2) in vec3 in_Normal;
 layout (location = 3) in vec4 in_Tangent;
 
-
 layout(std140) uniform sceneMatrices
 {
-	vec4 worldCameraPosition;
+	vec4 worldCameraPosition; // Change this to a vec3
 	vec4 lightSourceDirection; // Already normalized
 	mat4 model;
 	mat4 viewProjection;
 	mat4 worldToShadowMap;
 	
+	vec4 cascadeSplitsStartDistances;
 	float offsetScale;
 	float shadowDrawDistance;
 	float shadowFadeStartDistance;
@@ -25,7 +25,6 @@ layout(std140) uniform sceneMatrices
 	
 	bool cascadeDrawDistanceToggle;
 }ubo;
-
 
 out vec3 out_worldSpaceNormal;
 out vec3 out_worldSpaceFragment;
