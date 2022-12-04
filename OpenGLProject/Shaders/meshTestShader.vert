@@ -1,5 +1,7 @@
 #version 450
 
+#define MAXIMUM_CASCADES 4
+
 layout (location = 0) in vec3 in_Position;
 layout (location = 1) in vec2 in_TextureCoordinate;
 layout (location = 2) in vec3 in_Normal;
@@ -7,13 +9,14 @@ layout (location = 3) in vec4 in_Tangent;
 
 layout(std140) uniform sceneMatrices
 {
-	vec4 worldCameraPosition; // Change this to a vec3
-	vec4 lightSourceDirection; // Already normalized
+	vec4 worldCameraPosition; 
+	vec4 lightSourceDirection; 
 	mat4 model;
 	mat4 viewProjection;
-	mat4 worldToShadowMap;
+
+	mat4 worldToShadowMapMatrices[MAXIMUM_CASCADES];
 	
-	vec4 cascadeSplitsStartDistances;
+	vec4 cascadeSplitsEndDistances;
 	float offsetScale;
 	float shadowDrawDistance;
 	float shadowFadeStartDistance;

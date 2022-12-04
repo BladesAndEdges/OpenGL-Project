@@ -542,7 +542,7 @@ int main()
 		};
 
 		float offsetScale = 0.0f;
-		uint32_t cascadeIndex = 0;
+		uint32_t cascadeIndex = 0u;
 
 		// Depth Pass(es);
 		for (Cascade& cascade : cascades)
@@ -561,11 +561,12 @@ int main()
 			const float texelSize = 1.0f / (float)(cascade.getShadowMap()->getWidth());
 			offsetScale = radiusInTexels * texelSize;
 
-			uint32_t cascadeSplitDistanceIndex = cascadeIndex * 2;
+			uint32_t cascadeSplitDistanceIndex = cascadeIndex * 2u;
 			updateShadowView(mainView, cascade.getCascadeView(), zenithAngle, azimuthAngle, cascadeSplitDistances[cascadeSplitDistanceIndex], cascadeSplitDistances[cascadeSplitDistanceIndex + 1]);
 
 			glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-			updateUniformBuffer(uniformBuffer, cascade.getCascadeView(), cascade.getCascadeView(), worldSpaceToLightVector, offsetScale, maximumShadowDrawDistance, fadingRegionStart, 
+			const uint32_t cascadeSplitEndId = cascadeSplitDistanceIndex + 1u;
+			updateUniformBuffer(uniformBuffer, cascade.getCascadeView(), cascade.getCascadeView(), cascadeSplitDistances[cascadeSplitEndId], cascadeIndex, worldSpaceToLightVector, offsetScale, maximumShadowDrawDistance, fadingRegionStart, 
 				normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
 
 			glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
@@ -576,28 +577,6 @@ int main()
 
 			cascadeIndex++;
 		}
-
-		//int framebufferWidth, framebufferHeight;
-		//glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
-
-		//glViewport(0, 0, shadowMap->getWidth(), shadowMap->getHeight());
-
-		//const GLfloat depthClearValue = 1.0f;
-		//glClearNamedFramebufferfv(shadowMapFramebuffer.getName(), GL_DEPTH, 0, &depthClearValue);
-
-		//const float texelSize = 1.0f / (float)(shadowMap->getWidth());
-		//const float offsetScale = radiusInTexels * texelSize;
-
-		//updateShadowView(mainView, shadowView, zenithAngle, azimuthAngle, shadowDrawDistance);
-		//glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		//updateUniformBuffer(uniformBuffer, shadowView, shadowView, worldSpaceToLightVector,  offsetScale, shadowDrawDistance,
-		//						shadowFadeStart, normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
-
-		//glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
-		//glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
-		//glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-		//renderSceneFromView(depthOnlyPassShader, shadowView, uniformBuffer, mainModel, shadowMapFramebuffer, shadowMap);
 
 		//--------------------------------------------------------------------------------------------------------------------------------------
 		// Main Camera rendering
@@ -694,8 +673,10 @@ int main()
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+		// What to do about this. Isn't this meaning cascade 0 values get partially updated ahead of others ?
 		const glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, mainView, cascades[0].getCascadeView(), worldSpaceToLightVector,  offsetScale, maximumShadowDrawDistance,
+		updateUniformBuffer(uniformBuffer, mainView, cascades[0].getCascadeView(), cascadeSplitDistances[1], 0u, worldSpaceToLightVector,  offsetScale, maximumShadowDrawDistance,
 								fadingRegionStart, normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);

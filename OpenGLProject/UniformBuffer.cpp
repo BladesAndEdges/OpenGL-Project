@@ -1,9 +1,7 @@
 #include "UniformBuffer.h"
 
-#define MAXIMUM_NUM_OF_CASCADES 4
-
 // --------------------------------------------------------------------------------
-void copyMat4ToFloatArray(const glm::mat4 & source, float destination[16])
+void copyMat4ToFloat16Array(const glm::mat4 & source, float destination[16])
 {
 	const float* matrixData = glm::value_ptr(source);
 
@@ -11,6 +9,26 @@ void copyMat4ToFloatArray(const glm::mat4 & source, float destination[16])
 	{
 		destination[element] = matrixData[element];
 	}
+}
+
+// --------------------------------------------------------------------------------
+void copyMat4ToFloat64ArrayByIndex(const glm::mat4 & source, float destination[64], uint32_t matrixIndex)
+{
+	assert(matrixIndex < MAXIMUM_NUM_OF_CASCADES);
+
+	const float* matrixData = glm::value_ptr(source);
+	const uint32_t destinationStartId = matrixIndex * 16u;
+
+	for (uint32_t sourceElementId = 0u; sourceElementId < 16u; sourceElementId++)
+	{
+		const uint32_t destinationElementId = destinationStartId + sourceElementId;
+		destination[destinationElementId] = matrixData[sourceElementId];
+	}
+
+	//for (uint32_t element = startingIndex; element < endingIndex; element++)
+	//{
+	//	destination[element] = matrixData[element];
+	//}
 }
 
 // --------------------------------------------------------------------------------
@@ -25,7 +43,7 @@ void copyVec4ToFloatArray(const glm::vec4 & source, float destination[4])
 }
 
 // --------------------------------------------------------------------------------
-void updateUniformBuffer(UniformBuffer & ubo, const Camera & mainView, const Camera & shadowMapView, const glm::vec3& toLightDirectionWorldSpace, 
+void updateUniformBuffer(UniformBuffer& ubo, const Camera& mainView, const Camera& shadowMapView, const float cascadeSplitEndDistance, const uint32_t worldToShadowMapArrayId, const glm::vec3& toLightDirectionWorldSpace,
 	float offScale, float shadowDrawDistance, float shadowFadeStart, bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle, bool cascadeDrawDistanceToggle)
 {
 	const glm::vec4 worldSpacePosition = glm::vec4(mainView.getWorldPosition(), 1.0f);
@@ -41,23 +59,17 @@ void updateUniformBuffer(UniformBuffer & ubo, const Camera & mainView, const Cam
 	const glm::mat4 shadowMapProjectionMatrix = shadowMapView.createProjectionMatrix();
 	const glm::mat4 shadowMapViewProjection = shadowMapProjectionMatrix * shadowMapViewMatrix;
 
-	// Go over and assign the starting distances for each cascade.
-	// Assume you always got 4 cascades, might change, might not. 
-	// We won't ever consider more than 4 cascades either way, best might be to 
-	// take it as a #define to avoid magic numbers
-	for (uint32_t cascadeId = 0; cascadeId < MAXIMUM_NUM_OF_CASCADES; cascadeId++)
-	{
-		const float cascadeCoverageInPercent = 0.25f;
-		ubo.cascadeSplitsStartDistances[cascadeId] = (cascadeId * cascadeCoverageInPercent) * shadowDrawDistance;
-	}
+
+	ubo.cascadeSplitsEndDistances[worldToShadowMapArrayId] = cascadeSplitEndDistance;
 
 	// Copy over values to the UBO
 	copyVec4ToFloatArray(worldSpacePosition, ubo.worldSpaceCameraPosition);
 	copyVec4ToFloatArray(toLightDirectionWS, ubo.lightSourceDirection);
 
-	copyMat4ToFloatArray(model, ubo.model);
-	copyMat4ToFloatArray(viewProjection, ubo.viewProjection);
-	copyMat4ToFloatArray(shadowMapViewProjection, ubo.worldToShadowMap);
+	copyMat4ToFloat16Array(model, ubo.model);
+	copyMat4ToFloat16Array(viewProjection, ubo.viewProjection);
+
+	copyMat4ToFloat64ArrayByIndex(shadowMapViewProjection, ubo.worldToShadowMap, worldToShadowMapArrayId);
 
 	ubo.offsetScale = offScale;
 	ubo.shadowDrawDistance = shadowDrawDistance;
