@@ -7,6 +7,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include "ProfileMarker.h" // Included above glad due to windows.h
+
 #include <glad.h>
 #include <GLFW/glfw3.h>
 
@@ -326,13 +328,19 @@ void imguiStyleSetting()
 // --------------------------------------------------------------------------------
 int main()
 {
+	// Profile Marker variables
+	ProfileMarker mainFunctionInitMarker("Main Setup Code");
+
+	// GLFW-related variables
+	GLFWwindow* window = nullptr;
+
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
-	GLFWwindow* window = glfwCreateWindow(800, 600, "", nullptr, nullptr);
+	window = glfwCreateWindow(800, 600, "", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebufferCallback);
 
@@ -346,12 +354,6 @@ int main()
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-
-	// Setup Dear ImGui style
-	/*ImGui::StyleColorsDark();*/
-	//ImGui::StyleColorsClassic();
 	imguiStyleSetting();
 
 	// Setup Platform/Renderer backends
@@ -486,6 +488,7 @@ int main()
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 
+	mainFunctionInitMarker.endTiming();
 	while (!glfwWindowShouldClose(window))
 	{
 		// Shadow Map == nullptr only for frame 0; And for a moment whilst deleted (?)
