@@ -63,7 +63,7 @@ public:
 	Texture(const std::string& source, TextureTarget target, TextureWrapMode wrapMode,
 		TextureFilterMode filterMode);
 
-	Texture(const std::string& label, uint32_t width,  uint32_t height, uint32_t depth, TextureTarget target
+	Texture(const std::string& label, uint32_t width,  uint32_t height, uint32_t layers, TextureTarget target
 									, TextureWrapMode wrapMode, TextureFilterMode filterMode, 
 										TextureFormat format, TextureComparisonMode comparisonMode);
 

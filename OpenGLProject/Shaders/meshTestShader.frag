@@ -1,6 +1,8 @@
 #version 450 core
 
 #define PI 3.1415926538
+#define MAXIMUM_CASCADES 4
+#define UINT_MAX 0xFFFFFFFFu
 
 in vec3 out_worldSpaceNormal;
 in vec3 out_worldSpaceFragment;
@@ -20,12 +22,14 @@ struct Material
 
 layout(std140) uniform sceneMatrices
 {
-	vec4 worldCameraPosition; // Change this to a vec3
-	vec4 lightSourceDirection; // Already normalized
+	vec4 worldCameraPosition; 
+	vec4 lightSourceDirection; 
 	mat4 model;
 	mat4 viewProjection;
-	mat4 worldToShadowMap;
+
+	mat4 worldToShadowMapMatrices[MAXIMUM_CASCADES];
 	
+	vec4 cascadeSplitsEndDistances;
 	float offsetScale;
 	float shadowDrawDistance;
 	float shadowFadeStartDistance;
@@ -66,10 +70,64 @@ float computeShadowStrength(float maximumDrawDistance, float fadingStartDistance
 }
 
 // --------------------------------------------------------------------------------
+uint pickCascadeSplit(const float fragmentDistance, const vec4 cascadeSplitsEndDistances)
+{
+	// Cascades[0] is redundant and should be removed. First cascade always starts at 0.
+	// 4th cascade always ends at maxShadowDrawDistance.
+	if(fragmentDistance <= cascadeSplitsEndDistances[0])
+	{
+		return 0;
+	}
+	else if(fragmentDistance <= cascadeSplitsEndDistances[1])
+	{
+		return 1;
+	}
+	else if(fragmentDistance <= cascadeSplitsEndDistances[2])
+	{
+		return 2;
+	}
+	else if(fragmentDistance <= cascadeSplitsEndDistances[3])
+	{
+		return 3;
+	}
+	else
+	{
+		return UINT_MAX;
+	}
+}
+
+// --------------------------------------------------------------------------------
+vec3 getDebugColourByCascadeRegion(uint cascadeId)
+{
+	// Magenta
+	vec3 debugColour = vec3(1.0f, 0.0f, 1.0f);
+	
+	if(cascadeId == 0u)
+	{	
+		debugColour = vec3(1.0f, 0.0f, 0.0f); // Red
+	}
+	else if(cascadeId == 1u)
+	{
+		debugColour = vec3(0.0f, 1.0f, 0.0f); // Green
+	}
+	else if(cascadeId == 2u)
+	{
+		debugColour = vec3(0.0f, 0.0f, 1.0f); // Blue
+	}
+	else if(cascadeId == 3u)
+	{
+		debugColour = vec3(1.0f, 1.0f, 0.0f); // Yellow
+	}
+	
+	return debugColour;
+}
+
+// --------------------------------------------------------------------------------
 float computeInShadowRatio(float offsetScale, vec3 shadowMapFragment, const vec3 mainCameraWorldPosition, 
-											const vec3 fragmentWorldPosition, float maximumShadowDrawDistance, float shadowFadeStartDistance)
+											const vec3 fragmentWorldPosition, float maximumShadowDrawDistance, float shadowFadeStartDistance, uint cascadeSplitId)
 {	
 
+//#if 0
 	const vec2 sampleOffsets[8]=vec2[8](
 	vec2(-0.7071, 0.7071),
 	vec2(-0.0000, -0.8750),
@@ -103,19 +161,24 @@ float computeInShadowRatio(float offsetScale, vec3 shadowMapFragment, const vec3
 											vec2(-sineRotation, cosineRotation));
 											
 			const vec2 shadowMapOffset = currentFragmentDepthTextureCoords.xy + (rotationMatrix * (offsetScale * sampleOffsets[offset]));
+			
 			const vec3 shadowTextureCoordinates = vec3(shadowMapOffset, currentFragmentDepthTextureCoords.z);
-			total += texture(shadowMap, vec4(shadowTextureCoordinates, 61231231231231231231231.0f)).r; // something is wrong here 
+			total += texture(shadowMap, vec4(vec3(shadowTextureCoordinates.xy, cascadeSplitId), currentFragmentDepthTextureCoords.z));		
 		}
 		
 		float shadowStrength = computeShadowStrength(maximumShadowDrawDistance, shadowFadeStartDistance, mainCameraToFragmentMagnitude);
 		float fragmentShadowedRatio = total / 8.0f;
 		
-		return mix(1.0f, fragmentShadowedRatio, shadowStrength);
+		// return mix(1.0f, fragmentShadowedRatio, shadowStrength);
+		return fragmentShadowedRatio;
 	}
 	else
 	{
 		return 1.0f;
 	}
+//#else
+	return 0.0f;
+//#endif
 };
 
 // --------------------------------------------------------------------------------
@@ -171,30 +234,28 @@ void main()
 		specular = lightSourceIntensity * material.Ks * texture(specularTextureSampler, out_textureCoordinate).rgb * highlight;
 	}
 	
-	
 	// SAMPLING THE SHADOW MAP
-	const vec4 homogeneousShadowMapSpaceFragment = ubo.worldToShadowMap * vec4(out_worldSpaceFragment, 1.0f);
-	const vec3 cartesianShadowMapFragment = homogeneousShadowMapSpaceFragment.xyz / homogeneousShadowMapSpaceFragment.w;
-	const vec3 shadowMapSpaceFragment = vec3(cartesianShadowMapFragment.x, cartesianShadowMapFragment.y, 
+	
+	const vec3 mainCameraToFragment = out_worldSpaceFragment - ubo.worldCameraPosition.xyz;
+	const uint cascadeSplitId = pickCascadeSplit(length(mainCameraToFragment), ubo.cascadeSplitsEndDistances);
+	
+	float inShadowRatio = 1.0f;
+	if(cascadeSplitId < MAXIMUM_CASCADES)
+	{
+		// Calculate shadow map tex coord
+		const vec4 homogeneousShadowMapSpaceFragment = ubo.worldToShadowMapMatrices[cascadeSplitId] * vec4(out_worldSpaceFragment, 1.0f);
+		const vec3 cartesianShadowMapFragment = homogeneousShadowMapSpaceFragment.xyz / homogeneousShadowMapSpaceFragment.w;
+		const vec3 shadowMapSpaceFragment = vec3(cartesianShadowMapFragment.x, cartesianShadowMapFragment.y, 
 											cartesianShadowMapFragment.z);
-											
-	const float inShadowRatio = computeInShadowRatio(ubo.offsetScale, shadowMapSpaceFragment, ubo.worldCameraPosition.xyz, out_worldSpaceFragment, 
-																				ubo.shadowDrawDistance, ubo.shadowFadeStartDistance);
+		
+		// Sample the Shadow Map
+		inShadowRatio = computeInShadowRatio(ubo.offsetScale, shadowMapSpaceFragment, ubo.worldCameraPosition.xyz, out_worldSpaceFragment, 
+																				ubo.shadowDrawDistance, ubo.shadowFadeStartDistance, cascadeSplitId);
+	}
 	
 	if(ubo.cascadeDrawDistanceToggle)
 	{
-		const vec3 mainCameraToFragment = out_worldSpaceFragment - ubo.worldCameraPosition.xyz;
-		const float mainCameraToFragmentMagnitude = length(mainCameraToFragment);
-		const bool inDrawingDistance = (mainCameraToFragmentMagnitude <= ubo.shadowDrawDistance);
-		
-		if(inDrawingDistance)
-		{
-			FragColour = vec3(1.0f, 0.0f, 0.0f);
-		}
-		else
-		{
-			FragColour = ambient + (inShadowRatio * (diffuse + specular));
-		}
+		FragColour = getDebugColourByCascadeRegion(cascadeSplitId) + ambient + (inShadowRatio * (diffuse + specular));
 	}
 	else
 	{

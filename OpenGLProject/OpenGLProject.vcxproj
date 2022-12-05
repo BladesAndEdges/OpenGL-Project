@@ -119,11 +119,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\MikkTSpace;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\imgui\backends;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\imgui;$(ProjectDir)Submodules\stb;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\glm\glm;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Dependencies\glad\include\glad;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>C:\Users\danie\source\repos\OpenGLProject\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ImGui.lib;MikkTSpace.lib;GLFW.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
