@@ -2,6 +2,9 @@
 
 #include <string>
 #include <unordered_map>
+
+#include "ProfileMarker.h"
+
 #include "Material.h"
 
 #include "TextureHashMaps.h"
@@ -26,6 +29,10 @@ private:
 	std::unordered_map<std::string, Material> m_Materials;
 
 	TextureHashMaps m_textureHashMaps;
+
+	// Consider making it just loadTexture(const char path, <Texture properties>);
+	void loadTexture(const char* name, TextureTarget target, TextureWrapMode wrapMode,
+		TextureFilterMode filterMode);
 
 	void provideNormalMapTexture(Material& material);
 	void provideMaskTexture(Material& material);

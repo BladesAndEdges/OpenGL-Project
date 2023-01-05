@@ -6,23 +6,16 @@
 // --------------------------------------------------------------------------------
 MaterialReader::MaterialReader()
 {
-	Texture defaultNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat,
-		TextureFilterMode::Point);
-
-	Texture defaultMaskTexture(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat,
-		TextureFilterMode::Point);
-
-	Texture defaultBlackTexture(R"(Meshes\sponza\textures\black8x8.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat,
-		TextureFilterMode::Point);
-
-	m_textureHashMaps.addTexture(R"(Meshes\sponza\textures\dummy_ddn.png)", std::move(defaultNormalMap));
-	m_textureHashMaps.addTexture(R"(Meshes\sponza\textures\dummy_mask.png)", std::move(defaultMaskTexture));
-	m_textureHashMaps.addTexture(R"(Meshes\sponza\textures\black8x8.png)", std::move(defaultBlackTexture));
+	loadTexture(R"(Meshes\sponza\textures\dummy_ddn.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point); // default normal map
+	loadTexture(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point); // default mask texture
+	loadTexture(R"(Meshes\sponza\textures\black8x8.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point); // default texture for missing textures
 }
 
 // --------------------------------------------------------------------------------
 void MaterialReader::parseMaterialFile(const std::string & fileName)
 {
+	ProfileMarker parseMaterialFileMarker("Parse Material File Marker");
+
 	std::ifstream ifs(fileName);
 
 	if (!ifs.is_open())
@@ -89,9 +82,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				Texture texture(finalPath, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
-
-				m_textureHashMaps.addTexture(finalPath, std::move(texture));
+				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 				currentMaterial.m_ambientTexture = m_textureHashMaps.getTexture(finalPath);
 
 				std::cout << "Loaded Ambient Texture: " << texturePath << std::endl;
@@ -112,9 +103,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				Texture texture(finalPath, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
-
-				m_textureHashMaps.addTexture(finalPath, std::move(texture));
+				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 				currentMaterial.m_diffuseTexture = m_textureHashMaps.getTexture(finalPath);
 
 				std::cout << "Loaded Diffuse Texture: " << texturePath << std::endl;
@@ -135,9 +124,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				Texture texture(finalPath, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
-
-				m_textureHashMaps.addTexture(finalPath, std::move(texture));
+				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 				currentMaterial.m_specularTexture = m_textureHashMaps.getTexture(finalPath);
 
 				std::cout << "Loaded Specular Texture: " << texturePath << std::endl;
@@ -158,9 +145,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				Texture texture(finalPath, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
-
-				m_textureHashMaps.addTexture(finalPath, std::move(texture));
+				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 				currentMaterial.m_normalMapTexture = m_textureHashMaps.getTexture(finalPath);
 
 				std::cout << "Loaded Normal Texture: " << texturePath << std::endl;
@@ -181,9 +166,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
 			{
-				Texture texture(finalPath, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
-
-				m_textureHashMaps.addTexture(finalPath, std::move(texture));
+				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 				currentMaterial.m_maskTexture = m_textureHashMaps.getTexture(finalPath);
 
 				std::cout << "Loaded Mask Texture: " << texturePath << std::endl;
@@ -203,13 +186,22 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 	}
 
 	completeMaterial(currentMaterial);
-	m_Materials.insert({ materialName, currentMaterial }); 
+	m_Materials.insert({ materialName, currentMaterial });
+
+	parseMaterialFileMarker.endTiming();
 }
 
 // --------------------------------------------------------------------------------
 const Material * MaterialReader::getMaterial(const std::string & materialName) const
 {
 	return &m_Materials.at(materialName);
+}
+
+// --------------------------------------------------------------------------------
+void MaterialReader::loadTexture(const char * path, TextureTarget target, TextureWrapMode wrapMode, TextureFilterMode filterMode)
+{
+	Texture texture(path, target, wrapMode, filterMode);
+	m_textureHashMaps.addTexture(path, std::move(texture));
 }
 
 // --------------------------------------------------------------------------------

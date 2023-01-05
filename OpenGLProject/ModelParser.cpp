@@ -1,43 +1,38 @@
-#include "MeshReader.h"
+#include "ModelParser.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <assert.h>
 
-
-MeshReader::MeshReader(const std::string & objFileName, const std::string& materialFileName)
+// --------------------------------------------------------------------------------
+ModelParser::ModelParser()
 {
-	m_materialReader.parseMaterialFile(materialFileName);
-	parseMeshData(objFileName);
-
-	SMikkTSpaceContext* mikkTSpaceContext = new SMikkTSpaceContext();
-	SMikkTSpaceInterface* mikkTSpaceInterface = new SMikkTSpaceInterface();
-
-	mikkTSpaceInterface->m_getPosition = &getPosition;
-	mikkTSpaceInterface->m_getTexCoord = &getTexCoord;
-	mikkTSpaceInterface->m_getNormal = &getNormal;
-	mikkTSpaceInterface->m_getNumFaces = &getNumFaces;
-	mikkTSpaceInterface->m_getNumVerticesOfFace = &getNumVerticesOfFace;
-
-	mikkTSpaceInterface->m_setTSpaceBasic = &setTSpaceBasic;
-
-	mikkTSpaceContext->m_pInterface = mikkTSpaceInterface;
-	mikkTSpaceContext->m_pUserData = &m_faces;
-
-	bool result = genTangSpaceDefault(mikkTSpaceContext);
-	assert(result == true);
-
-	const std::vector<Face>* fp = (std::vector<Face>*)mikkTSpaceContext->m_pUserData;
-	m_faces = *fp;
-
-	createIndexBuffer();
-
-	assert((m_faces.size() * 3) == m_indexBuffer.size());
-
-	m_sceneCenter = computeSceneCenter();
 }
 
-void MeshReader::parseMeshData(const std::string & fileName)
+// --------------------------------------------------------------------------------
+bool ModelParser::parseModelData(const char * objSourceFile, const char * materialSourceFile, 
+	std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter)
+{
+	assert(objSourceFile != nullptr);
+	assert(materialSourceFile != nullptr);
+	assert((meshes.size() == 0) && (indexedVertexBuffer.size() == 0) && (indexBuffer.size() == 0));
+
+	m_materialReader.parseMaterialFile(materialSourceFile);
+	createMeshAndFaceBuffers(objSourceFile, meshes);
+
+	computeTangentVectors();
+
+	createIndexBufferAndIndexedVertexBuffer(indexedVertexBuffer, indexBuffer);
+
+	assert((m_faces.size() * 3) == indexBuffer.size());
+
+	sceneCenter = computeSceneCenter(indexedVertexBuffer);
+
+	return (meshes.size() > 0) && (indexedVertexBuffer.size() > 0) && (indexBuffer.size() > 0);
+}
+
+// --------------------------------------------------------------------------------
+void ModelParser::createMeshAndFaceBuffers(const std::string & fileName , std::vector<Mesh>& meshes)
 {
 	std::ifstream ifs(fileName);
 
@@ -63,7 +58,7 @@ void MeshReader::parseMeshData(const std::string & fileName)
 
 			if (!firstMesh && (currentMesh.indicesCount > 0))
 			{
-				m_meshes.push_back(currentMesh);
+				meshes.push_back(currentMesh);
 			}
 
 			currentMesh.firstIndex = (unsigned int)m_faces.size() * 3;
@@ -137,7 +132,7 @@ void MeshReader::parseMeshData(const std::string & fileName)
 			{
 				if (currentMesh.indicesCount > 0)
 				{
-					m_meshes.push_back(currentMesh);
+					meshes.push_back(currentMesh);
 				}
 
 				currentMesh.material = m_materialReader.getMaterial(materialName);
@@ -152,11 +147,12 @@ void MeshReader::parseMeshData(const std::string & fileName)
 	//If it's a single mesh within the Model, or for the final Mesh of a multi-mesh model
 	if (currentMesh.indicesCount > 0)
 	{
-		m_meshes.push_back(currentMesh);
+		meshes.push_back(currentMesh);
 	}
 }
 
-std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
+// --------------------------------------------------------------------------------
+std::vector<Vertex> ModelParser::parseVertexData(const std::string & line)
 {
 	std::vector<Vertex> vertices;
 
@@ -273,7 +269,8 @@ std::vector<Vertex> MeshReader::parseVertexData(const std::string & line)
 	return vertices;
 }
 
-std::vector<Face> MeshReader::triangulateFaceVertices(const std::vector<Vertex>& vertices)
+// --------------------------------------------------------------------------------
+std::vector<Face> ModelParser::triangulateFaceVertices(const std::vector<Vertex>& vertices)
 {
 	const int vertexCount = (int)vertices.size();
 
@@ -293,23 +290,11 @@ std::vector<Face> MeshReader::triangulateFaceVertices(const std::vector<Vertex>&
 	return faces;
 }
 
-const std::vector<Mesh>& MeshReader::getMeshes() const
+// --------------------------------------------------------------------------------
+void ModelParser::createIndexBufferAndIndexedVertexBuffer(std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer)
 {
-	return m_meshes;
-}
+	ProfileMarker createIndexbufferMarker("Create Index Buffer Marker");
 
-const std::vector<unsigned int>& MeshReader::getIndexBuffer() const
-{
-	return m_indexBuffer;
-}
-
-const std::vector<Vertex>& MeshReader::getIndexedVertexBuffer() const
-{
-	return m_indexedVertexBuffer;
-}
-
-void MeshReader::createIndexBuffer()
-{
 	std::unordered_map<Vertex, unsigned int, KeyHasher> indices;
 	unsigned int index = 0;
 
@@ -323,35 +308,40 @@ void MeshReader::createIndexBuffer()
 			if (it == indices.end())
 			{
 				indices.insert({ key, index });
-				m_indexBuffer.push_back(index);
-				m_indexedVertexBuffer.push_back(key);
+				indexBuffer.push_back(index);
+				indexedVertexBuffer.push_back(key);
 				index++;
 			}
 			else
 			{
-				m_indexBuffer.push_back(it->second);
+				indexBuffer.push_back(it->second);
 			}
 		}
 	}
+
+	createIndexbufferMarker.endTiming();
 }
 
-glm::vec3 MeshReader::computeSceneCenter()
+// --------------------------------------------------------------------------------
+glm::vec3 ModelParser::computeSceneCenter(std::vector<Vertex>& indexedVertexBuffer)
 {
-	float minX = m_indexedVertexBuffer[0].m_position[0];
+	ProfileMarker computeSceneCenterMarker("Compute Scene Center Marker");
+
+	float minX = indexedVertexBuffer[0].m_position[0];
 	float maxX = minX;
 
-	float minY = m_indexedVertexBuffer[0].m_position[1];
+	float minY = indexedVertexBuffer[0].m_position[1];
 	float maxY = minY;
 
-	float minZ = m_indexedVertexBuffer[0].m_position[2];
+	float minZ = indexedVertexBuffer[0].m_position[2];
 	float maxZ = minZ;
 
 	// Start from 1 since the initial vertex is used as a starting value
-	for (unsigned int vertex = 1; vertex < m_indexedVertexBuffer.size(); vertex++)
+	for (unsigned int vertex = 1; vertex < indexedVertexBuffer.size(); vertex++)
 	{
-		const float vertexX = m_indexedVertexBuffer[vertex].m_position[0];
-		const float vertexY = m_indexedVertexBuffer[vertex].m_position[1];
-		const float vertexZ = m_indexedVertexBuffer[vertex].m_position[2];
+		const float vertexX = indexedVertexBuffer[vertex].m_position[0];
+		const float vertexY = indexedVertexBuffer[vertex].m_position[1];
+		const float vertexZ = indexedVertexBuffer[vertex].m_position[2];
 
 		if (vertexX < minX)
 		{
@@ -388,30 +378,55 @@ glm::vec3 MeshReader::computeSceneCenter()
 	const float halfwayY = (minY + maxY) / 2.0f;
 	const float halfWayZ = (minZ + maxZ) / 2.0f;
 
+	computeSceneCenterMarker.endTiming();
+
 	return glm::vec3(halfwayX, halfwayY, halfWayZ);
 }
 
-glm::vec3 MeshReader::getSceneCenter() const
-{
-	return m_sceneCenter;
-}
-
-const MaterialReader & MeshReader::getMaterialReader() const
+// --------------------------------------------------------------------------------
+const MaterialReader & ModelParser::getMaterialReader() const
 {
 	return m_materialReader;
 }
 
+// --------------------------------------------------------------------------------
+void ModelParser::computeTangentVectors()
+{
+	SMikkTSpaceContext* mikkTSpaceContext = new SMikkTSpaceContext();
+	SMikkTSpaceInterface* mikkTSpaceInterface = new SMikkTSpaceInterface();
+
+	mikkTSpaceInterface->m_getPosition = &getPosition;
+	mikkTSpaceInterface->m_getTexCoord = &getTexCoord;
+	mikkTSpaceInterface->m_getNormal = &getNormal;
+	mikkTSpaceInterface->m_getNumFaces = &getNumFaces;
+	mikkTSpaceInterface->m_getNumVerticesOfFace = &getNumVerticesOfFace;
+
+	mikkTSpaceInterface->m_setTSpaceBasic = &setTSpaceBasic;
+
+	mikkTSpaceContext->m_pInterface = mikkTSpaceInterface;
+	mikkTSpaceContext->m_pUserData = &m_faces;
+
+	bool result = genTangSpaceDefault(mikkTSpaceContext);
+	assert(result == true);
+
+	const std::vector<Face>* fp = (std::vector<Face>*)mikkTSpaceContext->m_pUserData;
+	m_faces = *fp;
+}
+
+// --------------------------------------------------------------------------------
 int getNumFaces(const SMikkTSpaceContext * pContext)
 {
 	const std::vector<Face>* const fp = (const std::vector<Face>* const)pContext->m_pUserData;
 	return (int)fp->size();
 }
 
+// --------------------------------------------------------------------------------
 int getNumVerticesOfFace(const SMikkTSpaceContext*, const int)
 {
 	return 3;
 }
 
+// --------------------------------------------------------------------------------
 void getPosition(const SMikkTSpaceContext * pContext, float fvPosOut[], const int iFace, const int iVert)
 {
 	const std::vector<Face>* const fp = (const std::vector<Face>* const)pContext->m_pUserData;
@@ -421,6 +436,7 @@ void getPosition(const SMikkTSpaceContext * pContext, float fvPosOut[], const in
 	fvPosOut[2] = (*fp)[iFace].m_faceVertices[iVert].m_position[2];
 }
 
+// --------------------------------------------------------------------------------
 void getNormal(const SMikkTSpaceContext * pContext, float fvNormOut[], const int iFace, const int iVert)
 {
 	const std::vector<Face>* const fp = (const std::vector<Face>* const)pContext->m_pUserData;
@@ -430,6 +446,7 @@ void getNormal(const SMikkTSpaceContext * pContext, float fvNormOut[], const int
 	fvNormOut[2] = (*fp)[iFace].m_faceVertices[iVert].m_normal[2];
 }
 
+// --------------------------------------------------------------------------------
 void getTexCoord(const SMikkTSpaceContext * pContext, float fvTexcOut[], const int iFace, const int iVert)
 {
 	const std::vector<Face>* const fp = (const std::vector<Face>* const)pContext->m_pUserData;
@@ -438,6 +455,7 @@ void getTexCoord(const SMikkTSpaceContext * pContext, float fvTexcOut[], const i
 	fvTexcOut[1] = (*fp)[iFace].m_faceVertices[iVert].m_textureCoordinate[1];
 }
 
+// --------------------------------------------------------------------------------
 void setTSpaceBasic(const SMikkTSpaceContext * pContext, const float fvTangent[], const float fSign, const int iFace, const int iVert)
 {
 	std::vector<Face>* const fp = (std::vector<Face>* const)pContext->m_pUserData;

@@ -16,7 +16,7 @@ ProfileMarker::ProfileMarker(const std::string& markerName) : name(markerName)
 void ProfileMarker::endTiming()
 {
 	QueryPerformanceCounter(&countsAtEnd);
-	std::cout << "PERFORMANCE COUNTER << " << name << " >> : | " << (countsAtEnd.QuadPart - countsAtStart.QuadPart) / frequency.QuadPart << " seconds |" << std::endl;
+	std::cout << "PERFORMANCE COUNTER << " << name << " >> : | " << 1000 * (countsAtEnd.QuadPart - countsAtStart.QuadPart) / frequency.QuadPart << " miliseconds |" << std::endl;
 	countsAtEnd.QuadPart = -1;
 }
 

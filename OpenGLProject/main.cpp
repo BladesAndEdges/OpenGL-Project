@@ -2,12 +2,16 @@
 
 #define ArraySize(x) sizeof(x)/sizeof(x[0]);
 #include<iostream>
+#include <experimental/filesystem>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
 #include "ProfileMarker.h" // Included above glad due to windows.h
+#include "Model.h"
+#include "Mesh.h"
+#include "Vertex.h"
 
 #include <glad.h>
 #include <GLFW/glfw3.h>
@@ -23,7 +27,6 @@
 
 #include "UniformBuffer.h"
 #include "Texture.h"
-#include "MeshReader.h"
 #include "Camera.h"
 #include "Framebuffer.h"
 #include "Cascade.h"
@@ -52,19 +55,30 @@ void GLAPIENTRY MessageCallback(GLenum, GLenum type, GLuint, GLenum severity, GL
 		fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
 			(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
 			type, severity, message);
-		__debugbreak();
+
+		if (type != 33360)
+		{
+			__debugbreak();
+		}
+
 		break;
 	case GL_DEBUG_SEVERITY_MEDIUM:
 		fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
 			(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
 			type, severity, message);
-		__debugbreak();
+		if (type != 33360)
+		{
+			__debugbreak();
+		}
 		break;
 	case GL_DEBUG_SEVERITY_LOW:
 		fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
 			(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
 			type, severity, message);
-		__debugbreak();
+		if (type != 33360) // Ignore performance warnings for now
+		{
+			__debugbreak();
+		}
 		break;
 	default:
 		break;
@@ -218,7 +232,7 @@ void updateShadowView(const Camera& mainView, Camera& shadowView, float zenith, 
 }
 
 // --------------------------------------------------------------------------------
-void renderSceneFromView(const Shader& shader, const Camera&,  const UniformBuffer&, const MeshReader& model, const Framebuffer& framebuffer, 
+void renderSceneFromView(const Shader& shader, const Camera&,  const UniformBuffer&, const Model& model, const Framebuffer& framebuffer, 
 								const Texture* shadowMap)
 {
 	assert(shadowMap != nullptr);
@@ -400,8 +414,12 @@ int main()
 	//USE glBufferSubData() to update the values of the UBO members later on whent the values change due to the addition of a camera.
 
 	//---------------------------------------------------------------------------------------------------------------------------------------
-	// Testing to see if the MeshReader Data can be rendered
-	MeshReader mainModel(R"(Meshes\sponza\sponza.obj)", R"(Meshes\sponza\sponza.mtl)");
+	ProfileMarker meshReaderProfileMarker("Mesh Reader Profile Marker");
+
+	Model sponzaModel(R"(SomeCompiledFile.compiled)", R"(Meshes\sponza\sponza.obj)", R"(Meshes\sponza\sponza.mtl)");
+	meshReaderProfileMarker.endTiming();
+
+	ProfileMarker afterMeshReaderProfileMarker("After Mesh Reader Profile Marker");
 
 	// Vertex Buffers and VAO
 	unsigned int modelVBO;
@@ -416,11 +434,11 @@ int main()
 	unsigned int modelIBO;
 	glGenBuffers(1, &modelIBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, modelIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mainModel.getIndexBuffer().size() * sizeof(unsigned int), mainModel.getIndexBuffer().data(), GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sponzaModel.getIndexBuffer().size() * sizeof(unsigned int), sponzaModel.getIndexBuffer().data(), GL_STATIC_DRAW);
 
 
 	glBindBuffer(GL_ARRAY_BUFFER, modelVBO);
-	glBufferData(GL_ARRAY_BUFFER, mainModel.getIndexedVertexBuffer().size() * sizeof(Vertex), mainModel.getIndexedVertexBuffer().data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sponzaModel.getIndexedVertexBuffer().size() * sizeof(Vertex), sponzaModel.getIndexedVertexBuffer().data(), GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_position));
 	glEnableVertexAttribArray(0);
@@ -439,7 +457,7 @@ int main()
 	int mainViewWidth, mainViewHeight;
 	glfwGetWindowSize(window, &mainViewWidth, &mainViewHeight);
 
-	Camera mainView = Camera::perspective(mainModel.getSceneCenter(), (float)mainViewWidth,
+	Camera mainView = Camera::perspective(sponzaModel.getSceneCenter(), (float)mainViewWidth,
 		(float)mainViewHeight, 0.1f, 100.0f, 90.0f);
 
 	float frameTimeArray[128];
@@ -487,6 +505,7 @@ int main()
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+	afterMeshReaderProfileMarker.endTiming();
 
 	mainFunctionInitMarker.endTiming();
 	while (!glfwWindowShouldClose(window))
@@ -576,7 +595,7 @@ int main()
 			glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 			glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-			renderSceneFromView(depthOnlyPassShader, cascade.getCascadeView(), uniformBuffer, mainModel, cascade.getFramebuffer(), cascade.getShadowMap());
+			renderSceneFromView(depthOnlyPassShader, cascade.getCascadeView(), uniformBuffer, sponzaModel, cascade.getFramebuffer(), cascade.getShadowMap());
 
 			cascadeIndex++;
 		}
@@ -686,7 +705,7 @@ int main()
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		renderSceneFromView(meshTestShader, mainView, uniformBuffer, mainModel, mainFramebuffer, shadowMap);
+		renderSceneFromView(meshTestShader, mainView, uniformBuffer, sponzaModel, mainFramebuffer, shadowMap);
 
 		shadowMapDebugShader.useProgram();
 
