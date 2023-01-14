@@ -6,3 +6,4 @@ x64/
 *.vcxproj.user
 GLFW/x64/
 OpenGLProject/imgui.ini
+OpenGLProject/Cache/
