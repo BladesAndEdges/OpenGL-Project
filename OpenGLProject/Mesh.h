@@ -1,12 +1,14 @@
 #pragma once
 
 #include "Material.h"
+#include <string>
 
 // --------------------------------------------------------------------------------
 struct Mesh
 {
-	unsigned int firstIndex;
-	unsigned int indicesCount;
+	uint32_t firstIndex;
+	uint32_t indicesCount;
 
 	const Material* material;
+	std::string materialName;
 };

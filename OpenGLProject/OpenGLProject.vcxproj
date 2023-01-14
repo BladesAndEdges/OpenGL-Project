@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -89,6 +89,10 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\MikkTSpace;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\imgui\backends;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\imgui;$(ProjectDir)Submodules\stb;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\glm\glm;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Dependencies\glad\include\glad;C:\Users\danie\source\repos\OpenGLProject\OpenGLProject\Submodules\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -138,7 +142,10 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MaterialReader.cpp" />
-    <ClCompile Include="MeshReader.cpp" />
+    <ClCompile Include="ModelCacher.cpp" />
+    <ClCompile Include="ModelParser.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="ProfileMarker.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureHashMaps.cpp" />
@@ -153,7 +160,10 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="MaterialReader.h" />
     <ClInclude Include="Mesh.h" />
-    <ClInclude Include="MeshReader.h" />
+    <ClInclude Include="ModelCacher.h" />
+    <ClInclude Include="ModelParser.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="ProfileMarker.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureHashMaps.h" />
