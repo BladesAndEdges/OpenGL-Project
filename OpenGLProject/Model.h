@@ -6,13 +6,14 @@
 
 struct Vertex;
 struct Mesh;
+class MaterialReader;
 
 // --------------------------------------------------------------------------------
 class Model
 {
 public:
 
-	Model(const char* compiledModelFile, const char* objSourceFile, const char* materialSourceFile);
+	Model(const char* compiledModelFileName, const char* objSourceFile, const MaterialReader& materialReader);
 
 	const std::vector<Mesh>& getMeshes() const;
 	const std::vector<Vertex>& getIndexedVertexBuffer() const;

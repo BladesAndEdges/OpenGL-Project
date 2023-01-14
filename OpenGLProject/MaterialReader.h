@@ -16,7 +16,7 @@ class MaterialReader
 public:
 
 	MaterialReader();
-
+					
 	MaterialReader(const MaterialReader&) = delete;
 	MaterialReader& operator=(const MaterialReader&) = delete;
 

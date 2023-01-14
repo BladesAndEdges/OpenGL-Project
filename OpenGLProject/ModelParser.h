@@ -7,8 +7,9 @@
 #include "ProfileMarker.h"
 #include "Mesh.h"
 #include "Face.h"
-#include "MaterialReader.h"
 #include "mikktspace.h"
+
+class MaterialReader;
 
 // --------------------------------------------------------------------------------
 class ModelParser
@@ -16,11 +17,11 @@ class ModelParser
 public:
 
 	ModelParser();
-	bool parseModelData(const char* objSourceFile, const char* materialSourceFile, 
+	bool parseModelData(const char* objSourceFile, const MaterialReader& materialReader, 
 		std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter);
 
 private:
-	void createMeshAndFaceBuffers(const std::string& fileName, std::vector<Mesh>& meshes);
+	void createMeshAndFaceBuffers(const std::string & fileName, const MaterialReader& materialReader, std::vector<Mesh>& meshes);
 
 	void createIndexBufferAndIndexedVertexBuffer(std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer);
 
@@ -30,16 +31,12 @@ private:
 	std::vector<Vertex> parseVertexData(const std::string& line);
 	std::vector<Face> triangulateFaceVertices(const std::vector<Vertex>& vertices);
 
-	const MaterialReader& getMaterialReader() const;
-
 	std::vector<glm::vec3> m_vertexPositions;
 	std::vector<glm::vec2> m_vertextextureCoordinates;
 	std::vector<glm::vec3> m_vertexNormals;
 	std::vector<Face> m_faces;
 
 	SMikkTSpaceContext m_mikktSpaceContext;
-
-	MaterialReader m_materialReader;
 };
 
 // --------------------------------------------------------------------------------

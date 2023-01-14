@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <assert.h>
+#include "MaterialReader.h"
 
 // --------------------------------------------------------------------------------
 ModelParser::ModelParser()
@@ -10,15 +11,15 @@ ModelParser::ModelParser()
 }
 
 // --------------------------------------------------------------------------------
-bool ModelParser::parseModelData(const char * objSourceFile, const char * materialSourceFile, 
+bool ModelParser::parseModelData(const char * objSourceFile, const MaterialReader& materialReader, 
 	std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter)
 {
+	ProfileMarker modelDataParser("Parse Model Data");
+
 	assert(objSourceFile != nullptr);
-	assert(materialSourceFile != nullptr);
 	assert((meshes.size() == 0) && (indexedVertexBuffer.size() == 0) && (indexBuffer.size() == 0));
 
-	m_materialReader.parseMaterialFile(materialSourceFile);
-	createMeshAndFaceBuffers(objSourceFile, meshes);
+	createMeshAndFaceBuffers(objSourceFile, materialReader, meshes);
 
 	computeTangentVectors();
 
@@ -28,11 +29,13 @@ bool ModelParser::parseModelData(const char * objSourceFile, const char * materi
 
 	sceneCenter = computeSceneCenter(indexedVertexBuffer);
 
+	modelDataParser.endTiming();
+
 	return (meshes.size() > 0) && (indexedVertexBuffer.size() > 0) && (indexBuffer.size() > 0);
 }
 
 // --------------------------------------------------------------------------------
-void ModelParser::createMeshAndFaceBuffers(const std::string & fileName , std::vector<Mesh>& meshes)
+void ModelParser::createMeshAndFaceBuffers(const std::string & fileName , const MaterialReader& materialReader, std::vector<Mesh>& meshes)
 {
 	std::ifstream ifs(fileName);
 
@@ -61,7 +64,7 @@ void ModelParser::createMeshAndFaceBuffers(const std::string & fileName , std::v
 				meshes.push_back(currentMesh);
 			}
 
-			currentMesh.firstIndex = (unsigned int)m_faces.size() * 3;
+			currentMesh.firstIndex = (uint32_t)(m_faces.size() * 3);
 			currentMesh.indicesCount = 0;
 
 			firstMesh = false;
@@ -126,7 +129,8 @@ void ModelParser::createMeshAndFaceBuffers(const std::string & fileName , std::v
 
 			if (materialsUsed == 0)
 			{
-				currentMesh.material = m_materialReader.getMaterial(materialName);
+				currentMesh.material = materialReader.getMaterial(materialName);
+				currentMesh.materialName = materialName;
 			}
 			else
 			{
@@ -135,8 +139,9 @@ void ModelParser::createMeshAndFaceBuffers(const std::string & fileName , std::v
 					meshes.push_back(currentMesh);
 				}
 
-				currentMesh.material = m_materialReader.getMaterial(materialName);
-				currentMesh.firstIndex = (unsigned int)(m_faces.size() * 3);
+				currentMesh.material = materialReader.getMaterial(materialName);
+				currentMesh.materialName = materialName;
+				currentMesh.firstIndex = (uint32_t)(m_faces.size() * 3);
 				currentMesh.indicesCount = 0;
 			}
 
@@ -381,12 +386,6 @@ glm::vec3 ModelParser::computeSceneCenter(std::vector<Vertex>& indexedVertexBuff
 	computeSceneCenterMarker.endTiming();
 
 	return glm::vec3(halfwayX, halfwayY, halfWayZ);
-}
-
-// --------------------------------------------------------------------------------
-const MaterialReader & ModelParser::getMaterialReader() const
-{
-	return m_materialReader;
 }
 
 // --------------------------------------------------------------------------------

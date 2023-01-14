@@ -10,6 +10,7 @@
 
 #include "ProfileMarker.h" // Included above glad due to windows.h
 #include "Model.h"
+#include "MaterialReader.h"
 #include "Mesh.h"
 #include "Vertex.h"
 
@@ -342,9 +343,6 @@ void imguiStyleSetting()
 // --------------------------------------------------------------------------------
 int main()
 {
-	// Profile Marker variables
-	ProfileMarker mainFunctionInitMarker("Main Setup Code");
-
 	// GLFW-related variables
 	GLFWwindow* window = nullptr;
 
@@ -414,12 +412,9 @@ int main()
 	//USE glBufferSubData() to update the values of the UBO members later on whent the values change due to the addition of a camera.
 
 	//---------------------------------------------------------------------------------------------------------------------------------------
-	ProfileMarker meshReaderProfileMarker("Mesh Reader Profile Marker");
-
-	Model sponzaModel(R"(SomeCompiledFile.compiled)", R"(Meshes\sponza\sponza.obj)", R"(Meshes\sponza\sponza.mtl)");
-	meshReaderProfileMarker.endTiming();
-
-	ProfileMarker afterMeshReaderProfileMarker("After Mesh Reader Profile Marker");
+	MaterialReader materialReader;
+	materialReader.parseMaterialFile(R"(Meshes\sponza\sponza.mtl)");
+	Model sponzaModel(R"(SponzaModel.compiled)", R"(Meshes\sponza\sponza.obj)", materialReader);
 
 	// Vertex Buffers and VAO
 	unsigned int modelVBO;
@@ -505,9 +500,7 @@ int main()
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-	afterMeshReaderProfileMarker.endTiming();
 
-	mainFunctionInitMarker.endTiming();
 	while (!glfwWindowShouldClose(window))
 	{
 		// Shadow Map == nullptr only for frame 0; And for a moment whilst deleted (?)
