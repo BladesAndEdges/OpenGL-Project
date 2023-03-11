@@ -1,4 +1,6 @@
 #include "Texture.h"
+#include <experimental/filesystem>
+#include <fstream>
 
 #define TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
 
@@ -16,28 +18,25 @@ Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMo
 
 	stbi_set_flip_vertically_on_load(true);
 
-	GLint width;
-	GLint height;
-	GLint numberOfChannels;
+	GLint numberOfChannels = -1;
+	std::vector<GLubyte> textureStorage;
+	loadTextureFromDisk(source.c_str(), /* out */ numberOfChannels, /* out */ textureStorage);
 
-	GLubyte* textureData = stbi_load(source.c_str(), &width, &height, &numberOfChannels, 0);
-
-	m_width = (uint32_t)width;
-	m_height = (uint32_t)height;
+	assert((m_width > 0u) && (m_height > 0u));
 
 	TextureFormat format = chooseTextureSizedFormat(numberOfChannels);
 
 	GLenum glSizedFormat = translateFormatToOpenGLSizedFormat(format);
 	GLenum glInternalFormat = translateFormatToOpenGLInternalFormat(format);
 
-	if (textureData)
+	if (!textureStorage.empty())
 	{
 		const uint32_t smallestSide = m_width > m_height ? m_height : m_width;
 
 		const uint32_t mipCount = (uint32_t)ceilf(log2f((float)smallestSide));
 
 		glTextureStorage2D(m_name, mipCount, glSizedFormat, m_width, m_height);
-		glTextureSubImage2D(m_name, 0, 0, 0, m_width, m_height, glInternalFormat, GL_UNSIGNED_BYTE, textureData);
+		glTextureSubImage2D(m_name, 0, 0, 0, m_width, m_height, glInternalFormat, GL_UNSIGNED_BYTE, textureStorage.data()); 
 	}
 	else
 	{
@@ -135,14 +134,111 @@ GLuint Texture::getName() const
 	return m_name;
 }
 
+// --------------------------------------------------------------------------------
 uint32_t Texture::getWidth() const
 {
 	return m_width;
 }
 
+// --------------------------------------------------------------------------------
 uint32_t Texture::getHeight() const
 {
 	return m_height;
+}
+
+// --------------------------------------------------------------------------------
+void Texture::loadTextureFromDisk(const char * sourceFile, GLint& o_numberOfChannels, std::vector<GLubyte>& o_vectorStorage)
+{
+	const std::string compiledExtension = ".compiled";
+	const std::string textureFileName = getFilenameFromTextureSourceString(sourceFile);
+	const std::string compiledFileName = textureFileName + compiledExtension;
+
+	GLint width = -1; 
+	GLint height = -1;
+
+	tryReadFromCache(compiledFileName.c_str(), width, height, o_numberOfChannels, o_vectorStorage);
+
+	if ((width > 0) && (height > 0))
+	{
+		m_width = (uint32_t)width;
+		m_height = (uint32_t)height;
+	}
+
+	if (!o_vectorStorage.data())
+	{
+		GLubyte* data = stbi_load(sourceFile, &width, &height, &o_numberOfChannels, 0);
+		
+		const uint32_t allocationInSizeInBytes = width * height * o_numberOfChannels;
+		o_vectorStorage.resize(allocationInSizeInBytes);
+		memcpy(o_vectorStorage.data(), data, allocationInSizeInBytes);
+
+		if ((width > 0) && (height > 0))
+		{
+			m_width = (uint32_t)width;
+			m_height = (uint32_t)height;
+		}
+
+		if (data)
+		{
+			writeToCache(compiledFileName.c_str(), width, height, (uint32_t)o_numberOfChannels, data); // Since it would be empty for the write
+		}
+
+		stbi_image_free(data); // Correct
+	}
+}
+
+// --------------------------------------------------------------------------------
+void Texture::tryReadFromCache(const char* fileName, GLint& width, GLint& height, GLint& numberOfChannels, std::vector<GLubyte>& textureData)
+{
+	assert(fileName != nullptr);
+	assert(textureData.size() == 0);
+
+	const std::string cacheString = "Cache\\";
+	const std::string finalPath = cacheString + std::string(fileName);
+	assert(finalPath.size() != 0);
+
+	std::ifstream inputStream;
+	inputStream.open(finalPath, std::ios::binary);
+	if (inputStream.is_open())
+	{
+		inputStream.read((char*)&(width), sizeof(uint32_t));
+		inputStream.read((char*)&(height), sizeof(uint32_t));
+		inputStream.read((char*)&(numberOfChannels), sizeof(uint32_t));
+
+		textureData.resize(width * height * numberOfChannels);
+		inputStream.read((char*)(textureData.data()), width * height * numberOfChannels);
+	}
+
+	// Doesn't fail, it should
+}
+
+// --------------------------------------------------------------------------------
+void Texture::writeToCache(const char* fileName, uint32_t width, uint32_t height, uint32_t numberOfChannels, GLubyte* data)
+{
+	assert(fileName != nullptr);
+	assert(width > 0u);
+	assert(height > 0u);
+	assert(numberOfChannels > 0u);
+
+	const std::string directoryName = "Cache";
+	const bool directoryCreationSuccess = std::experimental::filesystem::create_directory(directoryName);
+
+	const std::string cacheString = "Cache\\";
+	const std::string finalPath = cacheString + std::string(fileName);
+	assert(finalPath.size() != 0);
+
+	std::ofstream fw(finalPath, std::ios::binary);
+	if (!fw)
+	{
+		assert(0);
+	}
+
+	fw.write((const char*)&(width), sizeof(uint32_t));
+	fw.write((const char*)&(height), sizeof(uint32_t));
+	fw.write((const char*)&(numberOfChannels), sizeof(uint32_t));
+	fw.write((const char*)data, width * height * numberOfChannels); // Magic number for the interal data requirements (GL_RGBA)
+
+	fw.close();
 }
 
 // --------------------------------------------------------------------------------
@@ -300,4 +396,20 @@ TextureFormat Texture::chooseTextureSizedFormat(int numberOfChannels) const
 	const uint32_t index = (uint32_t)(numberOfChannels - 1);
 
 	return colourFormats[index];
+}
+
+// --------------------------------------------------------------------------------
+std::string getFilenameFromTextureSourceString(std::string sourceString)
+{
+	// THIS WILL BREAK FOR ANYTING WITH EXTENSION (with dot) LARGER THAN 4!!!!
+	// .png will work, .jpeg will not
+	const std::string path = "Meshes\\sponza\\textures\\";
+	const uint32_t substringStartPos = (uint32_t)(path.size());
+	sourceString.erase(0, substringStartPos);
+
+	const uint32_t sourceStringSize = (uint32_t)sourceString.size();
+	const uint32_t substringEndPos = (uint32_t)(sourceStringSize - 3u);
+	sourceString.erase(substringEndPos - 1, 4);
+
+	return sourceString;
 }

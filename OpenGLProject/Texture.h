@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <string>
 #include <assert.h>
+#include <vector>
 
 // --------------------------------------------------------------------------------
 enum class TextureTarget
@@ -91,6 +92,10 @@ private:
 	uint32_t m_height;
 	uint32_t m_depth;
 
+	void loadTextureFromDisk(const char* sourceFile, GLint& o_numberOfChannels, std::vector<GLubyte>& o_vectorStorage);
+	void tryReadFromCache(const char* fileName, GLint& width, GLint& height, GLint& numberOfChannels, std::vector<GLubyte>& vectorStorage);
+	void writeToCache(const char* fileName, uint32_t width, uint32_t height, uint32_t numberOfChannels, GLubyte* data);
+
 	// --------------------------------------------------------------------------------
 	GLenum translateTargetToOpenGL(TextureTarget target) const;
 	GLenum translateWrapModeToOpenGL(TextureWrapMode wrapMode) const;
@@ -103,3 +108,5 @@ private:
 	TextureFormat chooseTextureSizedFormat(int numberOfChannels) const;
 };
 
+// --------------------------------------------------------------------------------
+std::string getFilenameFromTextureSourceString(std::string sourceString);
