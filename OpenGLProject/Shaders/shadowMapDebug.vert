@@ -1,4 +1,4 @@
-#version 450
+#version 450 core
 
 const float c_quadSize = 0.2f;
 const float c_quadSpacing = c_quadSize + 0.02f;
@@ -22,7 +22,6 @@ const vec2 c_quadTextureCoordinates[6]=vec2[6](
 );
 
 out vec3 v2f_textureCoordinate;
-out float v2f_layerId;
 
 void main()
 {

@@ -20,6 +20,17 @@ struct Material
 	float Ns;
 };
 
+struct SurfaceProperties
+{
+	vec3 m_worldPosition;
+	vec3 m_worldNormal; 
+	vec3 m_ambientColour;
+	vec3 m_diffuseColour;
+	vec3 m_specularColour;
+	float m_smoothness;
+	float m_opacity;
+};
+
 layout(std140) uniform sceneMatrices
 {
 	vec4 worldCameraPosition; 
@@ -182,60 +193,103 @@ float computeInShadowRatio(float offsetScale, vec3 shadowMapFragment, const vec3
 };
 
 // --------------------------------------------------------------------------------
-void main()
+vec3 getWorldSurfaceNormal(bool normalMappingEnabled)
 {
-
-	if(texture(maskTextureSampler, out_textureCoordinate).r < 0.5f) discard;
-	
-	vec3 shadingNormal = vec3(0.0f, 0.0f, 0.0f);
-	
-	//Normal map computation
-	if(ubo.normalMapToggle)
+	if(normalMappingEnabled)
 	{
-		vec4 tangentSpaceNormal = ((texture(normalMapTextureSampler, out_textureCoordinate) * 2.0f) -1.0f);
-		vec3 bitangent = out_Tangent.w * cross(vn, vec3(out_Tangent.xyz)); 
-		vec3 vNout = normalize( tangentSpaceNormal.x * out_Tangent.xyz + tangentSpaceNormal.y * bitangent + tangentSpaceNormal.z * vn);
-		shadingNormal = vNout;
+		const vec4 tangentSpaceNormal = ((texture(normalMapTextureSampler, out_textureCoordinate) * 2.0f) -1.0f);
+		const vec3 bitangent = out_Tangent.w * cross(vn, vec3(out_Tangent.xyz)); 
+		return normalize(tangentSpaceNormal.x * out_Tangent.xyz + tangentSpaceNormal.y * bitangent + tangentSpaceNormal.z * vn);
 	}
 	else
 	{
-		shadingNormal = normalize(out_worldSpaceNormal);
+		return normalize(out_worldSpaceNormal);
 	}
+};
+
+// --------------------------------------------------------------------------------
+SurfaceProperties getSurfaceProperties()
+{	
+	SurfaceProperties surfaceProperties;
 	
-	//Intensities
-	const vec3 ambientIntensity = vec3(0.8f, 0.8f, 0.8f);
-	const vec3 lightSourceIntensity = vec3(0.723f, 0.535f, 0.1293f);
+	// Position
+	surfaceProperties.m_worldPosition = out_worldSpaceFragment;
 	
-	//Normalize
-	const vec3 normalizedToCameraDirection = normalize(ubo.worldCameraPosition.xyz);
+	// Normal
+	surfaceProperties.m_worldNormal = getWorldSurfaceNormal(ubo.normalMapToggle);
 	
-	//Ambient
-	vec3 ambient = vec3(0.0f, 0.0f, 0.0f);
-	if(ubo.ambientToggle)
+	// Material properties
+	surfaceProperties.m_ambientColour = material.Ka * texture(ambientTextureSampler, out_textureCoordinate).rgb;
+	surfaceProperties.m_diffuseColour = material.Kd * texture(diffuseTextureSampler, out_textureCoordinate).rgb;
+	surfaceProperties.m_specularColour = material.Ks * texture(specularTextureSampler, out_textureCoordinate).rgb;
+	surfaceProperties.m_smoothness = material.Ns;
+	surfaceProperties.m_opacity = texture(maskTextureSampler, out_textureCoordinate).r;
+
+	return surfaceProperties;
+};
+
+// --------------------------------------------------------------------------------
+vec3 calculateAmbientTerm(bool ambientLightingEnabled, const vec3 surfaceAmbientColour)
+{
+	if(ambientLightingEnabled)
 	{
-		ambient = ambientIntensity * material.Ka * texture(ambientTextureSampler, out_textureCoordinate).rgb;
+		const vec3 c_ambientIntensity = vec3(0.8f, 0.8f, 0.8f);
+		return c_ambientIntensity * surfaceAmbientColour;
 	}
-	
-	//Diffuse
-	vec3 diffuse = vec3(0.0f, 0.0f, 0.0f);
-	if(ubo.diffuseToggle)
+	else
 	{
-		const float cosTheta = max(dot(ubo.lightSourceDirection.xyz, shadingNormal), 0.0f);
-		diffuse = lightSourceIntensity * material.Kd * texture(diffuseTextureSampler, out_textureCoordinate).rgb * cosTheta;
+		return vec3(0.0f, 0.0f, 0.0f);
 	}
-	
-	//Specular
-	vec3 specular = vec3(0.0f, 0.0f, 0.0f);
-	if(ubo.specularToggle)
+};
+
+// --------------------------------------------------------------------------------
+vec3 calculateDiffuseTerm(bool diffuseLightingEnabled, const vec3 surfaceDiffuseColour, const vec3 worldNormal)
+{
+	if(diffuseLightingEnabled)
 	{
+		const vec3 c_lightSourceIntensity = vec3(0.723f, 0.535f, 0.1293f);
+		const float c_cosTheta = max(dot(ubo.lightSourceDirection.xyz, worldNormal), 0.0f);
+		return c_lightSourceIntensity * surfaceDiffuseColour * c_cosTheta;
+	}
+	else
+	{	
+		return vec3(0.0f, 0.0f, 0.0f);
+	}
+};
+
+// --------------------------------------------------------------------------------
+vec3 calculateSpecularTerm(bool specularLightingEnabled, const vec3 surfaceSpecularColour, const vec3 surfaceWorldNormal, const float surfaceSmoothness)
+{
+	if(specularLightingEnabled)
+	{
+		const vec3 c_lightSourceIntensity = vec3(0.723f, 0.535f, 0.1293f);
+		
 		const vec3 fragmentToCameraDirection = normalize(ubo.worldCameraPosition.xyz - out_worldSpaceFragment);
-		const vec3 reflectedVector = normalize(reflect(-ubo.lightSourceDirection.xyz, shadingNormal));
-		const float highlight = pow(max(dot(fragmentToCameraDirection, reflectedVector), 0.0f), material.Ns);
-		specular = lightSourceIntensity * material.Ks * texture(specularTextureSampler, out_textureCoordinate).rgb * highlight;
+		const vec3 reflectedVector = normalize(reflect(-ubo.lightSourceDirection.xyz, surfaceWorldNormal));
+		const float highlightDistribution = pow(max(dot(fragmentToCameraDirection, reflectedVector), 0.0f), surfaceSmoothness);
+		return c_lightSourceIntensity * surfaceSpecularColour * highlightDistribution; // Ask if this is a correct term
 	}
+	else
+	{
+		return vec3(0.0f, 0.0f, 0.0f);
+	}
+};
+
+// --------------------------------------------------------------------------------
+vec3 calculateLightingAtSurfacePoint(SurfaceProperties surfaceProperties)
+{	
+	// Ambient Term
+	const vec3 ambientTerm = calculateAmbientTerm(ubo.ambientToggle, surfaceProperties.m_ambientColour);
 	
-	// SAMPLING THE SHADOW MAP
+	// Diffuse Term
+	const vec3 diffuseTerm = calculateDiffuseTerm(ubo.diffuseToggle, surfaceProperties.m_diffuseColour, surfaceProperties.m_worldNormal);
 	
+	// Specular Term
+	const vec3 specularTerm = calculateSpecularTerm(ubo.specularToggle, surfaceProperties.m_specularColour, surfaceProperties.m_specularColour, surfaceProperties.m_smoothness);
+	
+	
+	// Needs to be revised
+	// Shadow Map Cascades sampling
 	const vec3 mainCameraToFragment = out_worldSpaceFragment - ubo.worldCameraPosition.xyz;
 	const uint cascadeSplitId = pickCascadeSplit(length(mainCameraToFragment), ubo.cascadeSplitsEndDistances);
 	
@@ -255,10 +309,21 @@ void main()
 	
 	if(ubo.cascadeDrawDistanceToggle)
 	{
-		FragColour = getDebugColourByCascadeRegion(cascadeSplitId) + ambient + (inShadowRatio * (diffuse + specular));
+		return getDebugColourByCascadeRegion(cascadeSplitId) + ambientTerm + (inShadowRatio * (diffuseTerm + specularTerm));
 	}
 	else
 	{
-		FragColour = ambient + (inShadowRatio * (diffuse + specular));
+		return ambientTerm + (inShadowRatio * (diffuseTerm + specularTerm));
 	}
+};
+
+// --------------------------------------------------------------------------------
+void main()
+{
+	const float c_alphaTreshold = 0.5f;
+	
+	SurfaceProperties surfaceProperties = getSurfaceProperties();
+	if(surfaceProperties.m_opacity < c_alphaTreshold) discard;
+	
+	FragColour =  calculateLightingAtSurfacePoint(surfaceProperties);
 } 
