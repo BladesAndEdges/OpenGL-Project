@@ -5,16 +5,22 @@ Framebuffer Framebuffer::defaultFramebuffer()
 {
 	Framebuffer defaultFramebuffer;
 	defaultFramebuffer.m_name = 0;
+	// glObjectLabel(GL_FRAMEBUFFER, defaultFramebuffer.m_name, -1, "Default Framebuffer");
 
 	return defaultFramebuffer;
 }
 
 // --------------------------------------------------------------------------------
-Framebuffer Framebuffer::customFramebuffer()
+Framebuffer Framebuffer::customFramebuffer(const char* framebufferLabel)
 {
 	Framebuffer customFramebuffer;
 
 	glCreateFramebuffers(1, &customFramebuffer.m_name);
+
+	if (framebufferLabel != nullptr)
+	{
+		glObjectLabel(GL_FRAMEBUFFER, customFramebuffer.m_name, -1, framebufferLabel);
+	}
 
 	glNamedFramebufferDrawBuffer(customFramebuffer.m_name, GL_NONE);
 
@@ -41,13 +47,14 @@ Framebuffer::~Framebuffer()
 }
 
 // --------------------------------------------------------------------------------
-void Framebuffer::attachTexture(TextureTarget target, const Texture & texture, const AttachmentType & attachmentType, uint32_t layer)
+void Framebuffer::attachTexture(TextureTarget target, const Texture & texture, const AttachmentType & attachmentType, uint32_t layer, uint8_t colourAttachmentOffset)
 {	
 	GLenum glAttachmentType = translateAttachmentTypeToOpenGLAttachment(attachmentType);
 
 	if (target == TextureTarget::Texture2D)
 	{
-		glNamedFramebufferTexture(m_name, glAttachmentType, texture.getName(), 0);
+		// Need to check if this works properly for depth attchment
+		glNamedFramebufferTexture(m_name, glAttachmentType + colourAttachmentOffset, texture.getName(), 0);
 	}
 	else if (target == TextureTarget::ArrayTexture2D)
 	{
@@ -71,6 +78,9 @@ GLenum Framebuffer::translateAttachmentTypeToOpenGLAttachment(const AttachmentTy
 {
 	switch (attachmentType)
 	{
+	case AttachmentType::ColourAttachment:
+		return GL_COLOR_ATTACHMENT0;
+		// May need to add more
 	case AttachmentType::DepthAttachment:
 		return GL_DEPTH_ATTACHMENT;
 

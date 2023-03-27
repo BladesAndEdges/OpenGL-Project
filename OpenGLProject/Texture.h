@@ -33,11 +33,18 @@ enum class TextureFilterMode
 
 // --------------------------------------------------------------------------------
 enum class TextureFormat
-{
+{	
+	// Unsigned 
 	R8,
 	RG8,
 	RGB8,
-	RGBA8, 
+	RGBA8,
+
+	// Floating point
+	R32F,
+	RGB32F,
+
+	// Depth
 	DEPTH32
 };
 
@@ -64,7 +71,7 @@ public:
 	Texture(const std::string& source, TextureTarget target, TextureWrapMode wrapMode,
 		TextureFilterMode filterMode);
 
-	Texture(const std::string& label, uint32_t width,  uint32_t height, uint32_t layers, TextureTarget target
+	Texture(const std::string& label, uint32_t width,  uint32_t height, uint32_t depth, TextureTarget target
 									, TextureWrapMode wrapMode, TextureFilterMode filterMode, 
 										TextureFormat format, TextureComparisonMode comparisonMode);
 

@@ -31,6 +31,7 @@
 #include "Camera.h"
 #include "Framebuffer.h"
 #include "Cascade.h"
+#include "GBuffer.h"
 
 #include <cstdint>
 #include <string>
@@ -232,6 +233,57 @@ void updateShadowView(const Camera& mainView, Camera& shadowView, float zenith, 
 	shadowView.setCameraWorldOrientation(orientation);
 }
 
+// --------------------------------------------------------------------------------
+void renderAttributeToGBuffer(const Shader& shader, const Model& model, const Framebuffer& framebuffer)
+{	
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.getName());
+
+	const GLenum outputBuffers[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
+		GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
+
+	glNamedFramebufferDrawBuffers(framebuffer.getName(), 5u, outputBuffers);
+
+	// Clear values
+	const float c_positionAndNormalClearValue[3] = { 0.0f, 0.0f, 0.0f };
+	const uint32_t c_diffuseAndSpecularClearValue[3] = { 0u, 0u, 0u };
+	const float c_smoothnessClearValue = 0.0f;
+	const GLfloat c_depthClearValue = 1.0f;
+
+	// Clear the textures
+	glClearNamedFramebufferfv(framebuffer.getName(), GL_COLOR, 0, c_positionAndNormalClearValue);
+	glClearNamedFramebufferfv(framebuffer.getName(), GL_COLOR, 1, c_positionAndNormalClearValue);
+	glClearNamedFramebufferuiv(framebuffer.getName(), GL_COLOR, 2, c_diffuseAndSpecularClearValue);
+	glClearNamedFramebufferuiv(framebuffer.getName(), GL_COLOR, 3, c_diffuseAndSpecularClearValue);
+	glClearNamedFramebufferfv(framebuffer.getName(), GL_COLOR, 4, &c_smoothnessClearValue);
+	glClearNamedFramebufferfv(framebuffer.getName(), GL_DEPTH, 0, &c_depthClearValue);
+
+	for (const Mesh& mesh : model.getMeshes())
+	{
+		// Eventually will be separate in a UBO per material
+		glUniform1f(glGetUniformLocation(shader.getProgramID(), "material.Ns"), mesh.material->m_shininess);
+		glUniform3fv(glGetUniformLocation(shader.getProgramID(), "material.Ka"), 1, value_ptr(mesh.material->m_ambientColour));
+		glUniform3fv(glGetUniformLocation(shader.getProgramID(), "material.Kd"), 1, value_ptr(mesh.material->m_diffuseColour));
+		glUniform3fv(glGetUniformLocation(shader.getProgramID(), "material.Ks"), 1, value_ptr(mesh.material->m_specularColour));
+
+		assert(mesh.material->m_ambientTexture != nullptr);
+		assert(mesh.material->m_diffuseTexture != nullptr);
+		assert(mesh.material->m_specularTexture != nullptr);
+		assert(mesh.material->m_normalMapTexture != nullptr);
+		assert(mesh.material->m_maskTexture != nullptr);
+
+		mesh.material->m_ambientTexture->useTexture(0);
+		mesh.material->m_diffuseTexture->useTexture(1);
+		mesh.material->m_specularTexture->useTexture(2);
+		mesh.material->m_normalMapTexture->useTexture(3);
+		mesh.material->m_maskTexture->useTexture(4);
+
+		glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+//THIS DOESNT SEEM TO BE RENDERING FROM A VIEW ANYMORE. IT ONLY RENDERS THE OBECTS? Should it include the ubo + camera ?
 // --------------------------------------------------------------------------------
 void renderSceneFromView(const Shader& shader, const Camera&,  const UniformBuffer&, const Model& model, const Framebuffer& framebuffer, 
 								const Texture* shadowMap)
@@ -488,7 +540,6 @@ int main()
 	std::vector<Cascade> cascades;
 	uint32_t activeCascadesCount = 4;
 
-	Framebuffer shadowMapFramebuffer = Framebuffer::customFramebuffer();
 	Framebuffer mainFramebuffer = Framebuffer::defaultFramebuffer();
 
 	// Non-Comparison Sampler
@@ -501,10 +552,14 @@ int main()
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 
+	// -----------------------------------------------------------GBuffer
+	GBuffer gBuffer(800, 600); // Assume no resizes for now
+	Shader gBufferPassShader(R"(Shaders\gBufferPassShader.vert)", R"(Shaders\gBufferPassShader.frag)");
+
 	while (!glfwWindowShouldClose(window))
 	{
 		// Shadow Map == nullptr only for frame 0; And for a moment whilst deleted (?)
-		if ( (shadowMap == nullptr) || (activeCascadesCount != (uint32_t)cascades.size() ) || ((uint32_t)shadowMapSizes[shadowMapSizeID] != shadowMap->getWidth()) )
+		if ((shadowMap == nullptr) || (activeCascadesCount != (uint32_t)cascades.size()) || ((uint32_t)shadowMapSizes[shadowMapSizeID] != shadowMap->getWidth()))
 		{
 			// Recreate the Shadow Map
 			delete shadowMap;
@@ -539,12 +594,14 @@ int main()
 		processCameraInput(mainView, window);
 
 		glEnable(GL_DEPTH_TEST);
-		
+
+		/*glBindVertexArray(modelVAO);*/
+
 		//--------------------------------------------------------------------------------------------------------------------------------------
 		// Shadow Camera rendering
 
-		depthOnlyPassShader.useProgram(); // Make sure the shader is being used before setting these textures
-		glBindVertexArray(modelVAO);
+		depthOnlyPassShader.useProgram(); // Make sure the shader is being usegd before setting these textures
+		/*glBindVertexArray(modelVAO);*/
 
 		// Max is 200
 		// 0 - 0.25, 0.25 - 0.50, 0.50 - 0.75, 0.75 - 1.0f
@@ -562,6 +619,9 @@ int main()
 		// Depth Pass(es);
 		for (Cascade& cascade : cascades)
 		{
+			const std::string debugMarkerName = "Cascade " + std::to_string(cascadeIndex);
+
+			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0 , -1, debugMarkerName.c_str());
 
 			int framebufferWidth, framebufferHeight;
 			glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
@@ -581,7 +641,7 @@ int main()
 
 			glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
 			const uint32_t cascadeSplitEndId = cascadeSplitDistanceIndex + 1u;
-			updateUniformBuffer(uniformBuffer, cascade.getCascadeView(), cascade.getCascadeView(), cascadeSplitDistances[cascadeSplitEndId], cascadeIndex, worldSpaceToLightVector, offsetScale, maximumShadowDrawDistance, fadingRegionStart, 
+			updateUniformBuffer(uniformBuffer, cascade.getCascadeView(), cascade.getCascadeView(), cascadeSplitDistances[cascadeSplitEndId], cascadeIndex, worldSpaceToLightVector, offsetScale, maximumShadowDrawDistance, fadingRegionStart,
 				normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
 
 			glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
@@ -591,6 +651,8 @@ int main()
 			renderSceneFromView(depthOnlyPassShader, cascade.getCascadeView(), uniformBuffer, sponzaModel, cascade.getFramebuffer(), cascade.getShadowMap());
 
 			cascadeIndex++;
+
+			glPopDebugGroup();
 		}
 
 		//--------------------------------------------------------------------------------------------------------------------------------------
@@ -620,10 +682,10 @@ int main()
 
 		// ImGui 
 		static ImGuiComboFlags shadowMapDimensionsFlag = 0;
-		const char* possibleShadowMapDimensions[] = { "128x128", "256x256", "512x512", "1024x1024", "2048x2048", "4096x4096"};
+		const char* possibleShadowMapDimensions[] = { "128x128", "256x256", "512x512", "1024x1024", "2048x2048", "4096x4096" };
 
 		const char* combo_preview_value = possibleShadowMapDimensions[shadowMapSizeID];  // Pass in the preview value visible before opening the combo (it could be anything)
-		
+
 		if (ImGui::BeginCombo("SM Resolution", combo_preview_value, shadowMapDimensionsFlag))
 		{
 			for (int n = 0; n < IM_ARRAYSIZE(possibleShadowMapDimensions); n++)
@@ -645,7 +707,7 @@ int main()
 		ImGui::SliderFloat("PCF Texel Radius", &radiusInTexels, 0.0f, 100.0f);
 		ImGui::SliderFloat("Shadow Draw Distance", &maximumShadowDrawDistance, 1.0f, 200.0f);
 		ImGui::SliderFloat("Shadow Fade Start", &fadingRegionStart, 0.0f, 1.0f);
-		
+
 		// ------------------------------------------- Shadow Map Cascades ------------------------------------------------------------------
 		char cascadeCountScratch[2];
 		cascadeCountScratch[0] = '0' + char(activeCascadesCount);
@@ -674,6 +736,8 @@ int main()
 		ImGui::End();
 		//----------------------------------------------------------------------------------
 
+		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Main Colour Pass");
+
 		meshTestShader.useProgram();
 		glBindVertexArray(modelVAO);
 
@@ -683,7 +747,7 @@ int main()
 		mainView.setCameraWidth((float)winWidth);
 		mainView.setCameraHeight((float)winHeight);
 
-		glViewport(0, 0, winWidth , winHeight);
+		glViewport(0, 0, winWidth, winHeight);
 
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -691,8 +755,8 @@ int main()
 
 		// What to do about this. Isn't this meaning cascade 0 values get partially updated ahead of others ?
 		const glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
-		updateUniformBuffer(uniformBuffer, mainView, cascades[0].getCascadeView(), cascadeSplitDistances[1], 0u, worldSpaceToLightVector,  offsetScale, maximumShadowDrawDistance,
-								fadingRegionStart, normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
+		updateUniformBuffer(uniformBuffer, mainView, cascades[0].getCascadeView(), cascadeSplitDistances[1], 0u, worldSpaceToLightVector, offsetScale, maximumShadowDrawDistance,
+			fadingRegionStart, normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
@@ -700,6 +764,10 @@ int main()
 
 		renderSceneFromView(meshTestShader, mainView, uniformBuffer, sponzaModel, mainFramebuffer, shadowMap);
 
+		glPopDebugGroup();
+
+		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Shadow Map Debug Quad");
+		// Debug quad drawing
 		shadowMapDebugShader.useProgram();
 
 		glBindSampler(0, nonComparisonShadowSampler);
@@ -709,9 +777,19 @@ int main()
 
 		glBindSampler(0, 0);
 
+		glPopDebugGroup();
+
+		// GBuffer test rendering
+		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "GBuffer Rendering");
+		gBufferPassShader.useProgram();
+		renderAttributeToGBuffer(gBufferPassShader, sponzaModel, gBuffer.getFramebuffer());
+		glPopDebugGroup();
+
 		// Rendering
+		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ImGui Debug Window Rendering");
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		glPopDebugGroup();
 
 		glfwSwapBuffers(window);
 

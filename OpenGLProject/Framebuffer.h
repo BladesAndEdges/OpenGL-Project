@@ -7,6 +7,7 @@
 // --------------------------------------------------------------------------------
 enum class AttachmentType
 {
+	ColourAttachment,
 	DepthAttachment
 };
 
@@ -17,7 +18,7 @@ class Framebuffer
 public:
 
 	static Framebuffer defaultFramebuffer();
-	static Framebuffer customFramebuffer();
+	static Framebuffer customFramebuffer(const char* framebufferLabel);
 	 
 	Framebuffer(const Framebuffer&) = delete;
 	Framebuffer& operator=(const Framebuffer&) = delete;
@@ -27,7 +28,7 @@ public:
 	~Framebuffer();
 
 
-	void attachTexture(TextureTarget target, const Texture& texture, const AttachmentType& attachmentType, uint32_t layer);
+	void attachTexture(TextureTarget target, const Texture& texture, const AttachmentType& attachmentType, uint32_t layer, uint8_t colourAtachmentOffset);
 
 	GLuint getName() const;
 

@@ -58,6 +58,7 @@ Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMo
 Texture::Texture(const std::string& label, uint32_t width, uint32_t height, uint32_t depth, TextureTarget target,
 	TextureWrapMode wrapMode, TextureFilterMode filterMode, TextureFormat format, TextureComparisonMode comparisonMode)
 {
+	// Note: When TextureTarget::Texture2D is used, depth can be whatever, as it will never be used. Perhaps handle this somehow?
 	assert(width > 0);
 	assert(height > 0);
 	assert(depth > 0);
@@ -328,6 +329,12 @@ GLenum Texture::translateFormatToOpenGLSizedFormat(TextureFormat format) const
 	case TextureFormat::RGBA8:
 		return GL_RGBA8;
 
+	case TextureFormat::R32F:
+		return GL_R32F;
+
+	case TextureFormat::RGB32F:
+		return GL_RGB32F;
+
 	case TextureFormat::DEPTH32:
 		return GL_DEPTH_COMPONENT32;
 
@@ -343,12 +350,14 @@ GLenum Texture::translateFormatToOpenGLInternalFormat(TextureFormat format) cons
 	switch (format)
 	{
 	case TextureFormat::R8:
+	case TextureFormat::R32F:
 		return GL_RED;
 
 	case TextureFormat::RG8:
 		return GL_RG;
 
 	case TextureFormat::RGB8:
+	case TextureFormat::RGB32F:
 		return GL_RGB;
 
 	case TextureFormat::RGBA8:

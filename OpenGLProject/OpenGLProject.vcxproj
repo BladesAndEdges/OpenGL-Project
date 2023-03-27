@@ -139,9 +139,11 @@
     <ClCompile Include="Dependencies\glad\src\glad.c" />
     <ClCompile Include="Face.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
+    <ClCompile Include="GBuffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MaterialReader.cpp" />
+    <ClCompile Include="MaterialUniformBuffer.cpp" />
     <ClCompile Include="ModelCacher.cpp" />
     <ClCompile Include="ModelParser.cpp" />
     <ClCompile Include="Model.cpp" />
@@ -157,8 +159,10 @@
     <ClInclude Include="Cascade.h" />
     <ClInclude Include="Face.h" />
     <ClInclude Include="Framebuffer.h" />
+    <ClInclude Include="GBuffer.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="MaterialReader.h" />
+    <ClInclude Include="MaterialUniformBuffer.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="ModelCacher.h" />
     <ClInclude Include="ModelParser.h" />
