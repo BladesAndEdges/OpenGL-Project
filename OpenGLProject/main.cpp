@@ -555,6 +555,7 @@ int main()
 	// -----------------------------------------------------------GBuffer
 	GBuffer gBuffer(800, 600); // Assume no resizes for now
 	Shader gBufferPassShader(R"(Shaders\gBufferPassShader.vert)", R"(Shaders\gBufferPassShader.frag)");
+	Shader lightingPassShader(R"(Shaders\lightingPassShader.vert)", R"(Shaders\lightingPassShader.frag)");
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -783,6 +784,14 @@ int main()
 		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "GBuffer Rendering");
 		gBufferPassShader.useProgram();
 		renderAttributeToGBuffer(gBufferPassShader, sponzaModel, gBuffer.getFramebuffer());
+		glPopDebugGroup();
+
+		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass Shader");
+
+		lightingPassShader.useProgram();
+
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
 		glPopDebugGroup();
 
 		// Rendering
