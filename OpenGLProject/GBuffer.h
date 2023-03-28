@@ -17,6 +17,8 @@ public:
 
 	const Framebuffer& getFramebuffer() const;
 
+	Texture* getWorldPositionTexture() const;
+
 private:
 
 	Framebuffer m_framebuffer;

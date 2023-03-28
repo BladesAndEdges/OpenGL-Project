@@ -1,8 +1,13 @@
 #version 450 core
 
+in vec2 v2f_textureCoordinate;
+
+layout(binding = 0) uniform sampler2D gBufferPositionSampler;
+
 out vec3 o_fragmentColour;
 
 void main()
 {
-	o_fragmentColour = vec3(gl_FragCoord.x / 1000.0f, gl_FragCoord.y / 1000.0f, gl_FragCoord.z / 1000.0f);
+	const vec2 c_screenCoordAsTexCoord = vec2(gl_FragCoord.x / 800, gl_FragCoord.y / 600);
+	o_fragmentColour = texture(gBufferPositionSampler, c_screenCoordAsTexCoord).rgb;
 }

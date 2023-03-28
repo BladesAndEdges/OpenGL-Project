@@ -790,6 +790,7 @@ int main()
 
 		lightingPassShader.useProgram();
 
+		glBindTextureUnit(0, gBuffer.getWorldPositionTexture()->getName());
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glPopDebugGroup();

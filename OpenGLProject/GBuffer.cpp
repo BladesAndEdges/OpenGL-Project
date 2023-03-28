@@ -44,3 +44,9 @@ const Framebuffer & GBuffer::getFramebuffer() const
 {
 	return m_framebuffer;
 }
+
+// --------------------------------------------------------------------------------
+Texture * GBuffer::getWorldPositionTexture() const
+{
+	return m_worldPositionTexture;
+}
