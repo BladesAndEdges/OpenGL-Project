@@ -1,5 +1,6 @@
 #version 450 core
 
+// --------------------------------------------------------------------------------
 vec4 generateTriangleClipspaceCoordinate(uint vertexId)
 {		
 	vec4 clipSpaceCoord;
@@ -13,6 +14,7 @@ vec4 generateTriangleClipspaceCoordinate(uint vertexId)
 	return clipSpaceCoord;
 };
 
+// --------------------------------------------------------------------------------
 vec2 generateTriangleTextureCoordinates(uint vertexId)
 {
 	vec2 textureCoordinate;
@@ -25,11 +27,11 @@ vec2 generateTriangleTextureCoordinates(uint vertexId)
 
 out vec2 v2f_textureCoordinate;
 
+// --------------------------------------------------------------------------------
 void main()
 {
 	// To accomodate for CCW rendering, and avoid the triangle being culled
 	const uint c_correctedVertexId = 2  - gl_VertexID;
 	
 	gl_Position = generateTriangleClipspaceCoordinate(c_correctedVertexId);
-	v2f_textureCoordinate = generateTriangleTextureCoordinates(c_correctedVertexId);
 }

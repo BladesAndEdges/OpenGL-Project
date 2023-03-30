@@ -50,3 +50,24 @@ Texture * GBuffer::getWorldPositionTexture() const
 {
 	return m_worldPositionTexture;
 }
+
+// --------------------------------------------------------------------------------
+Texture * GBuffer::getWorldNormalTexture() const
+{
+	return m_worldNormalTexture;
+}
+
+Texture * GBuffer::getDiffuseColourTexture() const
+{
+	return m_diffuseColourTexture;
+}
+
+Texture * GBuffer::getSpecularColourTexture() const
+{
+	return m_specularColourTexture;
+}
+
+Texture * GBuffer::getSmoothnessTexture() const
+{
+	return m_smoothnessTexture;
+}

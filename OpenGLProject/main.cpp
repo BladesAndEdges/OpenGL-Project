@@ -791,6 +791,11 @@ int main()
 		lightingPassShader.useProgram();
 
 		glBindTextureUnit(0, gBuffer.getWorldPositionTexture()->getName());
+		glBindTextureUnit(1, gBuffer.getWorldNormalTexture()->getName());
+		glBindTextureUnit(2, gBuffer.getDiffuseColourTexture()->getName());
+		glBindTextureUnit(3, gBuffer.getSpecularColourTexture()->getName());
+		glBindTextureUnit(4, gBuffer.getSmoothnessTexture()->getName());
+		glBindTextureUnit(5, shadowMap->getName());
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glPopDebugGroup();

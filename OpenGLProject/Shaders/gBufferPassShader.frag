@@ -77,5 +77,4 @@ void main()
 	out_gDiffuseColour = surfaceProperties.m_diffuseColour;
 	out_gSpecularColour = surfaceProperties.m_specularColour;
 	out_gSmoothness = vec3(surfaceProperties.m_smoothness, 0.0f, 0.0f);
-	//out_gDepth = gl_FragCoord.z;
 }

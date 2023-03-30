@@ -18,6 +18,10 @@ public:
 	const Framebuffer& getFramebuffer() const;
 
 	Texture* getWorldPositionTexture() const;
+	Texture* getWorldNormalTexture() const;
+	Texture* getDiffuseColourTexture() const;
+	Texture* getSpecularColourTexture() const;
+	Texture* getSmoothnessTexture() const;
 
 private:
 
