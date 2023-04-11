@@ -1,5 +1,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 
+#include<Windows.h>
+#include<winuser.h>
+
 #define ArraySize(x) sizeof(x)/sizeof(x[0]);
 #include<iostream>
 #include <experimental/filesystem>
@@ -41,6 +44,15 @@ float g_previousFrameTime = 0.0f;
 
 float g_previousCursorX = 0.0f;
 float g_previousCursorY = 0.0f;
+
+// --------------------------------------------------------------------------------
+enum class RendererType
+{
+	Forward,
+	Deferred
+};
+
+RendererType currentRenderType = RendererType::Forward;
 
 // --------------------------------------------------------------------------------
 void framebufferCallback(GLFWwindow*, int width, int height)
@@ -425,6 +437,7 @@ int main()
 	const char* glsl_version = "#version 450 core";
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
+	
 	glEnable(GL_DEBUG_OUTPUT);
 	//glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(MessageCallback, 0);
@@ -540,6 +553,12 @@ int main()
 	std::vector<Cascade> cascades;
 	uint32_t activeCascadesCount = 4;
 
+	int x = 0;
+	if (shadowMap == nullptr)
+	{
+		x = 1;
+	}
+
 	Framebuffer mainFramebuffer = Framebuffer::defaultFramebuffer();
 
 	// Non-Comparison Sampler
@@ -556,6 +575,8 @@ int main()
 	GBuffer gBuffer(800, 600); // Assume no resizes for now
 	Shader gBufferPassShader(R"(Shaders\gBufferPassShader.vert)", R"(Shaders\gBufferPassShader.frag)");
 	Shader lightingPassShader(R"(Shaders\lightingPassShader.vert)", R"(Shaders\lightingPassShader.frag)");
+
+	
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -617,12 +638,18 @@ int main()
 		float offsetScale = 0.0f;
 		uint32_t cascadeIndex = 0u;
 
+		// MessageBox(nullptr, nullptr, nullptr, MB_OK);
+
 		// Depth Pass(es);
 		for (Cascade& cascade : cascades)
 		{
 			const std::string debugMarkerName = "Cascade " + std::to_string(cascadeIndex);
 
-			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0 , -1, debugMarkerName.c_str());
+			//MessageBox(nullptr, nullptr, nullptr, MB_OK);
+
+			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, debugMarkerName.c_str());
+
+			//MessageBox(nullptr, nullptr, nullptr, MB_OK);
 
 			int framebufferWidth, framebufferHeight;
 			glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
@@ -631,8 +658,12 @@ int main()
 			const uint32_t height = cascade.getShadowMap()->getHeight();
 			glViewport(0, 0, cascade.getShadowMap()->getWidth(), cascade.getShadowMap()->getHeight());
 
+			//MessageBox(nullptr, nullptr, nullptr, MB_OK);
+
 			const GLfloat clearValue = 1.0f;
 			glClearNamedFramebufferfv(cascade.getFramebuffer().getName(), GL_DEPTH, 0, &clearValue);
+
+			//MessageBox(nullptr, nullptr, nullptr, MB_OK);
 
 			const float texelSize = 1.0f / (float)(cascade.getShadowMap()->getWidth());
 			offsetScale = radiusInTexels * texelSize;
@@ -656,8 +687,6 @@ int main()
 			glPopDebugGroup();
 		}
 
-		//--------------------------------------------------------------------------------------------------------------------------------------
-		// Main Camera rendering
 		bool show_demo_window = true;
 
 		//----------------------------------------------------------------------------------
@@ -665,6 +694,27 @@ int main()
 		if (show_demo_window)
 		{
 			ImGui::ShowDemoWindow(&show_demo_window);
+		}
+
+		// Renderer Type
+		static ImGuiComboFlags renderTypeFlag = 0;
+		const char* renderTypeOptions[] = { "Forward", "Deferred" };
+
+		const char* renderTypePreviewValue = renderTypeOptions[static_cast<int>(currentRenderType)];
+		if (ImGui::BeginCombo("Type of Renderer", renderTypePreviewValue, renderTypeFlag))
+		{
+			for (int n = 0; n < IM_ARRAYSIZE(renderTypeOptions); n++)
+			{
+				const bool is_selected = (static_cast<int>(currentRenderType) == n);
+				if (ImGui::Selectable(renderTypeOptions[n], is_selected))
+				{
+					currentRenderType = static_cast<RendererType>(n);
+				}
+
+				if (is_selected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
 		}
 
 		ImGui::Begin("Overlays");
@@ -681,13 +731,12 @@ int main()
 		ImGui::SliderFloat("Azimuth", &azimuthAngle, 0.0f, 360.0f);
 		ImGui::SliderFloat("Zenith", &zenithAngle, 0.0f, 90.0f);
 
-		// ImGui 
 		static ImGuiComboFlags shadowMapDimensionsFlag = 0;
 		const char* possibleShadowMapDimensions[] = { "128x128", "256x256", "512x512", "1024x1024", "2048x2048", "4096x4096" };
 
-		const char* combo_preview_value = possibleShadowMapDimensions[shadowMapSizeID];  // Pass in the preview value visible before opening the combo (it could be anything)
+		const char* shadowMapDimensionsPreviewValue = possibleShadowMapDimensions[shadowMapSizeID];  // Pass in the preview value visible before opening the combo (it could be anything)
 
-		if (ImGui::BeginCombo("SM Resolution", combo_preview_value, shadowMapDimensionsFlag))
+		if (ImGui::BeginCombo("SM Resolution", shadowMapDimensionsPreviewValue, shadowMapDimensionsFlag))
 		{
 			for (int n = 0; n < IM_ARRAYSIZE(possibleShadowMapDimensions); n++)
 			{
@@ -735,13 +784,8 @@ int main()
 
 
 		ImGui::End();
+
 		//----------------------------------------------------------------------------------
-
-		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Main Colour Pass");
-
-		meshTestShader.useProgram();
-		glBindVertexArray(modelVAO);
-
 		int winWidth, winHeight;
 		glfwGetWindowSize(window, &winWidth, &winHeight);
 
@@ -763,9 +807,15 @@ int main()
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		renderSceneFromView(meshTestShader, mainView, uniformBuffer, sponzaModel, mainFramebuffer, shadowMap);
 
-		glPopDebugGroup();
+		if (currentRenderType == RendererType::Forward)
+		{
+			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Forward Renderer Drawing");
+			meshTestShader.useProgram();
+			glBindVertexArray(modelVAO);
+			renderSceneFromView(meshTestShader, mainView, uniformBuffer, sponzaModel, mainFramebuffer, shadowMap);
+			glPopDebugGroup();
+		}
 
 		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Shadow Map Debug Quad");
 		// Debug quad drawing
@@ -780,27 +830,29 @@ int main()
 
 		glPopDebugGroup();
 
-		// GBuffer test rendering
-		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "GBuffer Rendering");
-		gBufferPassShader.useProgram();
-		renderAttributeToGBuffer(gBufferPassShader, sponzaModel, gBuffer.getFramebuffer());
-		glPopDebugGroup();
+		if (currentRenderType == RendererType::Deferred)
+		{
+			// GBuffer test rendering
+			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Render to GBuffer Textures");
+			gBufferPassShader.useProgram();
+			renderAttributeToGBuffer(gBufferPassShader, sponzaModel, gBuffer.getFramebuffer());
+			glPopDebugGroup();
 
-		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass Shader");
+			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Deferred Renderer Drawing");
 
-		lightingPassShader.useProgram();
+			lightingPassShader.useProgram();
 
-		glBindTextureUnit(0, gBuffer.getWorldPositionTexture()->getName());
-		glBindTextureUnit(1, gBuffer.getWorldNormalTexture()->getName());
-		glBindTextureUnit(2, gBuffer.getDiffuseColourTexture()->getName());
-		glBindTextureUnit(3, gBuffer.getSpecularColourTexture()->getName());
-		glBindTextureUnit(4, gBuffer.getSmoothnessTexture()->getName());
-		glBindTextureUnit(5, shadowMap->getName());
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+			glBindTextureUnit(0, gBuffer.getWorldPositionTexture()->getName());
+			glBindTextureUnit(1, gBuffer.getWorldNormalTexture()->getName());
+			glBindTextureUnit(2, gBuffer.getDiffuseColourTexture()->getName());
+			glBindTextureUnit(3, gBuffer.getSpecularColourTexture()->getName());
+			glBindTextureUnit(4, gBuffer.getSmoothnessTexture()->getName());
+			glBindTextureUnit(5, shadowMap->getName());
+			glDrawArrays(GL_TRIANGLES, 0, 3);
 
-		glPopDebugGroup();
+			glPopDebugGroup();
+		}
 
-		// Rendering
 		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ImGui Debug Window Rendering");
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
