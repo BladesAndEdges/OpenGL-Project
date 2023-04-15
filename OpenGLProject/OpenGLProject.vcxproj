@@ -140,6 +140,7 @@
     <ClCompile Include="Face.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
     <ClCompile Include="GBuffer.cpp" />
+    <ClCompile Include="GraphicsConfiguations.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MaterialReader.cpp" />
@@ -160,6 +161,7 @@
     <ClInclude Include="Face.h" />
     <ClInclude Include="Framebuffer.h" />
     <ClInclude Include="GBuffer.h" />
+    <ClInclude Include="GraphicsConfiguations.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="MaterialReader.h" />
     <ClInclude Include="MaterialUniformBuffer.h" />

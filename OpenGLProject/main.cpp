@@ -10,6 +10,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "GraphicsConfiguations.h"
 
 #include "ProfileMarker.h" // Included above glad due to windows.h
 #include "Model.h"
@@ -44,15 +45,6 @@ float g_previousFrameTime = 0.0f;
 
 float g_previousCursorX = 0.0f;
 float g_previousCursorY = 0.0f;
-
-// --------------------------------------------------------------------------------
-enum class RendererType
-{
-	Forward,
-	Deferred
-};
-
-RendererType currentRenderType = RendererType::Forward;
 
 // --------------------------------------------------------------------------------
 void framebufferCallback(GLFWwindow*, int width, int height)
@@ -553,12 +545,6 @@ int main()
 	std::vector<Cascade> cascades;
 	uint32_t activeCascadesCount = 4;
 
-	int x = 0;
-	if (shadowMap == nullptr)
-	{
-		x = 1;
-	}
-
 	Framebuffer mainFramebuffer = Framebuffer::defaultFramebuffer();
 
 	// Non-Comparison Sampler
@@ -576,10 +562,18 @@ int main()
 	Shader gBufferPassShader(R"(Shaders\gBufferPassShader.vert)", R"(Shaders\gBufferPassShader.frag)");
 	Shader lightingPassShader(R"(Shaders\lightingPassShader.vert)", R"(Shaders\lightingPassShader.frag)");
 
-	
+	GraphicsConfiguations graphicsConfigurations;
 
 	while (!glfwWindowShouldClose(window))
 	{
+		// Start the Dear ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		// Update all configuration settings accessible via the UI
+		graphicsConfigurations.update();
+
 		// Shadow Map == nullptr only for frame 0; And for a moment whilst deleted (?)
 		if ((shadowMap == nullptr) || (activeCascadesCount != (uint32_t)cascades.size()) || ((uint32_t)shadowMapSizes[shadowMapSizeID] != shadowMap->getWidth()))
 		{
@@ -607,11 +601,6 @@ int main()
 		const float timerStartingPoint = (float)glfwGetTime();
 
 		glfwPollEvents();
-
-		// Start the Dear ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
 
 		processCameraInput(mainView, window);
 
@@ -694,27 +683,6 @@ int main()
 		if (show_demo_window)
 		{
 			ImGui::ShowDemoWindow(&show_demo_window);
-		}
-
-		// Renderer Type
-		static ImGuiComboFlags renderTypeFlag = 0;
-		const char* renderTypeOptions[] = { "Forward", "Deferred" };
-
-		const char* renderTypePreviewValue = renderTypeOptions[static_cast<int>(currentRenderType)];
-		if (ImGui::BeginCombo("Type of Renderer", renderTypePreviewValue, renderTypeFlag))
-		{
-			for (int n = 0; n < IM_ARRAYSIZE(renderTypeOptions); n++)
-			{
-				const bool is_selected = (static_cast<int>(currentRenderType) == n);
-				if (ImGui::Selectable(renderTypeOptions[n], is_selected))
-				{
-					currentRenderType = static_cast<RendererType>(n);
-				}
-
-				if (is_selected)
-					ImGui::SetItemDefaultFocus();
-			}
-			ImGui::EndCombo();
 		}
 
 		ImGui::Begin("Overlays");
@@ -808,7 +776,7 @@ int main()
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 
-		if (currentRenderType == RendererType::Forward)
+		if (graphicsConfigurations.getRendererType() == RendererType::Forward)
 		{
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Forward Renderer Drawing");
 			meshTestShader.useProgram();
@@ -830,7 +798,7 @@ int main()
 
 		glPopDebugGroup();
 
-		if (currentRenderType == RendererType::Deferred)
+		if (graphicsConfigurations.getRendererType() == RendererType::Deferred)
 		{
 			// GBuffer test rendering
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Render to GBuffer Textures");
