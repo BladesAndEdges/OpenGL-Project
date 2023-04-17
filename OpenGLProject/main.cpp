@@ -538,9 +538,7 @@ int main()
 
 	// Shadow Map texture
 	Texture* shadowMap = nullptr;
-	bool shadowMapHasChangedSize = false;
-	static int shadowMapSizeID = 3;
-	const uint32_t shadowMapSizes[6] = { 128, 256, 512, 1024, 2048, 4096 };
+	const uint32_t shadowMapSizes[6] = { 128, 256, 512, 1024, 2048, 4096 }; // Possibly move this into the GraphicsConfig class as options
 
 	std::vector<Cascade> cascades;
 	uint32_t activeCascadesCount = 4;
@@ -575,11 +573,11 @@ int main()
 		graphicsConfigurations.update();
 
 		// Shadow Map == nullptr only for frame 0; And for a moment whilst deleted (?)
-		if ((shadowMap == nullptr) || (activeCascadesCount != (uint32_t)cascades.size()) || ((uint32_t)shadowMapSizes[shadowMapSizeID] != shadowMap->getWidth()))
+		if ((shadowMap == nullptr) || (activeCascadesCount != (uint32_t)cascades.size()) || ((uint32_t)shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()] != shadowMap->getWidth()))
 		{
 			// Recreate the Shadow Map
 			delete shadowMap;
-			shadowMap = new Texture("ShadowMap", shadowMapSizes[shadowMapSizeID], shadowMapSizes[shadowMapSizeID], activeCascadesCount, TextureTarget::ArrayTexture2D,
+			shadowMap = new Texture("ShadowMap", shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()], shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()], activeCascadesCount, TextureTarget::ArrayTexture2D,
 				TextureWrapMode::ClampEdge, TextureFilterMode::Bilinear, TextureFormat::DEPTH32, TextureComparisonMode::LessEqual);
 
 			// Update Cascades
@@ -593,8 +591,8 @@ int main()
 
 		for (const Cascade& cascade : cascades)
 		{
-			assert(cascade.getShadowMap()->getHeight() == shadowMapSizes[shadowMapSizeID]);
-			assert(cascade.getShadowMap()->getWidth() == shadowMapSizes[shadowMapSizeID]);
+			assert(cascade.getShadowMap()->getHeight() == shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()]);
+			assert(cascade.getShadowMap()->getWidth() == shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()]);
 			assert(cascades.size() == activeCascadesCount);
 		}
 
@@ -676,15 +674,6 @@ int main()
 			glPopDebugGroup();
 		}
 
-		bool show_demo_window = true;
-
-		//----------------------------------------------------------------------------------
-		// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-		if (show_demo_window)
-		{
-			ImGui::ShowDemoWindow(&show_demo_window);
-		}
-
 		ImGui::Begin("Overlays");
 		ImGui::Checkbox("Cascade Draw Distance", &cascadeDrawDistanceOverlayBool);
 		ImGui::End();
@@ -698,29 +687,6 @@ int main()
 
 		ImGui::SliderFloat("Azimuth", &azimuthAngle, 0.0f, 360.0f);
 		ImGui::SliderFloat("Zenith", &zenithAngle, 0.0f, 90.0f);
-
-		static ImGuiComboFlags shadowMapDimensionsFlag = 0;
-		const char* possibleShadowMapDimensions[] = { "128x128", "256x256", "512x512", "1024x1024", "2048x2048", "4096x4096" };
-
-		const char* shadowMapDimensionsPreviewValue = possibleShadowMapDimensions[shadowMapSizeID];  // Pass in the preview value visible before opening the combo (it could be anything)
-
-		if (ImGui::BeginCombo("SM Resolution", shadowMapDimensionsPreviewValue, shadowMapDimensionsFlag))
-		{
-			for (int n = 0; n < IM_ARRAYSIZE(possibleShadowMapDimensions); n++)
-			{
-				const bool is_selected = (shadowMapSizeID == n);
-				if (ImGui::Selectable(possibleShadowMapDimensions[n], is_selected))
-				{
-					shadowMapSizeID = n;
-					shadowMapHasChangedSize = !shadowMapHasChangedSize;
-				}
-
-				// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-				if (is_selected)
-					ImGui::SetItemDefaultFocus();
-			}
-			ImGui::EndCombo();
-		}
 
 		ImGui::SliderFloat("PCF Texel Radius", &radiusInTexels, 0.0f, 100.0f);
 		ImGui::SliderFloat("Shadow Draw Distance", &maximumShadowDrawDistance, 1.0f, 200.0f);
@@ -742,14 +708,10 @@ int main()
 				{
 					activeCascadesCount = n;
 				}
-
-				// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-				if (is_selected)
-					ImGui::SetItemDefaultFocus();
 			}
+
 			ImGui::EndCombo();
 		}
-
 
 		ImGui::End();
 
