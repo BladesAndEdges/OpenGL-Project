@@ -534,14 +534,13 @@ int main()
 
 	float radiusInTexels = 0.0f;
 	float maximumShadowDrawDistance = 100.0f;
-	float fadingRegionStart = -0.90f; // Fade 80 percent into the shadowDrawDistance
+	float fadingRegionStart = -0.90f; // The fade distance seems to be negative, why ?
 
 	// Shadow Map texture
 	Texture* shadowMap = nullptr;
 	const uint32_t shadowMapSizes[6] = { 128, 256, 512, 1024, 2048, 4096 }; // Possibly move this into the GraphicsConfig class as options
 
 	std::vector<Cascade> cascades;
-	uint32_t activeCascadesCount = 4;
 
 	Framebuffer mainFramebuffer = Framebuffer::defaultFramebuffer();
 
@@ -573,17 +572,17 @@ int main()
 		graphicsConfigurations.update();
 
 		// Shadow Map == nullptr only for frame 0; And for a moment whilst deleted (?)
-		if ((shadowMap == nullptr) || (activeCascadesCount != (uint32_t)cascades.size()) || ((uint32_t)shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()] != shadowMap->getWidth()))
+		if ((shadowMap == nullptr) || (graphicsConfigurations.getNumberOfActiveCascades() != (uint32_t)cascades.size()) || ((uint32_t)shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()] != shadowMap->getWidth()))
 		{
 			// Recreate the Shadow Map
 			delete shadowMap;
-			shadowMap = new Texture("ShadowMap", shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()], shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()], activeCascadesCount, TextureTarget::ArrayTexture2D,
+			shadowMap = new Texture("ShadowMap", shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()], shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()], graphicsConfigurations.getNumberOfActiveCascades(), TextureTarget::ArrayTexture2D,
 				TextureWrapMode::ClampEdge, TextureFilterMode::Bilinear, TextureFormat::DEPTH32, TextureComparisonMode::LessEqual);
 
 			// Update Cascades
 			cascades.clear();
 
-			while ((uint32_t)cascades.size() < activeCascadesCount)
+			while ((uint32_t)cascades.size() < graphicsConfigurations.getNumberOfActiveCascades())
 			{
 				cascades.emplace_back(shadowMap, (uint32_t)cascades.size());
 			}
@@ -593,7 +592,7 @@ int main()
 		{
 			assert(cascade.getShadowMap()->getHeight() == shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()]);
 			assert(cascade.getShadowMap()->getWidth() == shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()]);
-			assert(cascades.size() == activeCascadesCount);
+			assert(cascades.size() == graphicsConfigurations.getNumberOfActiveCascades());
 		}
 
 		const float timerStartingPoint = (float)glfwGetTime();
@@ -692,27 +691,6 @@ int main()
 		ImGui::SliderFloat("Shadow Draw Distance", &maximumShadowDrawDistance, 1.0f, 200.0f);
 		ImGui::SliderFloat("Shadow Fade Start", &fadingRegionStart, 0.0f, 1.0f);
 
-		// ------------------------------------------- Shadow Map Cascades ------------------------------------------------------------------
-		char cascadeCountScratch[2];
-		cascadeCountScratch[0] = '0' + char(activeCascadesCount);
-		cascadeCountScratch[1] = '\0';
-
-		if (ImGui::BeginCombo("Number Of Cascades", cascadeCountScratch, 0))
-		{
-			for (uint32_t n = 1; n <= 4; n++)
-			{
-				const bool is_selected = (activeCascadesCount == n);
-				cascadeCountScratch[0] = '0' + char(n);
-
-				if (ImGui::Selectable(cascadeCountScratch, is_selected))
-				{
-					activeCascadesCount = n;
-				}
-			}
-
-			ImGui::EndCombo();
-		}
-
 		ImGui::End();
 
 		//----------------------------------------------------------------------------------
@@ -754,7 +732,7 @@ int main()
 		glBindSampler(0, nonComparisonShadowSampler);
 
 		glBindTextureUnit(0, shadowMap->getName());
-		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, activeCascadesCount);
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, graphicsConfigurations.getNumberOfActiveCascades());
 
 		glBindSampler(0, 0);
 

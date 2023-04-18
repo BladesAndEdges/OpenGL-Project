@@ -2,6 +2,8 @@
 
 #include "imgui.h"
 
+#define MAXIMUM_NUM_OF_CASCADES 4
+
 // Default Settings: 
 // RendererType -> Forward Renderer
 // Display ImGui Demo Window -> false
@@ -64,6 +66,28 @@ void GraphicsConfiguations::update()
 
 		ImGui::EndCombo();
 	}
+
+	// Number of active cascades in use
+	char cascadeCountScratch[2];
+	cascadeCountScratch[0] = '0' + char(m_numberOfAciveCascades);
+	cascadeCountScratch[1] = '\0';
+
+	if (ImGui::BeginCombo("Number Of Cascades", cascadeCountScratch, 0))
+	{
+		// Begin at 1 as we always want at least one active cascade
+		for (uint32_t numberOfCascades = 1u; numberOfCascades <= MAXIMUM_NUM_OF_CASCADES; numberOfCascades++)
+		{
+			const bool is_selected = (m_numberOfAciveCascades == numberOfCascades);
+			cascadeCountScratch[0] = '0' + char(numberOfCascades);
+
+			if (ImGui::Selectable(cascadeCountScratch, is_selected))
+			{
+				m_numberOfAciveCascades = (uint8_t)numberOfCascades;
+			}
+		}
+
+		ImGui::EndCombo();
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -76,4 +100,10 @@ RendererType GraphicsConfiguations::getRendererType() const
 uint8_t GraphicsConfiguations::getShadowMapDimensionsId() const
 {
 	return m_shadowMapDimensionsId;
+}
+
+// --------------------------------------------------------------------------------
+uint8_t GraphicsConfiguations::getNumberOfActiveCascades() const
+{
+	return m_numberOfAciveCascades;
 }

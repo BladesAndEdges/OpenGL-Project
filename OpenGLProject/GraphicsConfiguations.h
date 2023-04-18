@@ -20,14 +20,15 @@ public:
 
 	RendererType getRendererType() const;
 
-	bool getShadowMapDimensionsChanged() const;
 	uint8_t getShadowMapDimensionsId() const;
+	uint8_t getNumberOfActiveCascades() const;
 
 private:
 
 	RendererType m_rendererType;
 	bool m_displayImGuiDemoWindow = false;
 	uint8_t m_shadowMapDimensionsId = 3u;
+	uint8_t m_numberOfAciveCascades = 4u;
 
 };
 
