@@ -51,7 +51,6 @@ void updateUniformBuffer(UniformBuffer& ubo, const Camera& mainView, const Camer
 	const glm::vec4 worldSpacePosition = glm::vec4(mainView.getWorldPosition(), 1.0f);
 
 	const glm::vec4 toLightDirectionWS = glm::vec4(toLightDirectionWorldSpace, 1.0f);
-	std::cout << toLightDirectionWS.x << " " << toLightDirectionWS.y << " " << toLightDirectionWorldSpace.z << std::endl;
 
 	const glm::mat4 model = glm::mat4(1.0f);
 	const glm::mat4 view = mainView.createViewMatrix();

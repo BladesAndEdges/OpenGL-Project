@@ -614,18 +614,12 @@ int main()
 		float offsetScale = 0.0f;
 		uint32_t cascadeIndex = 0u;
 
-		// MessageBox(nullptr, nullptr, nullptr, MB_OK);
-
 		// Depth Pass(es);
 		for (Cascade& cascade : cascades)
 		{
 			const std::string debugMarkerName = "Cascade " + std::to_string(cascadeIndex);
 
-			//MessageBox(nullptr, nullptr, nullptr, MB_OK);
-
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, debugMarkerName.c_str());
-
-			//MessageBox(nullptr, nullptr, nullptr, MB_OK);
 
 			int framebufferWidth, framebufferHeight;
 			glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
@@ -634,12 +628,8 @@ int main()
 			const uint32_t height = cascade.getShadowMap()->getHeight();
 			glViewport(0, 0, cascade.getShadowMap()->getWidth(), cascade.getShadowMap()->getHeight());
 
-			//MessageBox(nullptr, nullptr, nullptr, MB_OK);
-
 			const GLfloat clearValue = 1.0f;
 			glClearNamedFramebufferfv(cascade.getFramebuffer().getName(), GL_DEPTH, 0, &clearValue);
-
-			//MessageBox(nullptr, nullptr, nullptr, MB_OK);
 
 			const float texelSize = 1.0f / (float)(cascade.getShadowMap()->getWidth());
 			offsetScale = radiusInTexels * texelSize;
@@ -648,6 +638,7 @@ int main()
 			updateShadowView(mainView, cascade.getCascadeView(), zenithAngle, azimuthAngle, cascadeSplitDistances[cascadeSplitDistanceIndex], cascadeSplitDistances[cascadeSplitDistanceIndex + 1]);
 
 			glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
+
 			const uint32_t cascadeSplitEndId = cascadeSplitDistanceIndex + 1u;
 			updateUniformBuffer(uniformBuffer, cascade.getCascadeView(), cascade.getCascadeView(), cascadeSplitDistances[cascadeSplitEndId], cascadeIndex, worldSpaceToLightVector, offsetScale, maximumShadowDrawDistance, fadingRegionStart,
 				graphicsConfigurations.getNormalMappingEnabled(), graphicsConfigurations.getDiffuseLightingEnabled(), graphicsConfigurations.getSpecularLightingEnabled(), graphicsConfigurations.getCascadesOverlayModeEnabled());
@@ -688,7 +679,7 @@ int main()
 
 
 		// What to do about this. Isn't this meaning cascade 0 values get partially updated ahead of others ?
-		const glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
+		const glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle); // Issue ?
 		updateUniformBuffer(uniformBuffer, mainView, cascades[0].getCascadeView(), cascadeSplitDistances[1], 0u, worldSpaceToLightVector, offsetScale, maximumShadowDrawDistance,
 			fadingRegionStart, graphicsConfigurations.getNormalMappingEnabled(), graphicsConfigurations.getDiffuseLightingEnabled(), graphicsConfigurations.getSpecularLightingEnabled(), graphicsConfigurations.getCascadesOverlayModeEnabled());
 
