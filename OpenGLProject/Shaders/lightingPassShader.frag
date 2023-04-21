@@ -37,7 +37,7 @@ layout(std140) uniform sceneMatrices
 	float shadowFadeStartDistance;
 	
 	bool normalMapToggle;
-	bool ambientToggle;
+	bool padding;
 	bool diffuseToggle;
 	bool specularToggle;
 	
@@ -46,14 +46,14 @@ layout(std140) uniform sceneMatrices
 
 // Phong functions
 // --------------------------------------------------------------------------------
-vec3 calculateAmbientTerm(const vec3 surfaceDiffuseColour)
+vec3 calculateIndirectDiffuseTerm(const vec3 surfaceDiffuseColour)
 {
-	const vec3 c_ambientIntensity = vec3(0.8f, 0.8f, 0.8f);
-	return c_ambientIntensity * surfaceDiffuseColour;
+	const vec3 c_globalLightSourceIntensity = vec3(0.8f, 0.8f, 0.8f);
+	return c_globalLightSourceIntensity * surfaceDiffuseColour;
 };
 
 // --------------------------------------------------------------------------------
-vec3 calculateDiffuseTerm(const vec3 surfaceDiffuseColour, const vec3 surfaceWorldNormal)
+vec3 calculateDirectDiffuseTerm(const vec3 surfaceDiffuseColour, const vec3 surfaceWorldNormal)
 {
 	const vec3 c_lightSourceIntensity = vec3(0.723f, 0.535f, 0.1293f);
 	const float c_cosTheta = max(dot(ubo.lightSourceDirection.xyz, surfaceWorldNormal), 0.0f);
@@ -220,13 +220,13 @@ SurfaceProperties getSurfaceProperties()
 // --------------------------------------------------------------------------------
 vec3 calculateLightingAtSurfacePoint(const SurfaceProperties surfaceProperties)
 {
-	const vec3 ambientTerm = calculateAmbientTerm(surfaceProperties.m_diffuseColour);
-	const vec3 diffuseTerm = calculateDiffuseTerm(surfaceProperties.m_diffuseColour, surfaceProperties.m_worldNormal);
+	const vec3 indirectDiffuseTerm = calculateIndirectDiffuseTerm(surfaceProperties.m_diffuseColour);
+	const vec3 directDiffuseTerm = calculateDirectDiffuseTerm(surfaceProperties.m_diffuseColour, surfaceProperties.m_worldNormal);
 	const vec3 specularTerm = calculateSpecularTerm(surfaceProperties.m_specularColour, surfaceProperties.m_worldPosition, 
 		surfaceProperties.m_worldNormal, surfaceProperties.m_smoothness);
 	const float inShadowRatio = calculateInShadowRatio(surfaceProperties.m_worldPosition);
 	
-	return ambientTerm + (inShadowRatio * (diffuseTerm + specularTerm));
+	return indirectDiffuseTerm + (inShadowRatio * (directDiffuseTerm + specularTerm));
 };
 
 

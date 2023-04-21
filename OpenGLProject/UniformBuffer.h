@@ -29,7 +29,7 @@ struct UniformBuffer
 
 	// Debug bools
 	uint32_t normalMapToggle;
-	uint32_t ambientToggle;
+	uint32_t padding;
 	uint32_t diffuseToggle;
 	uint32_t specularToggle;
 
@@ -43,4 +43,4 @@ void copyMat4ToFloat64ArrayByIndex(const glm::mat4& source, float destination[64
 void copyVec4ToFloatArray(const glm::vec4& source, float destination[4]);
 
 void updateUniformBuffer(UniformBuffer& ubo, const Camera& mainView, const Camera& shadowMapView, const float cascadeSplitEndDistance, const uint32_t worldToShadowMapArrayId, const glm::vec3& toLightDirectionWorldSpace,
-	float offScale, float shadowDrawDistance, float shadowFadingStart, bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle, bool cascadeDrawDistanceToggle);
+	float offScale, float shadowDrawDistance, float shadowFadingStart, bool nmToggle, bool diffToggle, bool specToggle, bool cascadeDrawDistanceToggle);

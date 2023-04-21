@@ -46,7 +46,7 @@ layout(std140) uniform sceneMatrices
 	float shadowFadeStartDistance;
 	
 	bool normalMapToggle;
-	bool ambientToggle;
+	bool padding;
 	bool diffuseToggle;
 	bool specularToggle;
 	
@@ -229,21 +229,14 @@ SurfaceProperties getSurfaceProperties()
 };
 
 // --------------------------------------------------------------------------------
-vec3 calculateAmbientTerm(bool ambientLightingEnabled, const vec3 surfaceAmbientColour)
+vec3 calculateIndirectDiffuseTerm(const vec3 surfaceDiffuseColour)
 {
-	if(ambientLightingEnabled)
-	{
-		const vec3 c_ambientIntensity = vec3(0.8f, 0.8f, 0.8f);
-		return c_ambientIntensity * surfaceAmbientColour;
-	}
-	else
-	{
-		return vec3(0.0f, 0.0f, 0.0f);
-	}
+	const vec3 c_globalLightSourceIntensity = vec3(0.8f, 0.8f, 0.8f);
+	return c_globalLightSourceIntensity * surfaceDiffuseColour;
 };
 
 // --------------------------------------------------------------------------------
-vec3 calculateDiffuseTerm(bool diffuseLightingEnabled, const vec3 surfaceDiffuseColour, const vec3 worldNormal)
+vec3 calculateDirectDiffuseTerm(bool diffuseLightingEnabled, const vec3 surfaceDiffuseColour, const vec3 worldNormal)
 {
 	if(diffuseLightingEnabled)
 	{
@@ -278,11 +271,11 @@ vec3 calculateSpecularTerm(bool specularLightingEnabled, const vec3 surfaceSpecu
 // --------------------------------------------------------------------------------
 vec3 calculateLightingAtSurfacePoint(SurfaceProperties surfaceProperties)
 {	
-	// Ambient Term
-	const vec3 ambientTerm = calculateAmbientTerm(ubo.ambientToggle, surfaceProperties.m_ambientColour);
+	// Indirect Diffuse Term
+	const vec3 indirectDiffuseTerm = calculateIndirectDiffuseTerm(surfaceProperties.m_diffuseColour);
 	
-	// Diffuse Term
-	const vec3 diffuseTerm = calculateDiffuseTerm(ubo.diffuseToggle, surfaceProperties.m_diffuseColour, surfaceProperties.m_worldNormal);
+	// Direct Diffuse Term
+	const vec3 directDiffuseTerm = calculateDirectDiffuseTerm(ubo.diffuseToggle, surfaceProperties.m_diffuseColour, surfaceProperties.m_worldNormal);
 	
 	// Specular Term
 	const vec3 specularTerm = calculateSpecularTerm(ubo.specularToggle, surfaceProperties.m_specularColour, surfaceProperties.m_specularColour, surfaceProperties.m_smoothness);
@@ -309,11 +302,11 @@ vec3 calculateLightingAtSurfacePoint(SurfaceProperties surfaceProperties)
 	
 	if(ubo.cascadeDrawDistanceToggle)
 	{
-		return getDebugColourByCascadeRegion(cascadeSplitId) + ambientTerm + (inShadowRatio * (diffuseTerm + specularTerm));
+		return getDebugColourByCascadeRegion(cascadeSplitId) + (inShadowRatio * (directDiffuseTerm + specularTerm));
 	}
 	else
 	{
-		return ambientTerm + (inShadowRatio * (diffuseTerm + specularTerm));
+		return indirectDiffuseTerm + (inShadowRatio * (directDiffuseTerm + specularTerm));
 	}
 };
 

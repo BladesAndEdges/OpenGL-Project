@@ -22,7 +22,7 @@ layout(std140) uniform sceneMatrices
 	float shadowFadeStartDistance;
 	
 	bool normalMapToggle;
-	bool ambientToggle;
+	bool padding;
 	bool diffuseToggle;
 	bool specularToggle;
 	

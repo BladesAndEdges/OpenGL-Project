@@ -42,13 +42,16 @@ void copyVec4ToFloatArray(const glm::vec4 & source, float destination[4])
 	}
 }
 
+#include <iostream>
+
 // --------------------------------------------------------------------------------
 void updateUniformBuffer(UniformBuffer& ubo, const Camera& mainView, const Camera& shadowMapView, const float cascadeSplitEndDistance, const uint32_t worldToShadowMapArrayId, const glm::vec3& toLightDirectionWorldSpace,
-	float offScale, float shadowDrawDistance, float shadowFadeStart, bool nmToggle, bool ambToggle, bool diffToggle, bool specToggle, bool cascadeDrawDistanceToggle)
+	float offScale, float shadowDrawDistance, float shadowFadeStart, bool nmToggle, bool diffToggle, bool specToggle, bool cascadeDrawDistanceToggle)
 {
 	const glm::vec4 worldSpacePosition = glm::vec4(mainView.getWorldPosition(), 1.0f);
 
 	const glm::vec4 toLightDirectionWS = glm::vec4(toLightDirectionWorldSpace, 1.0f);
+	std::cout << toLightDirectionWS.x << " " << toLightDirectionWS.y << " " << toLightDirectionWorldSpace.z << std::endl;
 
 	const glm::mat4 model = glm::mat4(1.0f);
 	const glm::mat4 view = mainView.createViewMatrix();
@@ -76,7 +79,7 @@ void updateUniformBuffer(UniformBuffer& ubo, const Camera& mainView, const Camer
 	ubo.shadowFadeStartDistance = shadowFadeStart * shadowDrawDistance;
 
 	ubo.normalMapToggle = (nmToggle) ? 1 : 0;
-	ubo.ambientToggle = (ambToggle) ? 1 : 0;
+	ubo.padding = 0u;
 	ubo.diffuseToggle = (diffToggle) ? 1 : 0;
 	ubo.specularToggle = (specToggle) ? 1 : 0;
 
@@ -90,7 +93,7 @@ void copyBoolIntoBuffer(const bool source, bool& destination)
 }
 
 // --------------------------------------------------------------------------------
-UniformBuffer::UniformBuffer() : lightSourceDirection{ 0.0f, 1001.0f, 0.0f, 0.0f }, normalMapToggle(1), ambientToggle(1), diffuseToggle(1), 
+UniformBuffer::UniformBuffer() : lightSourceDirection{ 0.0f, 1001.0f, 0.0f, 0.0f }, normalMapToggle(1), padding(0), diffuseToggle(1), 
 	specularToggle(1), cascadeDrawDistanceOverlayToggle(0)
 {
 }

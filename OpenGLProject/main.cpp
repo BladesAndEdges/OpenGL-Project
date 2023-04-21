@@ -519,17 +519,8 @@ int main()
 		TextureFilterMode::Point);
 	Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point);
 
-	// ImGui stuff
-	bool normalMapBool = true;
-	bool ambientBool = true;
-	bool diffuseBool = true;
-	bool specularBool = true;
-
-	//Overlay booleans;
-	bool cascadeDrawDistanceOverlayBool = false;
-
-	float azimuthAngle = 0.0f;
-	float zenithAngle = 0.0f;
+	float azimuthAngle = 0.23f;
+	float zenithAngle = 0.80f;
 	float bus[3] = { 0.0f, 0.0f, 0.0f };
 
 	float radiusInTexels = 0.0f;
