@@ -660,7 +660,7 @@ int main()
 			glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
 			const uint32_t cascadeSplitEndId = cascadeSplitDistanceIndex + 1u;
 			updateUniformBuffer(uniformBuffer, cascade.getCascadeView(), cascade.getCascadeView(), cascadeSplitDistances[cascadeSplitEndId], cascadeIndex, worldSpaceToLightVector, offsetScale, maximumShadowDrawDistance, fadingRegionStart,
-				normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
+				graphicsConfigurations.getNormalMappingEnabled(), graphicsConfigurations.getDiffuseLightingEnabled(), graphicsConfigurations.getSpecularLightingEnabled(), graphicsConfigurations.getCascadesOverlayModeEnabled());
 
 			glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 			glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
@@ -673,16 +673,7 @@ int main()
 			glPopDebugGroup();
 		}
 
-		ImGui::Begin("Overlays");
-		ImGui::Checkbox("Cascade Draw Distance", &cascadeDrawDistanceOverlayBool);
-		ImGui::End();
-
 		ImGui::Begin("Debug Toggles");
-
-		ImGui::Checkbox("Normal Mapping", &normalMapBool);
-		ImGui::Checkbox("Ambient", &ambientBool);
-		ImGui::Checkbox("Diffuse", &diffuseBool);
-		ImGui::Checkbox("Specular", &specularBool);
 
 		ImGui::SliderFloat("Azimuth", &azimuthAngle, 0.0f, 360.0f);
 		ImGui::SliderFloat("Zenith", &zenithAngle, 0.0f, 90.0f);
@@ -709,7 +700,7 @@ int main()
 		// What to do about this. Isn't this meaning cascade 0 values get partially updated ahead of others ?
 		const glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
 		updateUniformBuffer(uniformBuffer, mainView, cascades[0].getCascadeView(), cascadeSplitDistances[1], 0u, worldSpaceToLightVector, offsetScale, maximumShadowDrawDistance,
-			fadingRegionStart, normalMapBool, ambientBool, diffuseBool, specularBool, cascadeDrawDistanceOverlayBool);
+			fadingRegionStart, graphicsConfigurations.getNormalMappingEnabled(), graphicsConfigurations.getDiffuseLightingEnabled(), graphicsConfigurations.getSpecularLightingEnabled(), graphicsConfigurations.getCascadesOverlayModeEnabled());
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);

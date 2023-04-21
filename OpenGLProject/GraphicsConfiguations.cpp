@@ -12,7 +12,13 @@
 // --------------------------------------------------------------------------------
 GraphicsConfiguations::GraphicsConfiguations() : m_rendererType(RendererType::Forward), 
 													m_displayImGuiDemoWindow(false),
-													m_shadowMapDimensionsId(3u)
+													m_shadowMapDimensionsId(3u),
+													m_numberOfAciveCascades(4u),
+													m_diffuseLightingEnabled(true),
+													m_specularLightingEnabled(true),
+													m_normalMappingEnabled(true),
+													m_cascadesOverlayModeEnabled(false)
+												
 											
 {
 }
@@ -88,6 +94,11 @@ void GraphicsConfiguations::update()
 
 		ImGui::EndCombo();
 	}
+
+	ImGui::Checkbox("Diffuse Lighting", &m_diffuseLightingEnabled);
+	ImGui::Checkbox("Specular", &m_specularLightingEnabled);
+	ImGui::Checkbox("Normal Mapping", &m_normalMappingEnabled);
+	ImGui::Checkbox("Cascades Overlay", &m_cascadesOverlayModeEnabled);
 }
 
 // --------------------------------------------------------------------------------
@@ -107,3 +118,28 @@ uint8_t GraphicsConfiguations::getNumberOfActiveCascades() const
 {
 	return m_numberOfAciveCascades;
 }
+
+// --------------------------------------------------------------------------------
+bool GraphicsConfiguations::getDiffuseLightingEnabled() const
+{
+	return m_diffuseLightingEnabled;
+}
+
+// --------------------------------------------------------------------------------
+bool GraphicsConfiguations::getSpecularLightingEnabled() const
+{
+	return m_specularLightingEnabled;
+}
+
+// --------------------------------------------------------------------------------
+bool GraphicsConfiguations::getNormalMappingEnabled() const
+{
+	return m_normalMappingEnabled;
+}
+
+// --------------------------------------------------------------------------------
+bool GraphicsConfiguations::getCascadesOverlayModeEnabled() const
+{
+	return m_cascadesOverlayModeEnabled;
+}
+
