@@ -519,13 +519,12 @@ int main()
 		TextureFilterMode::Point);
 	Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point);
 
-	float azimuthAngle = 0.23f;
-	float zenithAngle = 0.80f;
-	float bus[3] = { 0.0f, 0.0f, 0.0f };
+	float azimuthAngle = 23.0f;
+	float zenithAngle = 80.0f;
 
 	float radiusInTexels = 0.0f;
 	float maximumShadowDrawDistance = 100.0f;
-	float fadingRegionStart = -0.90f; // The fade distance seems to be negative, why ?
+	float fadingRegionStart = 0.90f;
 
 	// Shadow Map texture
 	Texture* shadowMap = nullptr;
