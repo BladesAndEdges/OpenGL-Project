@@ -10,7 +10,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "GraphicsConfiguations.h"
+#include "GraphicsConfigurations.h"
 
 #include "ProfileMarker.h" // Included above glad due to windows.h
 #include "Model.h"
@@ -659,7 +659,6 @@ int main()
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 
-
 		// What to do about this. Isn't this meaning cascade 0 values get partially updated ahead of others ?
 		const glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth()); // Issue ?
 		updateUniformBuffer(uniformBuffer, mainView, cascades[0].getCascadeView(), cascadeSplitDistances[1], 0u, worldSpaceToLightVector, offsetScale, graphicsConfigurations.getMaximumShadowDrawDistance(),
@@ -668,7 +667,6 @@ int main()
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
 
 		if (graphicsConfigurations.getRendererType() == RendererType::Forward)
 		{
