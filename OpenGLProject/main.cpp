@@ -507,7 +507,7 @@ int main()
 	//-----------------------------------------------------------------------------------------------------------------------------------------
 
 	int mainViewWidth, mainViewHeight;
-	glfwGetWindowSize(window, &mainViewWidth, &mainViewHeight);
+	glfwGetFramebufferSize(window, &mainViewWidth, &mainViewHeight);
 
 	Camera mainView = Camera::perspective(sponzaModel.getSceneCenter(), (float)mainViewWidth,
 		(float)mainViewHeight, 0.1f, 100.0f, 90.0f);
@@ -649,7 +649,7 @@ int main()
 
 		//----------------------------------------------------------------------------------
 		int winWidth, winHeight;
-		glfwGetWindowSize(window, &winWidth, &winHeight);
+		glfwGetFramebufferSize(window, &winWidth, &winHeight);
 
 		mainView.setCameraWidth((float)winWidth);
 		mainView.setCameraHeight((float)winHeight);
