@@ -10,11 +10,11 @@ enum class RendererType
 };
 
 // --------------------------------------------------------------------------------
-class GraphicsConfiguations
+class GraphicsConfigurations
 {
 public:
 
-	GraphicsConfiguations();
+	GraphicsConfigurations();
 
 	void update();
 

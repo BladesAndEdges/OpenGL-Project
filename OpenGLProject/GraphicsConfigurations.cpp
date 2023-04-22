@@ -1,11 +1,11 @@
-#include "GraphicsConfiguations.h"
+#include "GraphicsConfigurations.h"
 
 #include "imgui.h"
 
 #define MAXIMUM_NUM_OF_CASCADES 4
 
 // --------------------------------------------------------------------------------
-GraphicsConfiguations::GraphicsConfiguations() : m_rendererType(RendererType::Forward), 
+GraphicsConfigurations::GraphicsConfigurations() : m_rendererType(RendererType::Forward),
 													m_displayImGuiDemoWindow(false),
 													m_shadowMapDimensionsId(3u),
 													m_numberOfAciveCascades(4u),
@@ -23,7 +23,7 @@ GraphicsConfiguations::GraphicsConfiguations() : m_rendererType(RendererType::Fo
 }
 
 // --------------------------------------------------------------------------------
-void GraphicsConfiguations::update()
+void GraphicsConfigurations::update()
 {
 	// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
 	if (m_displayImGuiDemoWindow)
@@ -108,73 +108,73 @@ void GraphicsConfiguations::update()
 }
 
 // --------------------------------------------------------------------------------
-RendererType GraphicsConfiguations::getRendererType() const
+RendererType GraphicsConfigurations::getRendererType() const
 {
 	return m_rendererType;
 }
 
 // --------------------------------------------------------------------------------
-uint8_t GraphicsConfiguations::getShadowMapDimensionsId() const
+uint8_t GraphicsConfigurations::getShadowMapDimensionsId() const
 {
 	return m_shadowMapDimensionsId;
 }
 
 // --------------------------------------------------------------------------------
-uint8_t GraphicsConfiguations::getNumberOfActiveCascades() const
+uint8_t GraphicsConfigurations::getNumberOfActiveCascades() const
 {
 	return m_numberOfAciveCascades;
 }
 
 // --------------------------------------------------------------------------------
-bool GraphicsConfiguations::getDiffuseLightingEnabled() const
+bool GraphicsConfigurations::getDiffuseLightingEnabled() const
 {
 	return m_diffuseLightingEnabled;
 }
 
 // --------------------------------------------------------------------------------
-bool GraphicsConfiguations::getSpecularLightingEnabled() const
+bool GraphicsConfigurations::getSpecularLightingEnabled() const
 {
 	return m_specularLightingEnabled;
 }
 
 // --------------------------------------------------------------------------------
-bool GraphicsConfiguations::getNormalMappingEnabled() const
+bool GraphicsConfigurations::getNormalMappingEnabled() const
 {
 	return m_normalMappingEnabled;
 }
 
 // --------------------------------------------------------------------------------
-bool GraphicsConfiguations::getCascadesOverlayModeEnabled() const
+bool GraphicsConfigurations::getCascadesOverlayModeEnabled() const
 {
 	return m_cascadesOverlayModeEnabled;
 }
 
 // --------------------------------------------------------------------------------
-float GraphicsConfiguations::getGlobalLightSourceAzimuth() const
+float GraphicsConfigurations::getGlobalLightSourceAzimuth() const
 {
 	return m_globalLightSourceAzimuth;
 }
 
 // --------------------------------------------------------------------------------
-float GraphicsConfiguations::getGlobalLightSourceZenith() const
+float GraphicsConfigurations::getGlobalLightSourceZenith() const
 {
 	return m_globalLightSourceZenith;
 }
 
 // --------------------------------------------------------------------------------
-float GraphicsConfiguations::getSamplingRadiusInTexelUnits() const
+float GraphicsConfigurations::getSamplingRadiusInTexelUnits() const
 {
 	return m_samplingRadiusInTexelUnits;
 }
 
 // --------------------------------------------------------------------------------
-float GraphicsConfiguations::getMaximumShadowDrawDistance() const
+float GraphicsConfigurations::getMaximumShadowDrawDistance() const
 {
 	return m_maximumShadowDrawDistance;
 }
 
 // --------------------------------------------------------------------------------
-float GraphicsConfiguations::getFadedShadowsStartDistance() const
+float GraphicsConfigurations::getFadedShadowsStartDistance() const
 {
 	return m_fadedShadowsStartDistance;
 }

@@ -542,7 +542,7 @@ int main()
 	Shader gBufferPassShader(R"(Shaders\gBufferPassShader.vert)", R"(Shaders\gBufferPassShader.frag)");
 	Shader lightingPassShader(R"(Shaders\lightingPassShader.vert)", R"(Shaders\lightingPassShader.frag)");
 
-	GraphicsConfiguations graphicsConfigurations;
+	GraphicsConfigurations graphicsConfigurations;
 
 	while (!glfwWindowShouldClose(window))
 	{
