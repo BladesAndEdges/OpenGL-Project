@@ -29,6 +29,12 @@ public:
 	
 	bool getCascadesOverlayModeEnabled() const;
 
+	float getGlobalLightSourceAzimuth() const;
+	float getGlobalLightSourceZenith() const;
+	float getSamplingRadiusInTexelUnits() const;
+	float getMaximumShadowDrawDistance() const;
+	float getFadedShadowsStartDistance() const;
+
 private:
 
 	RendererType m_rendererType;
@@ -42,5 +48,13 @@ private:
 
 	// Overlays
 	bool m_cascadesOverlayModeEnabled;
+
+	float m_globalLightSourceAzimuth;
+	float m_globalLightSourceZenith;
+	float m_samplingRadiusInTexelUnits;
+	float m_maximumShadowDrawDistance;
+	float m_fadedShadowsStartDistance;
+	
+
 };
 

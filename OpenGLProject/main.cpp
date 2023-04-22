@@ -519,13 +519,6 @@ int main()
 		TextureFilterMode::Point);
 	Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point);
 
-	float azimuthAngle = 23.0f;
-	float zenithAngle = 80.0f;
-
-	float radiusInTexels = 0.0f;
-	float maximumShadowDrawDistance = 100.0f;
-	float fadingRegionStart = 0.90f;
-
 	// Shadow Map texture
 	Texture* shadowMap = nullptr;
 	const uint32_t shadowMapSizes[6] = { 128, 256, 512, 1024, 2048, 4096 }; // Possibly move this into the GraphicsConfig class as options
@@ -605,10 +598,10 @@ int main()
 		// 0 - 0.25, 0.25 - 0.50, 0.50 - 0.75, 0.75 - 1.0f
 		const float cascadeSplitDistances[8] =
 		{
-			0.0f, (0.25f * maximumShadowDrawDistance),
-			(0.25f * maximumShadowDrawDistance), (0.5f * maximumShadowDrawDistance),
-			(0.5f * maximumShadowDrawDistance), (0.75f * maximumShadowDrawDistance),
-			(0.75f * maximumShadowDrawDistance), (1.0f * maximumShadowDrawDistance),
+			0.0f, (0.25f * graphicsConfigurations.getMaximumShadowDrawDistance()),
+			(0.25f * graphicsConfigurations.getMaximumShadowDrawDistance()), (0.5f * graphicsConfigurations.getMaximumShadowDrawDistance()),
+			(0.5f * graphicsConfigurations.getMaximumShadowDrawDistance()), (0.75f * graphicsConfigurations.getMaximumShadowDrawDistance()),
+			(0.75f * graphicsConfigurations.getMaximumShadowDrawDistance()), (1.0f * graphicsConfigurations.getMaximumShadowDrawDistance()),
 		};
 
 		float offsetScale = 0.0f;
@@ -632,15 +625,15 @@ int main()
 			glClearNamedFramebufferfv(cascade.getFramebuffer().getName(), GL_DEPTH, 0, &clearValue);
 
 			const float texelSize = 1.0f / (float)(cascade.getShadowMap()->getWidth());
-			offsetScale = radiusInTexels * texelSize;
+			offsetScale = graphicsConfigurations.getSamplingRadiusInTexelUnits() * texelSize;
 
 			uint32_t cascadeSplitDistanceIndex = cascadeIndex * 2u;
-			updateShadowView(mainView, cascade.getCascadeView(), zenithAngle, azimuthAngle, cascadeSplitDistances[cascadeSplitDistanceIndex], cascadeSplitDistances[cascadeSplitDistanceIndex + 1]);
+			updateShadowView(mainView, cascade.getCascadeView(), graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth(), cascadeSplitDistances[cascadeSplitDistanceIndex], cascadeSplitDistances[cascadeSplitDistanceIndex + 1]);
 
-			glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle);
+			glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth());
 
 			const uint32_t cascadeSplitEndId = cascadeSplitDistanceIndex + 1u;
-			updateUniformBuffer(uniformBuffer, cascade.getCascadeView(), cascade.getCascadeView(), cascadeSplitDistances[cascadeSplitEndId], cascadeIndex, worldSpaceToLightVector, offsetScale, maximumShadowDrawDistance, fadingRegionStart,
+			updateUniformBuffer(uniformBuffer, cascade.getCascadeView(), cascade.getCascadeView(), cascadeSplitDistances[cascadeSplitEndId], cascadeIndex, worldSpaceToLightVector, offsetScale, graphicsConfigurations.getMaximumShadowDrawDistance(), graphicsConfigurations.getFadedShadowsStartDistance(),
 				graphicsConfigurations.getNormalMappingEnabled(), graphicsConfigurations.getDiffuseLightingEnabled(), graphicsConfigurations.getSpecularLightingEnabled(), graphicsConfigurations.getCascadesOverlayModeEnabled());
 
 			glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
@@ -654,17 +647,6 @@ int main()
 			glPopDebugGroup();
 		}
 
-		ImGui::Begin("Debug Toggles");
-
-		ImGui::SliderFloat("Azimuth", &azimuthAngle, 0.0f, 360.0f);
-		ImGui::SliderFloat("Zenith", &zenithAngle, 0.0f, 90.0f);
-
-		ImGui::SliderFloat("PCF Texel Radius", &radiusInTexels, 0.0f, 100.0f);
-		ImGui::SliderFloat("Shadow Draw Distance", &maximumShadowDrawDistance, 1.0f, 200.0f);
-		ImGui::SliderFloat("Shadow Fade Start", &fadingRegionStart, 0.0f, 1.0f);
-
-		ImGui::End();
-
 		//----------------------------------------------------------------------------------
 		int winWidth, winHeight;
 		glfwGetWindowSize(window, &winWidth, &winHeight);
@@ -675,13 +657,13 @@ int main()
 		glViewport(0, 0, winWidth, winHeight);
 
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 
 
 		// What to do about this. Isn't this meaning cascade 0 values get partially updated ahead of others ?
-		const glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(zenithAngle, azimuthAngle); // Issue ?
-		updateUniformBuffer(uniformBuffer, mainView, cascades[0].getCascadeView(), cascadeSplitDistances[1], 0u, worldSpaceToLightVector, offsetScale, maximumShadowDrawDistance,
-			fadingRegionStart, graphicsConfigurations.getNormalMappingEnabled(), graphicsConfigurations.getDiffuseLightingEnabled(), graphicsConfigurations.getSpecularLightingEnabled(), graphicsConfigurations.getCascadesOverlayModeEnabled());
+		const glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth()); // Issue ?
+		updateUniformBuffer(uniformBuffer, mainView, cascades[0].getCascadeView(), cascadeSplitDistances[1], 0u, worldSpaceToLightVector, offsetScale, graphicsConfigurations.getMaximumShadowDrawDistance(),
+			graphicsConfigurations.getFadedShadowsStartDistance(), graphicsConfigurations.getNormalMappingEnabled(), graphicsConfigurations.getDiffuseLightingEnabled(), graphicsConfigurations.getSpecularLightingEnabled(), graphicsConfigurations.getCascadesOverlayModeEnabled());
 
 		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);

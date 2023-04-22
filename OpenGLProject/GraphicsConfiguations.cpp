@@ -4,11 +4,6 @@
 
 #define MAXIMUM_NUM_OF_CASCADES 4
 
-// Default Settings: 
-// RendererType -> Forward Renderer
-// Display ImGui Demo Window -> false
-// Shadow Map Dimension Index set to 3 (1024 x 1024)
-
 // --------------------------------------------------------------------------------
 GraphicsConfiguations::GraphicsConfiguations() : m_rendererType(RendererType::Forward), 
 													m_displayImGuiDemoWindow(false),
@@ -17,9 +12,13 @@ GraphicsConfiguations::GraphicsConfiguations() : m_rendererType(RendererType::Fo
 													m_diffuseLightingEnabled(true),
 													m_specularLightingEnabled(true),
 													m_normalMappingEnabled(true),
-													m_cascadesOverlayModeEnabled(false)
+													m_cascadesOverlayModeEnabled(false),
+													m_globalLightSourceAzimuth(23.0f),
+													m_globalLightSourceZenith(80.0f),
+													m_samplingRadiusInTexelUnits(0.0f),
+													m_maximumShadowDrawDistance(100.0f),
+													m_fadedShadowsStartDistance(0.9f)
 												
-											
 {
 }
 
@@ -99,6 +98,13 @@ void GraphicsConfiguations::update()
 	ImGui::Checkbox("Specular", &m_specularLightingEnabled);
 	ImGui::Checkbox("Normal Mapping", &m_normalMappingEnabled);
 	ImGui::Checkbox("Cascades Overlay", &m_cascadesOverlayModeEnabled);
+
+	ImGui::SliderFloat("Azimuth", &m_globalLightSourceAzimuth, 0.0f, 360.0f);
+	ImGui::SliderFloat("Zenith", &m_globalLightSourceZenith, 0.0f, 90.0f);
+
+	ImGui::SliderFloat("PCF Texel Radius", &m_samplingRadiusInTexelUnits, 0.0f, 100.0f);
+	ImGui::SliderFloat("Shadow Draw Distance", &m_maximumShadowDrawDistance, 1.0f, 200.0f);
+	ImGui::SliderFloat("Shadow Fade Start", &m_fadedShadowsStartDistance, 0.0f, 1.0f);
 }
 
 // --------------------------------------------------------------------------------
@@ -141,5 +147,35 @@ bool GraphicsConfiguations::getNormalMappingEnabled() const
 bool GraphicsConfiguations::getCascadesOverlayModeEnabled() const
 {
 	return m_cascadesOverlayModeEnabled;
+}
+
+// --------------------------------------------------------------------------------
+float GraphicsConfiguations::getGlobalLightSourceAzimuth() const
+{
+	return m_globalLightSourceAzimuth;
+}
+
+// --------------------------------------------------------------------------------
+float GraphicsConfiguations::getGlobalLightSourceZenith() const
+{
+	return m_globalLightSourceZenith;
+}
+
+// --------------------------------------------------------------------------------
+float GraphicsConfiguations::getSamplingRadiusInTexelUnits() const
+{
+	return m_samplingRadiusInTexelUnits;
+}
+
+// --------------------------------------------------------------------------------
+float GraphicsConfiguations::getMaximumShadowDrawDistance() const
+{
+	return m_maximumShadowDrawDistance;
+}
+
+// --------------------------------------------------------------------------------
+float GraphicsConfiguations::getFadedShadowsStartDistance() const
+{
+	return m_fadedShadowsStartDistance;
 }
 
