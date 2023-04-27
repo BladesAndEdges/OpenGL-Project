@@ -30,7 +30,7 @@
 
 #pragma warning(pop)
 
-#include "UniformBuffer.h"
+#include "PerViewUniformData.h"
 #include "Texture.h"
 #include "Camera.h"
 #include "Framebuffer.h"
