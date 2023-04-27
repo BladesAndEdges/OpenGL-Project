@@ -554,6 +554,12 @@ int main()
 		// Update all configuration settings accessible via the UI
 		graphicsConfigurations.update();
 
+		// Update Camera
+		int currentFramebufferSizeX, currentFramebufferSizeY;
+		glfwGetFramebufferSize(window, &currentFramebufferSizeX, &currentFramebufferSizeY);
+		mainView.setCameraWidth((float)currentFramebufferSizeX);
+		mainView.setCameraHeight((float)currentFramebufferSizeY);
+
 		// Shadow Map == nullptr only for frame 0; And for a moment whilst deleted (?)
 		if ((shadowMap == nullptr) || (graphicsConfigurations.getNumberOfActiveCascades() != (uint32_t)cascades.size()) || ((uint32_t)shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()] != shadowMap->getWidth()))
 		{
@@ -648,14 +654,6 @@ int main()
 		}
 
 		//----------------------------------------------------------------------------------
-		int winWidth, winHeight;
-		glfwGetFramebufferSize(window, &winWidth, &winHeight);
-
-		mainView.setCameraWidth((float)winWidth);
-		mainView.setCameraHeight((float)winHeight);
-
-		glViewport(0, 0, winWidth, winHeight);
-
 		glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 
@@ -673,6 +671,7 @@ int main()
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Forward Renderer Drawing");
 			meshTestShader.useProgram();
 			glBindVertexArray(modelVAO);
+			glViewport(0, 0,(GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
 			renderSceneFromView(meshTestShader, mainView, uniformBuffer, sponzaModel, mainFramebuffer, shadowMap);
 			glPopDebugGroup();
 		}
@@ -695,6 +694,7 @@ int main()
 			// GBuffer test rendering
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Render to GBuffer Textures");
 			gBufferPassShader.useProgram();
+			glViewport(0, 0, (GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
 			renderAttributeToGBuffer(gBufferPassShader, sponzaModel, gBuffer.getFramebuffer());
 			glPopDebugGroup();
 
@@ -708,6 +708,7 @@ int main()
 			glBindTextureUnit(3, gBuffer.getSpecularColourTexture()->getName());
 			glBindTextureUnit(4, gBuffer.getSmoothnessTexture()->getName());
 			glBindTextureUnit(5, shadowMap->getName());
+
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 
 			glPopDebugGroup();

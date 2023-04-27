@@ -30,6 +30,8 @@ public:
 	void computeFrustumPlaneCornersInWorldSpace(float planeDistance, glm::vec3* frustumCorners) const;
 
 
+	float getViewWidth() const;
+	float getViewHeight() const;
 	glm::vec3 getWorldPosition() const;
 	glm::mat3 getWorldOrientation() const;
 	float getNearPlane() const;

@@ -69,6 +69,18 @@ void Camera::computeFrustumPlaneCornersInWorldSpace(float planeDistance, glm::ve
 }
 
 // --------------------------------------------------------------------------------
+float Camera::getViewWidth() const
+{
+	return m_width;
+}
+
+// --------------------------------------------------------------------------------
+float Camera::getViewHeight() const
+{
+	return m_height;
+}
+
+// --------------------------------------------------------------------------------
 glm::vec3 Camera::getWorldPosition() const
 {
 	return m_worldPosition;
