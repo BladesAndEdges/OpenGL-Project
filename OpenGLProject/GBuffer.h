@@ -9,11 +9,14 @@ class GBuffer
 {
 public:
 
-	GBuffer(const uint32_t screenWidth, const uint32_t screenHeight);
+	GBuffer(const uint32_t mainViewWidth, const uint32_t mainViewHeight);
 	~GBuffer();
 
 	GBuffer(const GBuffer&) = delete;
 	GBuffer& operator=(const GBuffer&) = delete;
+
+	uint32_t getWidth() const;
+	uint32_t getHeight() const;
 
 	const Framebuffer& getFramebuffer() const;
 
@@ -24,6 +27,9 @@ public:
 	Texture* getSmoothnessTexture() const;
 
 private:
+
+	uint32_t m_width;
+	uint32_t m_height;
 
 	Framebuffer m_framebuffer;
 

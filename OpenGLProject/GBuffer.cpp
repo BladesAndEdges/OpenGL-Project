@@ -1,25 +1,27 @@
 #include "GBuffer.h"
 
 // --------------------------------------------------------------------------------
-GBuffer::GBuffer(const uint32_t screenWidth, const uint32_t screenHeight) : m_framebuffer(Framebuffer::customFramebuffer("GBuffer Framebuffer"))
+GBuffer::GBuffer(const uint32_t mainViewWidth, const uint32_t mainViewHeight) : m_width(mainViewWidth),
+																				m_height(mainViewHeight),
+																				m_framebuffer(Framebuffer::customFramebuffer("GBuffer Framebuffer"))
 {
 	// Create textures
-	m_worldPositionTexture = new Texture("gBufferWorldPosition", screenWidth, screenHeight, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge, 
+	m_worldPositionTexture = new Texture("gBufferWorldPosition", m_width, m_height, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge, 
 		TextureFilterMode::Point, TextureFormat::RGB32F, TextureComparisonMode::None);
 
-	m_worldNormalTexture = new Texture("gBufferWorldNormal", screenWidth, screenHeight, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
+	m_worldNormalTexture = new Texture("gBufferWorldNormal", m_width, m_height, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
 		TextureFilterMode::Point, TextureFormat::RGB32F, TextureComparisonMode::None);
 
-	m_diffuseColourTexture = new Texture("gBufferDiffuseColour", screenWidth, screenHeight, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge, 
+	m_diffuseColourTexture = new Texture("gBufferDiffuseColour", m_width, m_height, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
 		TextureFilterMode::Point, TextureFormat::RGB8, TextureComparisonMode::None);
 
-	m_specularColourTexture = new Texture("gBufferSpecularColour", screenWidth, screenHeight, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
+	m_specularColourTexture = new Texture("gBufferSpecularColour", m_width, m_height, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
 		TextureFilterMode::Point, TextureFormat::RGB8, TextureComparisonMode::None);
 
-	m_smoothnessTexture = new Texture("gBufferSmoothness", screenWidth, screenHeight, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
+	m_smoothnessTexture = new Texture("gBufferSmoothness", m_width, m_height, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
 		TextureFilterMode::Point, TextureFormat::R32F, TextureComparisonMode::None);
 
-	m_depthTexture = new Texture("gBufferDepth", screenWidth, screenHeight, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
+	m_depthTexture = new Texture("gBufferDepth", m_width, m_height, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
 		TextureFilterMode::Point, TextureFormat::DEPTH32, TextureComparisonMode::LessEqual);
 
 	// Attach to framebuffer
@@ -37,6 +39,18 @@ GBuffer::GBuffer(const uint32_t screenWidth, const uint32_t screenHeight) : m_fr
 // --------------------------------------------------------------------------------
 GBuffer::~GBuffer()
 {
+}
+
+// --------------------------------------------------------------------------------
+uint32_t GBuffer::getWidth() const
+{
+	return m_width;
+}
+
+// --------------------------------------------------------------------------------
+uint32_t GBuffer::getHeight() const
+{
+	return m_height;
 }
 
 // --------------------------------------------------------------------------------

@@ -538,7 +538,7 @@ int main()
 	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 
 	// -----------------------------------------------------------GBuffer
-	GBuffer gBuffer(800, 600); // Assume no resizes for now
+	GBuffer* gBuffer = nullptr; // Assume no resizes for now
 	Shader gBufferPassShader(R"(Shaders\gBufferPassShader.vert)", R"(Shaders\gBufferPassShader.frag)");
 	Shader lightingPassShader(R"(Shaders\lightingPassShader.vert)", R"(Shaders\lightingPassShader.frag)");
 
@@ -546,6 +546,8 @@ int main()
 
 	while (!glfwWindowShouldClose(window))
 	{
+		glfwPollEvents();
+
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -557,8 +559,11 @@ int main()
 		// Update Camera
 		int currentFramebufferSizeX, currentFramebufferSizeY;
 		glfwGetFramebufferSize(window, &currentFramebufferSizeX, &currentFramebufferSizeY);
+
 		mainView.setCameraWidth((float)currentFramebufferSizeX);
 		mainView.setCameraHeight((float)currentFramebufferSizeY);
+
+		processCameraInput(mainView, window);
 
 		// Shadow Map == nullptr only for frame 0; And for a moment whilst deleted (?)
 		if ((shadowMap == nullptr) || (graphicsConfigurations.getNumberOfActiveCascades() != (uint32_t)cascades.size()) || ((uint32_t)shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()] != shadowMap->getWidth()))
@@ -584,11 +589,15 @@ int main()
 			assert(cascades.size() == graphicsConfigurations.getNumberOfActiveCascades());
 		}
 
+		// Check both dimensions as they can be dragged separately
+		if ((gBuffer == nullptr) || (gBuffer->getWidth() != mainView.getViewWidth()) || (gBuffer->getHeight() != mainView.getViewHeight()))
+		{
+			// Recreate the GBuffer
+			delete gBuffer;
+			gBuffer = new GBuffer((uint32_t)mainView.getViewWidth(), (uint32_t)mainView.getViewHeight());
+		}
+
 		const float timerStartingPoint = (float)glfwGetTime();
-
-		glfwPollEvents();
-
-		processCameraInput(mainView, window);
 
 		glEnable(GL_DEPTH_TEST);
 
@@ -680,8 +689,8 @@ int main()
 		// Debug quad drawing
 		shadowMapDebugShader.useProgram();
 
+		glViewport(0, 0, (GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
 		glBindSampler(0, nonComparisonShadowSampler);
-
 		glBindTextureUnit(0, shadowMap->getName());
 		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, graphicsConfigurations.getNumberOfActiveCascades());
 
@@ -695,18 +704,18 @@ int main()
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Render to GBuffer Textures");
 			gBufferPassShader.useProgram();
 			glViewport(0, 0, (GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
-			renderAttributeToGBuffer(gBufferPassShader, sponzaModel, gBuffer.getFramebuffer());
+			renderAttributeToGBuffer(gBufferPassShader, sponzaModel, gBuffer->getFramebuffer());
 			glPopDebugGroup();
 
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Deferred Renderer Drawing");
 
 			lightingPassShader.useProgram();
 
-			glBindTextureUnit(0, gBuffer.getWorldPositionTexture()->getName());
-			glBindTextureUnit(1, gBuffer.getWorldNormalTexture()->getName());
-			glBindTextureUnit(2, gBuffer.getDiffuseColourTexture()->getName());
-			glBindTextureUnit(3, gBuffer.getSpecularColourTexture()->getName());
-			glBindTextureUnit(4, gBuffer.getSmoothnessTexture()->getName());
+			glBindTextureUnit(0, gBuffer->getWorldPositionTexture()->getName());
+			glBindTextureUnit(1, gBuffer->getWorldNormalTexture()->getName());
+			glBindTextureUnit(2, gBuffer->getDiffuseColourTexture()->getName());
+			glBindTextureUnit(3, gBuffer->getSpecularColourTexture()->getName());
+			glBindTextureUnit(4, gBuffer->getSmoothnessTexture()->getName());
 			glBindTextureUnit(5, shadowMap->getName());
 
 			glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -724,8 +733,6 @@ int main()
 		const float timerEndPoint = (float)glfwGetTime();
 
 		const float milisecondsElapsed = (timerEndPoint - timerStartingPoint)  * 1000.0f;
-
-		/*std::cout << "Frame Timer in miliseconds: " << milisecondsElapsed << std::endl;*/
 
 		float averageFrameTime = measureAverageFrameTime(milisecondsElapsed, frameNumber, frameTimeArray);
 
