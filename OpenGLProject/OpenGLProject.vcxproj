@@ -153,6 +153,7 @@
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureHashMaps.cpp" />
     <ClCompile Include="PerViewUniformData.cpp" />
+    <ClCompile Include="UniformBuffer.cpp" />
     <ClCompile Include="Vertex.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -174,6 +175,7 @@
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureHashMaps.h" />
     <ClInclude Include="PerViewUniformData.h" />
+    <ClInclude Include="UniformBuffer.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

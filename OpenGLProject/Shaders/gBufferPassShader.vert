@@ -7,7 +7,7 @@ layout (location = 1) in vec2 in_TextureCoordinate;
 layout (location = 2) in vec3 in_Normal;
 
 // --------------------------------------------------------------------------------
-layout(std140) uniform sceneMatrices
+layout(std140, binding = 6) uniform sceneMatrices
 {
 	vec4 worldCameraPosition; 
 	vec4 lightSourceDirection; 

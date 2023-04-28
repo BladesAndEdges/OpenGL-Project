@@ -22,7 +22,7 @@ struct SurfaceProperties
 	float m_smoothness;
 };
 
-layout(std140) uniform sceneMatrices
+layout(std140, binding = 6) uniform sceneMatrices
 {
 	vec4 worldCameraPosition; 
 	vec4 lightSourceDirection; 

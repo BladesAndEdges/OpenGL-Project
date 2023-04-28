@@ -36,6 +36,7 @@
 #include "Framebuffer.h"
 #include "Cascade.h"
 #include "GBuffer.h"
+#include "UniformBuffer.h"
 
 #include <cstdint>
 #include <string>
@@ -289,7 +290,7 @@ void renderAttributeToGBuffer(const Shader& shader, const Model& model, const Fr
 
 //THIS DOESNT SEEM TO BE RENDERING FROM A VIEW ANYMORE. IT ONLY RENDERS THE OBECTS? Should it include the ubo + camera ?
 // --------------------------------------------------------------------------------
-void renderSceneFromView(const Shader& shader, const Camera&,  const UniformBuffer&, const Model& model, const Framebuffer& framebuffer, 
+void renderSceneFromView(const Shader& shader, const Camera&,  const PerViewUniformData&, const Model& model, const Framebuffer& framebuffer, 
 								const Texture* shadowMap)
 {
 	assert(shadowMap != nullptr);
@@ -443,32 +444,9 @@ int main()
 	Shader shadowMapDebugShader(R"(Shaders\shadowMapDebug.vert)", R"(Shaders\shadowMapDebug.frag)");
 
 	//UBO
-	UniformBuffer uniformBuffer;
+	PerViewUniformData perViewUniforms;
+	UniformBuffer perViewUniformBuffer(6u, sizeof(PerViewUniformData), "PerViewUniformBuffer");
 
-	unsigned int uniformMatrixBlockIndex;
-	uniformMatrixBlockIndex = glGetUniformBlockIndex(meshTestShader.getProgramID(), "sceneMatrices");
-	assert(uniformMatrixBlockIndex != GL_INVALID_INDEX);
-
-	/*
-	Returns a list of specified buffer object names.
-	These "names" are integers. They are not guarranteed
-	to be a set of continuous integers.
-	*/
-
-	GLuint sceneUBO;
-	glGenBuffers(1, &sceneUBO);
-
-	glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), nullptr, GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-	glObjectLabel(GL_BUFFER, sceneUBO, -1, "SceneUniformBuffer");
-
-	glBindBufferRange(GL_UNIFORM_BUFFER, uniformMatrixBlockIndex, sceneUBO, 0, sizeof(UniformBuffer)); // Understand what this does, since something seems fishy
-
-	//USE glBufferSubData() to update the values of the UBO members later on whent the values change due to the addition of a camera.
-
-	//---------------------------------------------------------------------------------------------------------------------------------------
 	MaterialReader materialReader;
 	materialReader.parseMaterialFile(R"(Meshes\sponza\sponza.mtl)");
 	Model sponzaModel(R"(SponzaModel.compiled)", R"(Meshes\sponza\sponza.obj)", materialReader);
@@ -601,13 +579,10 @@ int main()
 
 		glEnable(GL_DEPTH_TEST);
 
-		/*glBindVertexArray(modelVAO);*/
-
 		//--------------------------------------------------------------------------------------------------------------------------------------
 		// Shadow Camera rendering
 
 		depthOnlyPassShader.useProgram(); // Make sure the shader is being usegd before setting these textures
-		/*glBindVertexArray(modelVAO);*/
 
 		// Max is 200
 		// 0 - 0.25, 0.25 - 0.50, 0.50 - 0.75, 0.75 - 1.0f
@@ -648,14 +623,12 @@ int main()
 			glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth());
 
 			const uint32_t cascadeSplitEndId = cascadeSplitDistanceIndex + 1u;
-			updateUniformBuffer(uniformBuffer, cascade.getCascadeView(), cascade.getCascadeView(), cascadeSplitDistances[cascadeSplitEndId], cascadeIndex, worldSpaceToLightVector, offsetScale, graphicsConfigurations.getMaximumShadowDrawDistance(), graphicsConfigurations.getFadedShadowsStartDistance(),
+			updateUniformBuffer(perViewUniforms, cascade.getCascadeView(), cascade.getCascadeView(), cascadeSplitDistances[cascadeSplitEndId], cascadeIndex, worldSpaceToLightVector, offsetScale, graphicsConfigurations.getMaximumShadowDrawDistance(), graphicsConfigurations.getFadedShadowsStartDistance(),
 				graphicsConfigurations.getNormalMappingEnabled(), graphicsConfigurations.getDiffuseLightingEnabled(), graphicsConfigurations.getSpecularLightingEnabled(), graphicsConfigurations.getCascadesOverlayModeEnabled());
 
-			glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
-			glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
-			glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-			renderSceneFromView(depthOnlyPassShader, cascade.getCascadeView(), uniformBuffer, sponzaModel, cascade.getFramebuffer(), cascade.getShadowMap());
+			perViewUniformBuffer.update(&perViewUniforms);
+			perViewUniformBuffer.useBuffer();
+			renderSceneFromView(depthOnlyPassShader, cascade.getCascadeView(), perViewUniforms, sponzaModel, cascade.getFramebuffer(), cascade.getShadowMap());
 
 			cascadeIndex++;
 
@@ -668,12 +641,11 @@ int main()
 
 		// What to do about this. Isn't this meaning cascade 0 values get partially updated ahead of others ?
 		const glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth()); // Issue ?
-		updateUniformBuffer(uniformBuffer, mainView, cascades[0].getCascadeView(), cascadeSplitDistances[1], 0u, worldSpaceToLightVector, offsetScale, graphicsConfigurations.getMaximumShadowDrawDistance(),
+		updateUniformBuffer(perViewUniforms, mainView, cascades[0].getCascadeView(), cascadeSplitDistances[1], 0u, worldSpaceToLightVector, offsetScale, graphicsConfigurations.getMaximumShadowDrawDistance(),
 			graphicsConfigurations.getFadedShadowsStartDistance(), graphicsConfigurations.getNormalMappingEnabled(), graphicsConfigurations.getDiffuseLightingEnabled(), graphicsConfigurations.getSpecularLightingEnabled(), graphicsConfigurations.getCascadesOverlayModeEnabled());
 
-		glBindBuffer(GL_UNIFORM_BUFFER, sceneUBO);
-		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		perViewUniformBuffer.update(&perViewUniforms);
+		perViewUniformBuffer.useBuffer();
 
 		if (graphicsConfigurations.getRendererType() == RendererType::Forward)
 		{
@@ -681,7 +653,7 @@ int main()
 			meshTestShader.useProgram();
 			glBindVertexArray(modelVAO);
 			glViewport(0, 0,(GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
-			renderSceneFromView(meshTestShader, mainView, uniformBuffer, sponzaModel, mainFramebuffer, shadowMap);
+			renderSceneFromView(meshTestShader, mainView, perViewUniforms, sponzaModel, mainFramebuffer, shadowMap);
 			glPopDebugGroup();
 		}
 

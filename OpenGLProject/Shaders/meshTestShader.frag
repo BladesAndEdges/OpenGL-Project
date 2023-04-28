@@ -31,7 +31,7 @@ struct SurfaceProperties
 	float m_opacity;
 };
 
-layout(std140) uniform sceneMatrices
+layout(std140, binding = 6) uniform sceneMatrices
 {
 	vec4 worldCameraPosition; 
 	vec4 lightSourceDirection; 
@@ -180,8 +180,8 @@ float computeInShadowRatio(float offsetScale, vec3 shadowMapFragment, const vec3
 		float shadowStrength = computeShadowStrength(maximumShadowDrawDistance, shadowFadeStartDistance, mainCameraToFragmentMagnitude);
 		float fragmentShadowedRatio = total / 8.0f;
 		
-		// return mix(1.0f, fragmentShadowedRatio, shadowStrength);
-		return fragmentShadowedRatio;
+		// return mix(1.0f, fragmentShadowedRatio, shadowStrength); // If the shadow should be affected by the fade
+		return fragmentShadowedRatio; // Otherwise return the actual inShadowRatio
 	}
 	else
 	{

@@ -12,9 +12,9 @@
 #include "Camera.h"
 
 // --------------------------------------------------------------------------------
-struct UniformBuffer
+struct PerViewUniformData
 {
-	UniformBuffer();
+	PerViewUniformData();
 
 	float worldSpaceCameraPosition[4];
 	float lightSourceDirection[4];
@@ -42,5 +42,5 @@ void copyMat4ToFloat16Array(const glm::mat4& source, float destination[16]);
 void copyMat4ToFloat64ArrayByIndex(const glm::mat4& source, float destination[64], uint32_t matrixStartIndex);
 void copyVec4ToFloatArray(const glm::vec4& source, float destination[4]);
 
-void updateUniformBuffer(UniformBuffer& ubo, const Camera& mainView, const Camera& shadowMapView, const float cascadeSplitEndDistance, const uint32_t worldToShadowMapArrayId, const glm::vec3& toLightDirectionWorldSpace,
+void updateUniformBuffer(PerViewUniformData& ubo, const Camera& mainView, const Camera& shadowMapView, const float cascadeSplitEndDistance, const uint32_t worldToShadowMapArrayId, const glm::vec3& toLightDirectionWorldSpace,
 	float offScale, float shadowDrawDistance, float shadowFadingStart, bool nmToggle, bool diffToggle, bool specToggle, bool cascadeDrawDistanceToggle);

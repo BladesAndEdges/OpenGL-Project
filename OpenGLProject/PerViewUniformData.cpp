@@ -45,7 +45,7 @@ void copyVec4ToFloatArray(const glm::vec4 & source, float destination[4])
 #include <iostream>
 
 // --------------------------------------------------------------------------------
-void updateUniformBuffer(UniformBuffer& ubo, const Camera& mainView, const Camera& shadowMapView, const float cascadeSplitEndDistance, const uint32_t worldToShadowMapArrayId, const glm::vec3& toLightDirectionWorldSpace,
+void updateUniformBuffer(PerViewUniformData& ubo, const Camera& mainView, const Camera& shadowMapView, const float cascadeSplitEndDistance, const uint32_t worldToShadowMapArrayId, const glm::vec3& toLightDirectionWorldSpace,
 	float offScale, float shadowDrawDistance, float shadowFadeStart, bool nmToggle, bool diffToggle, bool specToggle, bool cascadeDrawDistanceToggle)
 {
 	const glm::vec4 worldSpacePosition = glm::vec4(mainView.getWorldPosition(), 1.0f);
@@ -92,7 +92,7 @@ void copyBoolIntoBuffer(const bool source, bool& destination)
 }
 
 // --------------------------------------------------------------------------------
-UniformBuffer::UniformBuffer() : lightSourceDirection{ 0.0f, 1001.0f, 0.0f, 0.0f }, normalMapToggle(1), padding(0), diffuseToggle(1), 
+PerViewUniformData::PerViewUniformData() : lightSourceDirection{ 0.0f, 1001.0f, 0.0f, 0.0f }, normalMapToggle(1), padding(0), diffuseToggle(1), 
 	specularToggle(1), cascadeDrawDistanceOverlayToggle(0)
 {
 }
