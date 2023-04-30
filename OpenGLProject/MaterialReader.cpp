@@ -16,8 +16,7 @@ MaterialReader::MaterialReader()
 MaterialReader::~MaterialReader()
 {
 	m_Materials.clear();
-	//m_textureHashMaps.clear();
-	// Clear texture hash map too
+	m_textures.clear();
 }
 
 // --------------------------------------------------------------------------------
@@ -93,16 +92,16 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			const std::string path = R"(Meshes\sponza\)";
 			const std::string finalPath = path + texturePath;
 
-			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
+			if (m_textures.find(path) == m_textures.end())
 			{
 				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
-				currentMaterial.m_ambientTexture = m_textureHashMaps.getTexture(finalPath);
+				currentMaterial.m_ambientTexture = &m_textures.at(finalPath);
 
 				std::cout << "Loaded Ambient Texture: " << texturePath << std::endl;
 			}
 			else
 			{
-				currentMaterial.m_ambientTexture = m_textureHashMaps.getTexture(finalPath);
+				currentMaterial.m_ambientTexture = &m_textures.at(finalPath);
 			}
 		}
 
@@ -114,16 +113,16 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			const std::string path = R"(Meshes\sponza\)";
 			const std::string finalPath = path + texturePath;
 
-			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
+			if (m_textures.find(path) == m_textures.end())
 			{
 				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
-				currentMaterial.m_diffuseTexture = m_textureHashMaps.getTexture(finalPath);
-
+				currentMaterial.m_diffuseTexture = &m_textures.at(finalPath);
+				
 				std::cout << "Loaded Diffuse Texture: " << texturePath << std::endl;
 			}
 			else
 			{
-				currentMaterial.m_diffuseTexture = m_textureHashMaps.getTexture(finalPath);
+				currentMaterial.m_diffuseTexture = &m_textures.at(finalPath);
 			}
 		}
 
@@ -135,16 +134,16 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			const std::string path = R"(Meshes\sponza\)";
 			const std::string finalPath = path + texturePath;
 
-			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
+			if (m_textures.find(path) == m_textures.end())
 			{
 				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
-				currentMaterial.m_specularTexture = m_textureHashMaps.getTexture(finalPath);
-
+				currentMaterial.m_specularTexture = &m_textures.at(finalPath);
+				
 				std::cout << "Loaded Specular Texture: " << texturePath << std::endl;
 			}
 			else
 			{
-				currentMaterial.m_specularTexture = m_textureHashMaps.getTexture(finalPath);
+				currentMaterial.m_specularTexture = &m_textures.at(finalPath);
 			}
 		}
 
@@ -156,16 +155,16 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			const std::string path = R"(Meshes\sponza\)";
 			const std::string finalPath = path + texturePath;
 
-			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
+			if (m_textures.find(path) == m_textures.end())
 			{
 				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
-				currentMaterial.m_normalMapTexture = m_textureHashMaps.getTexture(finalPath);
-
+				currentMaterial.m_normalMapTexture = &m_textures.at(finalPath);
+				
 				std::cout << "Loaded Normal Texture: " << texturePath << std::endl;
 			}
 			else
 			{
-				currentMaterial.m_normalMapTexture = m_textureHashMaps.getTexture(finalPath);
+				currentMaterial.m_normalMapTexture = &m_textures.at(finalPath);
 			}
 		}
 
@@ -177,16 +176,16 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			const std::string path = R"(Meshes\sponza\)";
 			const std::string finalPath = path + texturePath;
 
-			if (m_textureHashMaps.getTexture(finalPath) == nullptr)
+			if (m_textures.find(path) == m_textures.end())
 			{
 				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
-				currentMaterial.m_maskTexture = m_textureHashMaps.getTexture(finalPath);
+				currentMaterial.m_maskTexture = &m_textures.at(finalPath);
 
 				std::cout << "Loaded Mask Texture: " << texturePath << std::endl;
 			}
 			else
 			{
-				currentMaterial.m_maskTexture = m_textureHashMaps.getTexture(finalPath);
+				currentMaterial.m_maskTexture = &m_textures.at(finalPath);
 			}
 		}
 
@@ -216,21 +215,21 @@ const Material * MaterialReader::getMaterial(const std::string & materialName) c
 void MaterialReader::loadTexture(const char * path, TextureTarget target, TextureWrapMode wrapMode, TextureFilterMode filterMode)
 {
 	Texture texture(path, target, wrapMode, filterMode);
-	m_textureHashMaps.addTexture(path, std::move(texture));
+	m_textures.insert({ path, std::move(texture) });
 }
 
 // --------------------------------------------------------------------------------
 void MaterialReader::provideNormalMapTexture(Material& material)
 {
 	const std::string path = R"(Meshes\sponza\textures\dummy_ddn.png)";
-	material.m_normalMapTexture = m_textureHashMaps.getTexture(path);
+	material.m_normalMapTexture = &m_textures.at(path);
 }
 
 // --------------------------------------------------------------------------------
 void MaterialReader::provideMaskTexture(Material& material)
 {
 	const std::string path = R"(Meshes\sponza\textures\dummy_mask.png)";
-	material.m_maskTexture = m_textureHashMaps.getTexture(path);
+	material.m_maskTexture = &m_textures.at(path);
 }
 
 // --------------------------------------------------------------------------------
@@ -244,14 +243,15 @@ void MaterialReader::provideBlackTexture(Material & material, uint32_t id)
 	switch (id)
 	{
 	case 0:
-		material.m_ambientTexture = m_textureHashMaps.getTexture(path);
+		material.m_ambientTexture = &m_textures.at(path);
 		break;
 
 	case 1:
-		material.m_diffuseTexture = m_textureHashMaps.getTexture(path);
+		material.m_diffuseTexture = &m_textures.at(path);
 		break;
 
-	case 2: material.m_specularTexture = m_textureHashMaps.getTexture(path);
+	case 2: 
+		material.m_specularTexture = &m_textures.at(path);
 		break;
 
 	default:
