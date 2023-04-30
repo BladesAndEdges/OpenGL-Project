@@ -239,7 +239,7 @@ void updateShadowView(const Camera& mainView, Camera& shadowView, float zenith, 
 }
 
 // --------------------------------------------------------------------------------
-void renderAttributeToGBuffer(const Shader& shader, const Model& model, const Framebuffer& framebuffer)
+void renderAttributeToGBuffer(const Model& model, const Framebuffer& framebuffer)
 {	
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.getName());
 
@@ -264,23 +264,19 @@ void renderAttributeToGBuffer(const Shader& shader, const Model& model, const Fr
 
 	for (const Mesh& mesh : model.getMeshes())
 	{
-		// Eventually will be separate in a UBO per material
-		glUniform1f(glGetUniformLocation(shader.getProgramID(), "material.Ns"), mesh.material->m_shininess);
-		glUniform3fv(glGetUniformLocation(shader.getProgramID(), "material.Ka"), 1, value_ptr(mesh.material->m_ambientColour));
-		glUniform3fv(glGetUniformLocation(shader.getProgramID(), "material.Kd"), 1, value_ptr(mesh.material->m_diffuseColour));
-		glUniform3fv(glGetUniformLocation(shader.getProgramID(), "material.Ks"), 1, value_ptr(mesh.material->m_specularColour));
-
 		assert(mesh.material->m_ambientTexture != nullptr);
 		assert(mesh.material->m_diffuseTexture != nullptr);
 		assert(mesh.material->m_specularTexture != nullptr);
 		assert(mesh.material->m_normalMapTexture != nullptr);
 		assert(mesh.material->m_maskTexture != nullptr);
+		assert(mesh.material->m_uniformBuffer != nullptr);
 
 		mesh.material->m_ambientTexture->useTexture(0);
 		mesh.material->m_diffuseTexture->useTexture(1);
 		mesh.material->m_specularTexture->useTexture(2);
 		mesh.material->m_normalMapTexture->useTexture(3);
 		mesh.material->m_maskTexture->useTexture(4);
+		mesh.material->m_uniformBuffer->useBuffer();
 
 		glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
 	}
@@ -290,7 +286,7 @@ void renderAttributeToGBuffer(const Shader& shader, const Model& model, const Fr
 
 //THIS DOESNT SEEM TO BE RENDERING FROM A VIEW ANYMORE. IT ONLY RENDERS THE OBECTS? Should it include the ubo + camera ?
 // --------------------------------------------------------------------------------
-void renderSceneFromView(const Shader& shader, const Camera&,  const PerViewUniformData&, const Model& model, const Framebuffer& framebuffer, 
+void renderSceneFromView(const Camera&,  const PerViewUniformData&, const Model& model, const Framebuffer& framebuffer, 
 								const Texture* shadowMap)
 {
 	assert(shadowMap != nullptr);
@@ -300,24 +296,19 @@ void renderSceneFromView(const Shader& shader, const Camera&,  const PerViewUnif
 
 	for (const Mesh& mesh : model.getMeshes())
 	{
-		// Eventually will be separate in a UBO per material
-		glUniform1f(glGetUniformLocation(shader.getProgramID(), "material.Ns"), mesh.material->m_shininess);
-		glUniform3fv(glGetUniformLocation(shader.getProgramID(), "material.Ka"), 1, value_ptr(mesh.material->m_ambientColour));
-		glUniform3fv(glGetUniformLocation(shader.getProgramID(), "material.Kd"), 1, value_ptr(mesh.material->m_diffuseColour));
-		glUniform3fv(glGetUniformLocation(shader.getProgramID(), "material.Ks"), 1, value_ptr(mesh.material->m_specularColour));
-
 		assert(mesh.material->m_ambientTexture != nullptr);
 		assert(mesh.material->m_diffuseTexture != nullptr);
 		assert(mesh.material->m_specularTexture != nullptr);
 		assert(mesh.material->m_normalMapTexture != nullptr);
 		assert(mesh.material->m_maskTexture != nullptr);
+		assert(mesh.material->m_uniformBuffer != nullptr);
 
 		mesh.material->m_ambientTexture->useTexture(0);
 		mesh.material->m_diffuseTexture->useTexture(1);
 		mesh.material->m_specularTexture->useTexture(2);
 		mesh.material->m_normalMapTexture->useTexture(3);
 		mesh.material->m_maskTexture->useTexture(4);
-
+		mesh.material->m_uniformBuffer->useBuffer();
 		glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
 	}
 
@@ -445,7 +436,7 @@ int main()
 
 	//UBO
 	PerViewUniformData perViewUniforms;
-	UniformBuffer perViewUniformBuffer(6u, sizeof(PerViewUniformData), "PerViewUniformBuffer");
+	UniformBuffer perViewUniformBuffer(6u, sizeof(PerViewUniformData), nullptr, "PerViewUniformBuffer");
 
 	MaterialReader materialReader;
 	materialReader.parseMaterialFile(R"(Meshes\sponza\sponza.mtl)");
@@ -628,7 +619,7 @@ int main()
 
 			perViewUniformBuffer.update(&perViewUniforms);
 			perViewUniformBuffer.useBuffer();
-			renderSceneFromView(depthOnlyPassShader, cascade.getCascadeView(), perViewUniforms, sponzaModel, cascade.getFramebuffer(), cascade.getShadowMap());
+			renderSceneFromView(cascade.getCascadeView(), perViewUniforms, sponzaModel, cascade.getFramebuffer(), cascade.getShadowMap());
 
 			cascadeIndex++;
 
@@ -653,7 +644,7 @@ int main()
 			meshTestShader.useProgram();
 			glBindVertexArray(modelVAO);
 			glViewport(0, 0,(GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
-			renderSceneFromView(meshTestShader, mainView, perViewUniforms, sponzaModel, mainFramebuffer, shadowMap);
+			renderSceneFromView(mainView, perViewUniforms, sponzaModel, mainFramebuffer, shadowMap);
 			glPopDebugGroup();
 		}
 
@@ -676,7 +667,7 @@ int main()
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Render to GBuffer Textures");
 			gBufferPassShader.useProgram();
 			glViewport(0, 0, (GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
-			renderAttributeToGBuffer(gBufferPassShader, sponzaModel, gBuffer->getFramebuffer());
+			renderAttributeToGBuffer(sponzaModel, gBuffer->getFramebuffer());
 			glPopDebugGroup();
 
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Deferred Renderer Drawing");

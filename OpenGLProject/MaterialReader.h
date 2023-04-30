@@ -16,6 +16,7 @@ class MaterialReader
 public:
 
 	MaterialReader();
+	~MaterialReader();
 					
 	MaterialReader(const MaterialReader&) = delete;
 	MaterialReader& operator=(const MaterialReader&) = delete;
@@ -27,8 +28,8 @@ public:
 private:
 
 	std::unordered_map<std::string, Material> m_Materials;
-
 	TextureHashMaps m_textureHashMaps;
+	/*std::unordered_map<std::string, Texture> m_textures;*/
 
 	// Consider making it just loadTexture(const char path, <Texture properties>);
 	void loadTexture(const char* name, TextureTarget target, TextureWrapMode wrapMode,

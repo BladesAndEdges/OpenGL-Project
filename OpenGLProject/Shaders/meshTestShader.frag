@@ -12,13 +12,13 @@ in vec3 vn;
 
 out vec3 FragColour;
 
-struct Material
+layout(std140, binding = 7) uniform PerMaterialUniforms
 {
-	vec3 Ka;
-	vec3 Kd;
-	vec3 Ks;
-	float Ns;
-};
+	vec3 m_ambientColour;
+	vec3 m_diffuseColour;
+	vec3 m_specularColour;
+	float m_specularHighLight;
+} materialUniformData;
 
 struct SurfaceProperties
 {
@@ -60,8 +60,6 @@ layout(binding = 3) uniform sampler2D normalMapTextureSampler;
 layout(binding = 4) uniform sampler2D maskTextureSampler;
 
 layout(binding = 5) uniform sampler2DArrayShadow shadowMap;
-
-uniform Material material;
 
 // --------------------------------------------------------------------------------
 float interleavedGradientNoise()
@@ -219,10 +217,10 @@ SurfaceProperties getSurfaceProperties()
 	surfaceProperties.m_worldNormal = getWorldSurfaceNormal(ubo.normalMapToggle);
 	
 	// Material properties
-	surfaceProperties.m_ambientColour = material.Ka * texture(ambientTextureSampler, out_textureCoordinate).rgb;
-	surfaceProperties.m_diffuseColour = material.Kd * texture(diffuseTextureSampler, out_textureCoordinate).rgb;
-	surfaceProperties.m_specularColour = material.Ks * texture(specularTextureSampler, out_textureCoordinate).rgb;
-	surfaceProperties.m_smoothness = material.Ns;
+	surfaceProperties.m_ambientColour = materialUniformData.m_ambientColour * texture(ambientTextureSampler, out_textureCoordinate).rgb;
+	surfaceProperties.m_diffuseColour = materialUniformData.m_diffuseColour * texture(diffuseTextureSampler, out_textureCoordinate).rgb;
+	surfaceProperties.m_specularColour = materialUniformData.m_specularColour * texture(specularTextureSampler, out_textureCoordinate).rgb;
+	surfaceProperties.m_smoothness = materialUniformData.m_specularHighLight;
 	surfaceProperties.m_opacity = texture(maskTextureSampler, out_textureCoordinate).r;
 
 	return surfaceProperties;

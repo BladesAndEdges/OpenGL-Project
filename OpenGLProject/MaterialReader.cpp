@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include "PerMaterialUniformData.h"
 
 // --------------------------------------------------------------------------------
 MaterialReader::MaterialReader()
@@ -9,6 +10,14 @@ MaterialReader::MaterialReader()
 	loadTexture(R"(Meshes\sponza\textures\dummy_ddn.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point); // default normal map
 	loadTexture(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point); // default mask texture
 	loadTexture(R"(Meshes\sponza\textures\black8x8.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point); // default texture for missing textures
+}
+
+// --------------------------------------------------------------------------------
+MaterialReader::~MaterialReader()
+{
+	m_Materials.clear();
+	//m_textureHashMaps.clear();
+	// Clear texture hash map too
 }
 
 // --------------------------------------------------------------------------------
@@ -24,8 +33,8 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 	}
 
 	Material currentMaterial;
+	PerMaterialUniformData perMaterialUniforms;
 	std::string materialName;
-
 	std::string str;
 
 	bool firstMaterial = true;
@@ -37,6 +46,8 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			if (!firstMaterial)
 			{
 				completeMaterial(currentMaterial);
+				const std::string uniformBufferName = materialName + std::string(" UniformBuffer");
+				currentMaterial.m_uniformBuffer = new UniformBuffer(7u, sizeof(PerMaterialUniformData), &perMaterialUniforms, uniformBufferName.c_str());
 				m_Materials.insert({ materialName, currentMaterial });
 			}
 
@@ -45,6 +56,8 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			currentMaterial.m_specularTexture = nullptr;
 			currentMaterial.m_normalMapTexture = nullptr;
 			currentMaterial.m_maskTexture = nullptr;
+			currentMaterial.m_uniformBuffer = nullptr;
+			ZeroMemory(&perMaterialUniforms, sizeof(PerMaterialUniformData));
 
 			ifs >> materialName;
 
@@ -53,23 +66,23 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 		if (str == "Ka")
 		{
-			glm::vec3 ambient;
-			ifs >> ambient.x >> ambient.y >> ambient.z;
-			currentMaterial.m_ambientColour = ambient;
+			ifs >> perMaterialUniforms.m_ambientColour[0] 
+				>> perMaterialUniforms.m_ambientColour[1] 
+				>> perMaterialUniforms.m_ambientColour[2];
 		}
 
 		if (str == "Kd")
 		{
-			glm::vec3 diffuse;
-			ifs >> diffuse.x >> diffuse.y >> diffuse.z;
-			currentMaterial.m_diffuseColour = diffuse;
+			ifs >> perMaterialUniforms.m_diffuseColour[0]
+				>> perMaterialUniforms.m_diffuseColour[1]
+				>> perMaterialUniforms.m_diffuseColour[2];
 		}
 
 		if (str == "Ks")
 		{
-			glm::vec3 specular;
-			ifs >> specular.x >> specular.y >> specular.z;
-			currentMaterial.m_specularColour = specular;
+			ifs >> perMaterialUniforms.m_specularColour[0]
+				>> perMaterialUniforms.m_specularColour[1]
+				>> perMaterialUniforms.m_specularColour[2];
 		}
 
 		if (str == "map_Ka")
@@ -179,13 +192,15 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 		if (str == "Ns")
 		{
-			float shininess;
-			ifs >> shininess;
-			currentMaterial.m_shininess = shininess;
+			ifs >> perMaterialUniforms.m_specularHighlight;
 		}
 	}
 
 	completeMaterial(currentMaterial);
+
+	// !!!!!! THE BLOCK INDEX IS HARD-CODED!
+	const std::string uniformBufferName = materialName + std::string(" UniformBuffer");
+	currentMaterial.m_uniformBuffer = new UniformBuffer(7u, sizeof(PerMaterialUniformData), &perMaterialUniforms, uniformBufferName.c_str());
 	m_Materials.insert({ materialName, currentMaterial });
 
 	parseMaterialFileMarker.endTiming();
