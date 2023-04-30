@@ -13,9 +13,9 @@ layout(binding = 4) uniform sampler2D maskTextureSampler;
 // --------------------------------------------------------------------------------
 layout(std140, binding = 7) uniform PerMaterialUniforms
 {
-	vec3 m_ambientColour;
-	vec3 m_diffuseColour;
-	vec3 m_specularColour;
+	vec4 m_ambientColour;
+	vec4 m_diffuseColour;
+	vec4 m_specularColour;
 	float m_specularHighLight;
 } materialUniformData;
 
@@ -42,9 +42,9 @@ SurfaceProperties getSurfaceProperties()
 	surfaceProperties.m_worldNormal = v2f_worldNormalBeforeTangent;
 	
 	// Material properties
-	surfaceProperties.m_ambientColour = materialUniformData.m_ambientColour * texture(ambientTextureSampler, v2f_textureCoordinate).rgb;
-	surfaceProperties.m_diffuseColour = materialUniformData.m_diffuseColour * texture(diffuseTextureSampler, v2f_textureCoordinate).rgb;
-	surfaceProperties.m_specularColour = materialUniformData.m_specularColour * texture(specularTextureSampler, v2f_textureCoordinate).rgb;
+	surfaceProperties.m_ambientColour = materialUniformData.m_ambientColour.xyz * texture(ambientTextureSampler, v2f_textureCoordinate).rgb;
+	surfaceProperties.m_diffuseColour = materialUniformData.m_diffuseColour.xyz * texture(diffuseTextureSampler, v2f_textureCoordinate).rgb;
+	surfaceProperties.m_specularColour = materialUniformData.m_specularColour.xyz * texture(specularTextureSampler, v2f_textureCoordinate).rgb;
 	surfaceProperties.m_smoothness = materialUniformData.m_specularHighLight;
 	surfaceProperties.m_opacity = texture(maskTextureSampler, v2f_textureCoordinate).r;
 
