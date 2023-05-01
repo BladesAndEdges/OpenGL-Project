@@ -20,7 +20,11 @@ public:
 	const std::vector<unsigned int>& getIndexBuffer() const;
 	glm::vec3 getSceneCenter() const;
 
+	GLuint getVAO() const;
+
 private:
+
+	GLuint m_vao;
 
 	std::vector<Mesh> m_meshes;
 	std::vector<Vertex> m_indexedVertexBuffer;

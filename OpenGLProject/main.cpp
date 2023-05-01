@@ -442,37 +442,6 @@ int main()
 	materialReader.parseMaterialFile(R"(Meshes\sponza\sponza.mtl)");
 	Model sponzaModel(R"(SponzaModel.compiled)", R"(Meshes\sponza\sponza.obj)", materialReader);
 
-	// Vertex Buffers and VAO
-	unsigned int modelVBO;
-	unsigned int modelVAO;
-
-	glGenVertexArrays(1, &modelVAO);
-	glGenBuffers(1, &modelVBO);
-
-	glBindVertexArray(modelVAO);
-
-	// Index Buffer
-	unsigned int modelIBO;
-	glGenBuffers(1, &modelIBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, modelIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sponzaModel.getIndexBuffer().size() * sizeof(unsigned int), sponzaModel.getIndexBuffer().data(), GL_STATIC_DRAW);
-
-
-	glBindBuffer(GL_ARRAY_BUFFER, modelVBO);
-	glBufferData(GL_ARRAY_BUFFER, sponzaModel.getIndexedVertexBuffer().size() * sizeof(Vertex), sponzaModel.getIndexedVertexBuffer().data(), GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_position));
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_textureCoordinate));
-	glEnableVertexAttribArray(1);
-
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_normal));
-	glEnableVertexAttribArray(2);
-
-	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_tangent));
-	glEnableVertexAttribArray(3);
-
 	//-----------------------------------------------------------------------------------------------------------------------------------------
 
 	int mainViewWidth, mainViewHeight;
@@ -609,6 +578,7 @@ int main()
 
 			perViewUniformBuffer.update(&perViewUniforms);
 			perViewUniformBuffer.useBuffer();
+			glBindVertexArray(sponzaModel.getVAO());
 			renderSceneFromView(cascade.getCascadeView(), perViewUniforms, sponzaModel, cascade.getFramebuffer(), cascade.getShadowMap());
 
 			cascadeIndex++;
@@ -632,14 +602,13 @@ int main()
 		{
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Forward Renderer Drawing");
 			meshTestShader.useProgram();
-			glBindVertexArray(modelVAO);
+			glBindVertexArray(sponzaModel.getVAO());
 			glViewport(0, 0,(GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
 			renderSceneFromView(mainView, perViewUniforms, sponzaModel, mainFramebuffer, shadowMap);
 			glPopDebugGroup();
 		}
 
 		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Shadow Map Debug Quad");
-		// Debug quad drawing
 		shadowMapDebugShader.useProgram();
 
 		glViewport(0, 0, (GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
