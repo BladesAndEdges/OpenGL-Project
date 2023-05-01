@@ -654,7 +654,7 @@ int main()
 
 		glViewport(0, 0, (GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
 		glBindSampler(0, nonComparisonShadowSampler);
-		glBindTextureUnit(0, shadowMap->getName());
+		shadowMap->useTexture(0);
 		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, graphicsConfigurations.getNumberOfActiveCascades());
 
 		glBindSampler(0, 0);
@@ -674,12 +674,12 @@ int main()
 
 			lightingPassShader.useProgram();
 
-			glBindTextureUnit(0, gBuffer->getWorldPositionTexture()->getName());
-			glBindTextureUnit(1, gBuffer->getWorldNormalTexture()->getName());
-			glBindTextureUnit(2, gBuffer->getDiffuseColourTexture()->getName());
-			glBindTextureUnit(3, gBuffer->getSpecularColourTexture()->getName());
-			glBindTextureUnit(4, gBuffer->getSmoothnessTexture()->getName());
-			glBindTextureUnit(5, shadowMap->getName());
+			gBuffer->getWorldPositionTexture()->useTexture(0);
+			gBuffer->getWorldNormalTexture()->useTexture(1);
+			gBuffer->getDiffuseColourTexture()->useTexture(2);
+			gBuffer->getSpecularColourTexture()->useTexture(3);
+			gBuffer->getSmoothnessTexture()->useTexture(4);
+			shadowMap->useTexture(5);
 
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 
