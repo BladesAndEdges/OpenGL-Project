@@ -10,4 +10,5 @@ struct PerMaterialUniformData
 	float m_specularColour[3];
 	float _padding2_;
 	float m_specularHighlight;
+	float _padding3_[3];
 };
