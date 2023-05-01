@@ -56,7 +56,7 @@ Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMo
 
 // --------------------------------------------------------------------------------
 Texture::Texture(const std::string& label, uint32_t width, uint32_t height, uint32_t depth, TextureTarget target,
-	TextureWrapMode wrapMode, TextureFilterMode filterMode, TextureFormat format, TextureComparisonMode comparisonMode)
+	TextureWrapMode wrapMode, TextureFilterMode filterMode, TextureFormat format)
 {
 	// Note: When TextureTarget::Texture2D is used, depth can be whatever, as it will never be used. Perhaps handle this somehow?
 	assert(width > 0);
@@ -94,12 +94,6 @@ Texture::Texture(const std::string& label, uint32_t width, uint32_t height, uint
 	glTextureParameteri(m_name, GL_TEXTURE_WRAP_T, glWrapMode);
 	glTextureParameteri(m_name, GL_TEXTURE_MIN_FILTER, glMinFilterMode);
 	glTextureParameteri(m_name, GL_TEXTURE_MAG_FILTER, glMagFilterMode);
-
-	if (comparisonMode != TextureComparisonMode::None)
-	{
-		glTextureParameteri(m_name, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-		glTextureParameteri(m_name, GL_TEXTURE_COMPARE_FUNC, translateComparisonModeToOpenGL(comparisonMode));
-	}
 }
 
 // --------------------------------------------------------------------------------
@@ -124,8 +118,18 @@ Texture::Texture(Texture && other)
 }
 
 // --------------------------------------------------------------------------------
-void Texture::useTexture(GLuint textureUnit) const
+void Texture::useTexture(GLuint textureUnit, TextureComparisonMode comparisonMode) const
 {
+	if (comparisonMode != TextureComparisonMode::None)
+	{
+		glTextureParameteri(m_name, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+		glTextureParameteri(m_name, GL_TEXTURE_COMPARE_FUNC, translateComparisonModeToOpenGL(comparisonMode));
+	}
+	else
+	{
+		glTextureParameteri(m_name, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+	}
+
 	glBindTextureUnit(textureUnit, m_name);
 }
 

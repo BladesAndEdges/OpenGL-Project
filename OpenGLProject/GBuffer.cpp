@@ -7,22 +7,22 @@ GBuffer::GBuffer(const uint32_t mainViewWidth, const uint32_t mainViewHeight) : 
 {
 	// Create textures
 	m_worldPositionTexture = new Texture("gBufferWorldPosition", m_width, m_height, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge, 
-		TextureFilterMode::Point, TextureFormat::RGB32F, TextureComparisonMode::None);
+		TextureFilterMode::Point, TextureFormat::RGB32F);
 
 	m_worldNormalTexture = new Texture("gBufferWorldNormal", m_width, m_height, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
-		TextureFilterMode::Point, TextureFormat::RGB32F, TextureComparisonMode::None);
+		TextureFilterMode::Point, TextureFormat::RGB32F);
 
 	m_diffuseColourTexture = new Texture("gBufferDiffuseColour", m_width, m_height, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
-		TextureFilterMode::Point, TextureFormat::RGB8, TextureComparisonMode::None);
+		TextureFilterMode::Point, TextureFormat::RGB8);
 
 	m_specularColourTexture = new Texture("gBufferSpecularColour", m_width, m_height, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
-		TextureFilterMode::Point, TextureFormat::RGB8, TextureComparisonMode::None);
+		TextureFilterMode::Point, TextureFormat::RGB8);
 
 	m_smoothnessTexture = new Texture("gBufferSmoothness", m_width, m_height, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
-		TextureFilterMode::Point, TextureFormat::R32F, TextureComparisonMode::None);
+		TextureFilterMode::Point, TextureFormat::R32F);
 
 	m_depthTexture = new Texture("gBufferDepth", m_width, m_height, 1, TextureTarget::Texture2D, TextureWrapMode::ClampEdge,
-		TextureFilterMode::Point, TextureFormat::DEPTH32, TextureComparisonMode::LessEqual);
+		TextureFilterMode::Point, TextureFormat::DEPTH32);
 
 	// Attach to framebuffer
 	m_framebuffer.attachTexture(TextureTarget::Texture2D, *m_worldPositionTexture, AttachmentType::ColourAttachment, 0, 0);

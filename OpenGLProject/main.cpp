@@ -271,11 +271,11 @@ void renderAttributeToGBuffer(const Model& model, const Framebuffer& framebuffer
 		assert(mesh.material->m_maskTexture != nullptr);
 		assert(mesh.material->m_uniformBuffer != nullptr);
 
-		mesh.material->m_ambientTexture->useTexture(0);
-		mesh.material->m_diffuseTexture->useTexture(1);
-		mesh.material->m_specularTexture->useTexture(2);
-		mesh.material->m_normalMapTexture->useTexture(3);
-		mesh.material->m_maskTexture->useTexture(4);
+		mesh.material->m_ambientTexture->useTexture(0, TextureComparisonMode::None);
+		mesh.material->m_diffuseTexture->useTexture(1, TextureComparisonMode::None);
+		mesh.material->m_specularTexture->useTexture(2, TextureComparisonMode::None);
+		mesh.material->m_normalMapTexture->useTexture(3, TextureComparisonMode::None);
+		mesh.material->m_maskTexture->useTexture(4, TextureComparisonMode::None);
 		mesh.material->m_uniformBuffer->useBuffer();
 
 		glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
@@ -290,7 +290,7 @@ void renderSceneFromView(const Camera&,  const PerViewUniformData&, const Model&
 								const Texture* shadowMap)
 {
 	assert(shadowMap != nullptr);
-	shadowMap->useTexture(5);
+	shadowMap->useTexture(5, TextureComparisonMode::LessEqual);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.getName());
 
@@ -303,11 +303,11 @@ void renderSceneFromView(const Camera&,  const PerViewUniformData&, const Model&
 		assert(mesh.material->m_maskTexture != nullptr);
 		assert(mesh.material->m_uniformBuffer != nullptr);
 
-		mesh.material->m_ambientTexture->useTexture(0);
-		mesh.material->m_diffuseTexture->useTexture(1);
-		mesh.material->m_specularTexture->useTexture(2);
-		mesh.material->m_normalMapTexture->useTexture(3);
-		mesh.material->m_maskTexture->useTexture(4);
+		mesh.material->m_ambientTexture->useTexture(0, TextureComparisonMode::None);
+		mesh.material->m_diffuseTexture->useTexture(1, TextureComparisonMode::None);
+		mesh.material->m_specularTexture->useTexture(2, TextureComparisonMode::None);
+		mesh.material->m_normalMapTexture->useTexture(3, TextureComparisonMode::None);
+		mesh.material->m_maskTexture->useTexture(4, TextureComparisonMode::None);
 		mesh.material->m_uniformBuffer->useBuffer();
 		glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
 	}
@@ -496,16 +496,6 @@ int main()
 
 	Framebuffer mainFramebuffer = Framebuffer::defaultFramebuffer();
 
-	// Non-Comparison Sampler
-	GLuint nonComparisonShadowSampler;
-	glGenSamplers(1, &nonComparisonShadowSampler);
-
-	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glSamplerParameteri(nonComparisonShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-
 	// -----------------------------------------------------------GBuffer
 	GBuffer* gBuffer = nullptr; // Assume no resizes for now
 	Shader gBufferPassShader(R"(Shaders\gBufferPassShader.vert)", R"(Shaders\gBufferPassShader.frag)");
@@ -540,7 +530,7 @@ int main()
 			// Recreate the Shadow Map
 			delete shadowMap;
 			shadowMap = new Texture("ShadowMap", shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()], shadowMapSizes[graphicsConfigurations.getShadowMapDimensionsId()], graphicsConfigurations.getNumberOfActiveCascades(), TextureTarget::ArrayTexture2D,
-				TextureWrapMode::ClampEdge, TextureFilterMode::Bilinear, TextureFormat::DEPTH32, TextureComparisonMode::LessEqual);
+				TextureWrapMode::ClampEdge, TextureFilterMode::Bilinear, TextureFormat::DEPTH32);
 
 			// Update Cascades
 			cascades.clear();
@@ -653,11 +643,8 @@ int main()
 		shadowMapDebugShader.useProgram();
 
 		glViewport(0, 0, (GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
-		glBindSampler(0, nonComparisonShadowSampler);
-		shadowMap->useTexture(0);
+		shadowMap->useTexture(0, TextureComparisonMode::None);
 		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, graphicsConfigurations.getNumberOfActiveCascades());
-
-		glBindSampler(0, 0);
 
 		glPopDebugGroup();
 
@@ -674,12 +661,12 @@ int main()
 
 			lightingPassShader.useProgram();
 
-			gBuffer->getWorldPositionTexture()->useTexture(0);
-			gBuffer->getWorldNormalTexture()->useTexture(1);
-			gBuffer->getDiffuseColourTexture()->useTexture(2);
-			gBuffer->getSpecularColourTexture()->useTexture(3);
-			gBuffer->getSmoothnessTexture()->useTexture(4);
-			shadowMap->useTexture(5);
+			gBuffer->getWorldPositionTexture()->useTexture(0, TextureComparisonMode::None);
+			gBuffer->getWorldNormalTexture()->useTexture(1, TextureComparisonMode::None);
+			gBuffer->getDiffuseColourTexture()->useTexture(2, TextureComparisonMode::None);
+			gBuffer->getSpecularColourTexture()->useTexture(3, TextureComparisonMode::None);
+			gBuffer->getSmoothnessTexture()->useTexture(4, TextureComparisonMode::None);
+			shadowMap->useTexture(5, TextureComparisonMode::LessEqual);
 
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 

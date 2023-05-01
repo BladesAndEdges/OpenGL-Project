@@ -73,7 +73,7 @@ public:
 
 	Texture(const std::string& label, uint32_t width,  uint32_t height, uint32_t depth, TextureTarget target
 									, TextureWrapMode wrapMode, TextureFilterMode filterMode, 
-										TextureFormat format, TextureComparisonMode comparisonMode);
+										TextureFormat format);
 
 
 	~Texture();
@@ -84,7 +84,7 @@ public:
 
 	Texture(Texture&& other);
 
-	void useTexture(GLuint unit) const;
+	void useTexture(GLuint textureUnit, TextureComparisonMode comparisonMode) const;
 
 	GLuint getName() const;
 
