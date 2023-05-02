@@ -21,34 +21,35 @@ Model::Model(const char * compiledModelFileName, const char* objSourceFile, cons
 		}
 	}
 
-	// Vertex Buffers and VAO
-	unsigned int modelVBO;
+	GLuint vbo;
+	GLuint ibo;
 
-	glGenVertexArrays(1, &m_vao);
-	glGenBuffers(1, &modelVBO);
+	glCreateVertexArrays(1u, &m_vao);
 
-	glBindVertexArray(m_vao);
+	glCreateBuffers(1u, &vbo);
+	glNamedBufferData(vbo, m_indexedVertexBuffer.size() * sizeof(Vertex), m_indexedVertexBuffer.data(), GL_STATIC_DRAW);
 
-	// Index Buffer
-	unsigned int modelIBO;
-	glGenBuffers(1, &modelIBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, modelIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer.size() * sizeof(unsigned int), m_indexBuffer.data(), GL_STATIC_DRAW);
+	glCreateBuffers(1u, &ibo);
+	glNamedBufferData(ibo, m_indexBuffer.size() * sizeof(unsigned int), m_indexBuffer.data(), GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, modelVBO);
-	glBufferData(GL_ARRAY_BUFFER, m_indexedVertexBuffer.size() * sizeof(Vertex), m_indexedVertexBuffer.data(), GL_STATIC_DRAW);
+	glEnableVertexArrayAttrib(m_vao, 0u);
+	glVertexArrayAttribBinding(m_vao, 0u, 0u);
+	glVertexArrayAttribFormat(m_vao, 0u, 3u, GL_FLOAT, GL_FALSE, offsetof(Vertex, m_position));
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_position));
-	glEnableVertexAttribArray(0);
+	glEnableVertexArrayAttrib(m_vao, 1u);
+	glVertexArrayAttribBinding(m_vao, 1u, 0u);
+	glVertexArrayAttribFormat(m_vao, 1u, 2u, GL_FLOAT, GL_FALSE, offsetof(Vertex, m_textureCoordinate));
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_textureCoordinate));
-	glEnableVertexAttribArray(1);
+	glEnableVertexArrayAttrib(m_vao, 2u);
+	glVertexArrayAttribBinding(m_vao, 2u, 0u);
+	glVertexArrayAttribFormat(m_vao, 2u, 3u, GL_FLOAT, GL_FALSE, offsetof(Vertex, m_normal));
 
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_normal));
-	glEnableVertexAttribArray(2);
+	glEnableVertexArrayAttrib(m_vao, 3u);
+	glVertexArrayAttribBinding(m_vao, 3u, 0u);
+	glVertexArrayAttribFormat(m_vao, 3u, 4u, GL_FLOAT, GL_FALSE, offsetof(Vertex, m_tangent));
 
-	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_tangent));
-	glEnableVertexAttribArray(3);
+	glVertexArrayVertexBuffer(m_vao, 0u, vbo, 0u, sizeof(Vertex));
+	glVertexArrayElementBuffer(m_vao, ibo);
 }
 
 // --------------------------------------------------------------------------------
