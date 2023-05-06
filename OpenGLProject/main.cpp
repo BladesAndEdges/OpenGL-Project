@@ -208,34 +208,39 @@ glm::vec3 calculateWorldSpaceToLightVector(float zenith, float azimuth)
 // --------------------------------------------------------------------------------
 void updateShadowView(const Camera& mainView, Camera& shadowView, float zenith, float azimuth, float cascadeStartDistance, float cascadeEndDistance)
 {
+	// Compute the quaternion rotation that transforms from WorldSpace -> shadowView lightSpace and vice versa
 	const glm::vec3 eulerAngles = glm::vec3(glm::radians(-zenith), glm::radians(azimuth), 0.0f);
 	const glm::quat lightSpaceToWorldQuaternion = glm::quat(eulerAngles);
-	const glm::mat3 orientation = glm::toMat3(lightSpaceToWorldQuaternion);
+	const glm::quat worldSpaceToLightSpaceQuaternion = glm::inverse(lightSpaceToWorldQuaternion);
 
+	// First transform mainView's frustum corners to world space
 	glm::vec3 worldSpaceMainViewBounds[8];
 	mainView.computeFrustumPlaneCornersInWorldSpace(cascadeStartDistance, worldSpaceMainViewBounds);
 	mainView.computeFrustumPlaneCornersInWorldSpace(cascadeEndDistance, worldSpaceMainViewBounds + 4);
 
-	glm::vec3 min = orientation * worldSpaceMainViewBounds[0];
+	// Get to light space
+	glm::vec3 min = worldSpaceToLightSpaceQuaternion * worldSpaceMainViewBounds[0];
 	glm::vec3 max = min;
 
+	// Compute bounds in light space
 	for (uint32_t corner = 1; corner < 8; corner++)
 	{
-		const glm::vec3 point = orientation * worldSpaceMainViewBounds[corner];
+		const glm::vec3 point = worldSpaceToLightSpaceQuaternion * worldSpaceMainViewBounds[corner];
 
 		min = glm::min(min, point);
 		max = glm::max(max, point);
 	}
 
-	const glm::vec2 cascadeDimension = glm::vec2(max - min);
- 	const glm::vec3 cascadeCenterWorldSpace = glm::transpose(orientation) * ((min + max) / 2.0f);
+	// Compute width and height of the bounds in light space, and the center point
+	const glm::vec2 cascadeDimensionInLightSpace = glm::vec2(max - min);
+ 	const glm::vec3 cascadeCenterInLightSpace = (min + max) / 2.0f;
 
-	const float dimension = (cascadeDimension.x > cascadeDimension.y) ? cascadeDimension.x : cascadeDimension.y;
+	const float dimension = (cascadeDimensionInLightSpace.x > cascadeDimensionInLightSpace.y) ? cascadeDimensionInLightSpace.x : cascadeDimensionInLightSpace.y;
 
 	shadowView.setCameraWidth(dimension);
 	shadowView.setCameraHeight(dimension);
-	shadowView.setCameraWorldPosition(cascadeCenterWorldSpace);
-	shadowView.setCameraWorldOrientation(orientation);
+	shadowView.setCameraWorldPosition(lightSpaceToWorldQuaternion * cascadeCenterInLightSpace);
+	shadowView.setCameraWorldOrientation(glm::toMat4(lightSpaceToWorldQuaternion));
 }
 
 // --------------------------------------------------------------------------------
