@@ -540,21 +540,31 @@ int main()
 		depthOnlyPassShader.useProgram(); // Make sure the shader is being usegd before setting these textures
 
 		// Max is 200
-		// 0 - 0.25, 0.25 - 0.50, 0.50 - 0.75, 0.75 - 1.0f
-		const float cascadeSplitDistances[8] =
+		// 7%, 20%, 50% 100%
+		const float cascadeSplitStartDistances[4] =
 		{
-			0.0f, (0.25f * graphicsConfigurations.getMaximumShadowDrawDistance()),
-			(0.25f * graphicsConfigurations.getMaximumShadowDrawDistance()), (0.5f * graphicsConfigurations.getMaximumShadowDrawDistance()),
-			(0.5f * graphicsConfigurations.getMaximumShadowDrawDistance()), (0.75f * graphicsConfigurations.getMaximumShadowDrawDistance()),
-			(0.75f * graphicsConfigurations.getMaximumShadowDrawDistance()), (1.0f * graphicsConfigurations.getMaximumShadowDrawDistance()),
+			0.0f * graphicsConfigurations.getMaximumShadowDrawDistance(),
+			0.07f * graphicsConfigurations.getMaximumShadowDrawDistance(),
+			0.2f * graphicsConfigurations.getMaximumShadowDrawDistance(),
+			0.5f * graphicsConfigurations.getMaximumShadowDrawDistance()
+		};
+
+		const float cascadeSplitEndDistances[4] =
+		{
+			0.07f * graphicsConfigurations.getMaximumShadowDrawDistance(),
+			0.2f * graphicsConfigurations.getMaximumShadowDrawDistance(),
+			0.5f * graphicsConfigurations.getMaximumShadowDrawDistance(),
+			1.0f * graphicsConfigurations.getMaximumShadowDrawDistance()
 		};
 
 		float offsetScale = 0.0f;
 		uint32_t cascadeIndex = 0u;
 
 		// Depth Pass(es);
+		glBindVertexArray(sponzaModel.getVAO());
 		for (Cascade& cascade : cascades)
 		{
+
 			const std::string debugMarkerName = "Cascade " + std::to_string(cascadeIndex);
 
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, debugMarkerName.c_str());
@@ -565,25 +575,25 @@ int main()
 			const uint32_t width = cascade.getShadowMap()->getWidth();
 			const uint32_t height = cascade.getShadowMap()->getHeight();
 			glViewport(0, 0, cascade.getShadowMap()->getWidth(), cascade.getShadowMap()->getHeight());
-
+			
 			const GLfloat clearValue = 1.0f;
 			glClearNamedFramebufferfv(cascade.getFramebuffer().getName(), GL_DEPTH, 0, &clearValue);
 
 			const float texelSize = 1.0f / (float)(cascade.getShadowMap()->getWidth());
 			offsetScale = graphicsConfigurations.getSamplingRadiusInTexelUnits() * texelSize;
 
-			uint32_t cascadeSplitDistanceIndex = cascadeIndex * 2u;
-			updateShadowView(mainView, cascade.getCascadeView(), graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth(), cascadeSplitDistances[cascadeSplitDistanceIndex], cascadeSplitDistances[cascadeSplitDistanceIndex + 1]);
+			const float cascadeStartDistance = cascadeSplitStartDistances[cascadeIndex];
+			const float cascadeEndDistance = cascadeSplitEndDistances[cascadeIndex];
+			updateShadowView(mainView, cascade.getCascadeView(), graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth(), 
+				cascadeStartDistance, cascadeEndDistance);
 
 			glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth());
 
-			const uint32_t cascadeSplitEndId = cascadeSplitDistanceIndex + 1u;
-			updateUniformBuffer(perViewUniforms, cascade.getCascadeView(), cascade.getCascadeView(), cascadeSplitDistances[cascadeSplitEndId], cascadeIndex, worldSpaceToLightVector, offsetScale, graphicsConfigurations.getMaximumShadowDrawDistance(), graphicsConfigurations.getFadedShadowsStartDistance(),
+			updateUniformBuffer(perViewUniforms, cascade.getCascadeView(), cascade.getCascadeView(), cascadeSplitEndDistances[cascadeIndex], cascadeIndex, worldSpaceToLightVector, offsetScale, graphicsConfigurations.getMaximumShadowDrawDistance(), graphicsConfigurations.getFadedShadowsStartDistance(),
 				graphicsConfigurations.getNormalMappingEnabled(), graphicsConfigurations.getDiffuseLightingEnabled(), graphicsConfigurations.getSpecularLightingEnabled(), graphicsConfigurations.getCascadesOverlayModeEnabled());
 
 			perViewUniformBuffer.update(&perViewUniforms);
 			perViewUniformBuffer.useBuffer();
-			glBindVertexArray(sponzaModel.getVAO());
 			renderSceneFromView(cascade.getCascadeView(), perViewUniforms, sponzaModel, cascade.getFramebuffer(), cascade.getShadowMap());
 
 			cascadeIndex++;
@@ -597,7 +607,7 @@ int main()
 
 		// What to do about this. Isn't this meaning cascade 0 values get partially updated ahead of others ?
 		const glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth()); // Issue ?
-		updateUniformBuffer(perViewUniforms, mainView, cascades[0].getCascadeView(), cascadeSplitDistances[1], 0u, worldSpaceToLightVector, offsetScale, graphicsConfigurations.getMaximumShadowDrawDistance(),
+		updateUniformBuffer(perViewUniforms, mainView, cascades[0].getCascadeView(), cascadeSplitStartDistances[1], 0u, worldSpaceToLightVector, offsetScale, graphicsConfigurations.getMaximumShadowDrawDistance(),
 			graphicsConfigurations.getFadedShadowsStartDistance(), graphicsConfigurations.getNormalMappingEnabled(), graphicsConfigurations.getDiffuseLightingEnabled(), graphicsConfigurations.getSpecularLightingEnabled(), graphicsConfigurations.getCascadesOverlayModeEnabled());
 
 		perViewUniformBuffer.update(&perViewUniforms);
