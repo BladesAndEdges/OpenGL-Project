@@ -206,41 +206,48 @@ glm::vec3 calculateWorldSpaceToLightVector(float zenith, float azimuth)
 }
 
 // --------------------------------------------------------------------------------
-void updateShadowView(const Camera& mainView, Camera& shadowView, float zenith, float azimuth, float cascadeStartDistance, float cascadeEndDistance)
+void updateShadowView(const Camera& mainView, Camera& shadowView, float cascadeWidth, float zenith, float azimuth, float cascadeStartDistance, float cascadeEndDistance)
 {
-	// Compute the quaternion rotation that transforms from WorldSpace -> shadowView lightSpace and vice versa
-	const glm::vec3 eulerAngles = glm::vec3(glm::radians(-zenith), glm::radians(azimuth), 0.0f);
-	const glm::quat lightSpaceToWorldQuaternion = glm::quat(eulerAngles);
-	const glm::quat worldSpaceToLightSpaceQuaternion = glm::inverse(lightSpaceToWorldQuaternion);
 
-	// First transform mainView's frustum corners to world space
-	glm::vec3 worldSpaceMainViewBounds[8];
-	mainView.computeFrustumPlaneCornersInWorldSpace(cascadeStartDistance, worldSpaceMainViewBounds);
-	mainView.computeFrustumPlaneCornersInWorldSpace(cascadeEndDistance, worldSpaceMainViewBounds + 4);
+	// Compte both the World Space -> Light Space and Light Space -> World Space quaternion
+	const glm::vec3 eulerAngles = glm::vec3(glm::radians(-zenith), glm::radians(azimuth), glm::radians(0.0f));
+	const glm::quat lightSpaceToWorldSpaceQuaternion = glm::quat(eulerAngles);
+	const glm::quat worldSpaceToLightSpaceQuaternion = glm::inverse(lightSpaceToWorldSpaceQuaternion);
 
-	// Get to light space
-	glm::vec3 min = worldSpaceToLightSpaceQuaternion * worldSpaceMainViewBounds[0];
-	glm::vec3 max = min;
+	// Compute the cascades 8 world space corners
+	glm::vec3 worldSpaceFrustumCorners[8u];
+	mainView.computeFrustumPlaneCornersInWorldSpace(cascadeStartDistance, worldSpaceFrustumCorners);
+	mainView.computeFrustumPlaneCornersInWorldSpace(cascadeEndDistance, &worldSpaceFrustumCorners[4u]);
 
-	// Compute bounds in light space
-	for (uint32_t corner = 1; corner < 8; corner++)
+	// Convert all corners to Light Space
+	glm::vec3 lightSpaceFrustumCorners[8u];
+	for (uint32_t corner = 0; corner < 8u; corner++)
 	{
-		const glm::vec3 point = worldSpaceToLightSpaceQuaternion * worldSpaceMainViewBounds[corner];
-
-		min = glm::min(min, point);
-		max = glm::max(max, point);
+		lightSpaceFrustumCorners[corner] = worldSpaceToLightSpaceQuaternion * worldSpaceFrustumCorners[corner];
 	}
 
-	// Compute width and height of the bounds in light space, and the center point
-	const glm::vec2 cascadeDimensionInLightSpace = glm::vec2(max - min);
- 	const glm::vec3 cascadeCenterInLightSpace = (min + max) / 2.0f;
+	// Largest distance is two points along the diagonals
+	const glm::vec3 diagonalVector = lightSpaceFrustumCorners[6u] - lightSpaceFrustumCorners[0u];
+	const float boundingShereRadius = glm::length(diagonalVector) / 2.0f;
 
-	const float dimension = (cascadeDimensionInLightSpace.x > cascadeDimensionInLightSpace.y) ? cascadeDimensionInLightSpace.x : cascadeDimensionInLightSpace.y;
+	// Get light space center
+	glm::vec3 lightSpaceFrustumCenter = glm::vec3(0.0f);
+	for (uint32_t corner = 0u; corner < 8u; corner++)
+	{
+		lightSpaceFrustumCenter = lightSpaceFrustumCenter + lightSpaceFrustumCorners[corner];
+	}
+	lightSpaceFrustumCenter = lightSpaceFrustumCenter * (1.0f / 8.0f);
 
-	shadowView.setCameraWidth(dimension);
-	shadowView.setCameraHeight(dimension);
-	shadowView.setCameraWorldPosition(lightSpaceToWorldQuaternion * cascadeCenterInLightSpace);
-	shadowView.setCameraWorldOrientation(glm::toMat4(lightSpaceToWorldQuaternion));
+	// Texel Snapping???
+	const float texelCoverageInWorlUnits = (float)cascadeWidth / (boundingShereRadius * 2.0f);
+	lightSpaceFrustumCenter = texelCoverageInWorlUnits * lightSpaceFrustumCenter;
+	lightSpaceFrustumCenter = glm::floor(lightSpaceFrustumCenter);
+	lightSpaceFrustumCenter = lightSpaceFrustumCenter / texelCoverageInWorlUnits;
+
+	shadowView.setCameraWidth(boundingShereRadius * 2.0f);
+	shadowView.setCameraHeight(boundingShereRadius * 2.0f);
+	shadowView.setCameraWorldPosition(lightSpaceToWorldSpaceQuaternion * lightSpaceFrustumCenter);
+	shadowView.setCameraWorldOrientation(glm::toMat4(lightSpaceToWorldSpaceQuaternion));
 }
 
 // --------------------------------------------------------------------------------
@@ -543,7 +550,7 @@ int main()
 		// 7%, 20%, 50% 100%
 		const float cascadeSplitStartDistances[4] =
 		{
-			0.0f * graphicsConfigurations.getMaximumShadowDrawDistance(),
+			0.1f * graphicsConfigurations.getMaximumShadowDrawDistance(),
 			0.07f * graphicsConfigurations.getMaximumShadowDrawDistance(),
 			0.2f * graphicsConfigurations.getMaximumShadowDrawDistance(),
 			0.5f * graphicsConfigurations.getMaximumShadowDrawDistance()
@@ -584,7 +591,7 @@ int main()
 
 			const float cascadeStartDistance = cascadeSplitStartDistances[cascadeIndex];
 			const float cascadeEndDistance = cascadeSplitEndDistances[cascadeIndex];
-			updateShadowView(mainView, cascade.getCascadeView(), graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth(), 
+			updateShadowView(mainView, cascade.getCascadeView(), (float)cascade.getShadowMap()->getWidth(), graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth(), 
 				cascadeStartDistance, cascadeEndDistance);
 
 			glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth());
