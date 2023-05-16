@@ -4,6 +4,7 @@
 #pragma warning(disable:4201)
 #include<glm.hpp>
 #include<gtc/matrix_transform.hpp>
+#include <gtx/quaternion.hpp>
 #pragma warning(pop)
 
 enum class ProjectionType
@@ -27,8 +28,8 @@ public:
 	glm::mat4 createViewMatrix() const;
 	glm::mat4 createProjectionMatrix() const;
 
-	void computeFrustumPlaneCornersInWorldSpace(float planeDistance, glm::vec3* frustumCorners) const;
-
+	void computeFrustumPlaneCornersInWorldSpace(float planeDistance, glm::vec3* worldSpaceFrustumCorners) const;
+	void computeFrutsumPlaneCornersInViewSpace(float planeDistance, glm::vec3* viewSpaceFrustumCorners) const;
 
 	float getViewWidth() const;
 	float getViewHeight() const;

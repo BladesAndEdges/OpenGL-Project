@@ -1,4 +1,5 @@
 #include "Camera.h"
+
 // --------------------------------------------------------------------------------
 const glm::vec3 magnificationVec = glm::vec3(257.0f, 488.0f, -238.0f);
 const glm::vec3 minificationVec = glm::vec3(228.0f, 488.0f, 141.0f);
@@ -54,7 +55,7 @@ glm::mat4 Camera::createProjectionMatrix() const
 }
 
 // --------------------------------------------------------------------------------
-void Camera::computeFrustumPlaneCornersInWorldSpace(float planeDistance, glm::vec3 * planeCornersStart) const
+void Camera::computeFrustumPlaneCornersInWorldSpace(float planeDistance, glm::vec3 * worldPlaneFrustumCorners) const
 {
 	// Compute width and height of the plane in view space
 	float halfWidth = planeDistance * tanf(glm::radians(m_fov) / 2.0f);
@@ -62,10 +63,23 @@ void Camera::computeFrustumPlaneCornersInWorldSpace(float planeDistance, glm::ve
 
 	const glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), m_worldPosition);
 
-	planeCornersStart[0] = glm::vec3(translationMatrix * glm::vec4(m_worldOrientation * glm::vec3(-halfWidth, -halfHeight, -planeDistance), 1.0f));
-	planeCornersStart[1] = glm::vec3(translationMatrix * glm::vec4(m_worldOrientation * glm::vec3(halfWidth, -halfHeight, -planeDistance), 1.0f));
-	planeCornersStart[2] = glm::vec3(translationMatrix * glm::vec4(m_worldOrientation * glm::vec3(halfWidth, halfHeight, -planeDistance), 1.0f));
-	planeCornersStart[3] = glm::vec3(translationMatrix * glm::vec4(m_worldOrientation * glm::vec3(-halfWidth, halfHeight, -planeDistance), 1.0f));
+	worldPlaneFrustumCorners[0] = glm::vec3(translationMatrix * glm::vec4(m_worldOrientation * glm::vec3(-halfWidth, -halfHeight, -planeDistance), 1.0f));
+	worldPlaneFrustumCorners[1] = glm::vec3(translationMatrix * glm::vec4(m_worldOrientation * glm::vec3(halfWidth, -halfHeight, -planeDistance), 1.0f));
+	worldPlaneFrustumCorners[2] = glm::vec3(translationMatrix * glm::vec4(m_worldOrientation * glm::vec3(halfWidth, halfHeight, -planeDistance), 1.0f));
+	worldPlaneFrustumCorners[3] = glm::vec3(translationMatrix * glm::vec4(m_worldOrientation * glm::vec3(-halfWidth, halfHeight, -planeDistance), 1.0f));
+}
+
+// --------------------------------------------------------------------------------
+void Camera::computeFrutsumPlaneCornersInViewSpace(float planeDistance, glm::vec3 * viewSpaceFrustumCorners) const
+{
+	const float halfWidth = planeDistance * tanf(glm::radians(m_fov) / 2.0f);
+	const float halfHeight = halfWidth / (m_width / m_height);
+
+	viewSpaceFrustumCorners[0] = glm::vec3(-halfWidth, -halfHeight, -planeDistance);
+	viewSpaceFrustumCorners[1] = glm::vec3(halfWidth, -halfHeight, -planeDistance);
+	viewSpaceFrustumCorners[2] = glm::vec3(halfWidth, halfHeight, -planeDistance);
+	viewSpaceFrustumCorners[3] = glm::vec3(-halfWidth, halfHeight, -planeDistance);
+
 }
 
 // --------------------------------------------------------------------------------
