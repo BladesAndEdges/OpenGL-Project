@@ -1,6 +1,7 @@
 #include "Texture.h"
 #include <experimental/filesystem>
 #include <fstream>
+#include <iostream>
 
 #define TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
 
@@ -172,6 +173,12 @@ void Texture::loadTextureFromDisk(const char * sourceFile, GLint& o_numberOfChan
 	if (!o_vectorStorage.data())
 	{
 		GLubyte* data = stbi_load(sourceFile, &width, &height, &o_numberOfChannels, 0);
+
+		if (stbi_failure_reason())
+		{
+			const char* failureReason = stbi_failure_reason();
+			throw std::exception(failureReason);
+		}
 		
 		const uint32_t allocationInSizeInBytes = width * height * o_numberOfChannels;
 		o_vectorStorage.resize(allocationInSizeInBytes);
