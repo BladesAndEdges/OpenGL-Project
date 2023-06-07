@@ -228,7 +228,7 @@ void updateShadowView(const Camera& mainView, Camera& shadowView, float cascadeW
 
 	// Largest distance is two points along the diagonals
 	const glm::vec3 diagonalVector = lightSpaceFrustumCorners[6u] - lightSpaceFrustumCorners[0u];
-	const float boundingShereRadius = glm::length(diagonalVector) / 2.0f;
+	const float boundingShereDiamater = glm::length(diagonalVector);
 
 	// Get light space center
 	glm::vec3 lightSpaceFrustumCenter = glm::vec3(0.0f);
@@ -239,13 +239,13 @@ void updateShadowView(const Camera& mainView, Camera& shadowView, float cascadeW
 	lightSpaceFrustumCenter = lightSpaceFrustumCenter * (1.0f / 8.0f);
 
 	// Texel Snapping???
-	const float texelCoverageInWorlUnits = (float)cascadeWidth / (boundingShereRadius * 2.0f);
-	lightSpaceFrustumCenter = texelCoverageInWorlUnits * lightSpaceFrustumCenter;
+	const float texelsPerWorldUnit = (float)cascadeWidth / boundingShereDiamater;
+	lightSpaceFrustumCenter = texelsPerWorldUnit * lightSpaceFrustumCenter;
 	lightSpaceFrustumCenter = glm::floor(lightSpaceFrustumCenter);
-	lightSpaceFrustumCenter = lightSpaceFrustumCenter / texelCoverageInWorlUnits;
+	lightSpaceFrustumCenter = lightSpaceFrustumCenter / texelsPerWorldUnit;
 
-	shadowView.setCameraWidth(boundingShereRadius * 2.0f);
-	shadowView.setCameraHeight(boundingShereRadius * 2.0f);
+	shadowView.setCameraWidth(boundingShereDiamater);
+	shadowView.setCameraHeight(boundingShereDiamater);
 	shadowView.setCameraWorldPosition(lightSpaceToWorldSpaceQuaternion * lightSpaceFrustumCenter);
 	shadowView.setCameraWorldOrientation(glm::toMat4(lightSpaceToWorldSpaceQuaternion));
 }
