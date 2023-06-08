@@ -421,15 +421,26 @@ TextureFormat Texture::chooseTextureSizedFormat(int numberOfChannels) const
 // --------------------------------------------------------------------------------
 std::string getFilenameFromTextureSourceString(std::string sourceString)
 {
-	// THIS WILL BREAK FOR ANYTING WITH EXTENSION (with dot) LARGER THAN 4!!!!
-	// .png will work, .jpeg will not
-	const std::string path = "Meshes\\sponza\\textures\\";
-	const uint32_t substringStartPos = (uint32_t)(path.size());
-	sourceString.erase(0, substringStartPos);
+	// Cut directory path
+	for (uint32_t charPosition = (uint32_t)sourceString.size(); charPosition >= 0u; charPosition--)
+	{
+		if (sourceString[charPosition] == '\\')
+		{
+			sourceString.erase(0, charPosition + 1u);
+			break;
+		}
+	}
 
-	const uint32_t sourceStringSize = (uint32_t)sourceString.size();
-	const uint32_t substringEndPos = (uint32_t)(sourceStringSize - 3u);
-	sourceString.erase(substringEndPos - 1, 4);
+	// Cut the extension 
+	for (uint32_t charPosition = (uint32_t)sourceString.size(); charPosition >= 0u; charPosition--)
+	{
+		if (sourceString[charPosition] == '.')
+		{
+			const uint32_t countToDelete = (uint32_t)(sourceString.size() - charPosition);
+			sourceString.erase(charPosition, countToDelete);
+			break;
+		}
+	}
 
 	return sourceString;
 }
