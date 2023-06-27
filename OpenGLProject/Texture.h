@@ -8,15 +8,17 @@
 #include <assert.h>
 #include <vector>
 
+#include "FormatInfo.h" // Include here?
+
 // --------------------------------------------------------------------------------
-enum class TextureTarget
+enum class TextureTarget : uint32_t
 {
 	Texture2D, 
 	ArrayTexture2D
 };
 
 // --------------------------------------------------------------------------------
-enum class TextureWrapMode
+enum class TextureWrapMode : uint32_t
 {
 	Repeat, 
 	ClampEdge
@@ -24,7 +26,7 @@ enum class TextureWrapMode
 
 // --------------------------------------------------------------------------------
 // Inspired by Unity's version on doing this
-enum class TextureFilterMode
+enum class TextureFilterMode : uint32_t
 {
 	Point, 
 	Bilinear,
@@ -32,24 +34,7 @@ enum class TextureFilterMode
 };
 
 // --------------------------------------------------------------------------------
-enum class TextureFormat
-{	
-	// Unsigned 
-	R8,
-	RG8,
-	RGB8,
-	RGBA8,
-
-	// Floating point
-	R32F,
-	RGB32F,
-
-	// Depth
-	DEPTH32
-};
-
-// --------------------------------------------------------------------------------
-enum class TextureComparisonMode
+enum class TextureComparisonMode : uint32_t
 {
 	None, 
 	LessEqual,
@@ -108,10 +93,7 @@ private:
 	GLenum translateWrapModeToOpenGL(TextureWrapMode wrapMode) const;
 	GLenum translateFilterModeToOpenGLMinFilter(TextureFilterMode filterMode) const;
 	GLenum translateFilterModeToOpenGLMagFilter(TextureFilterMode filterMode) const;
-	GLenum translateFormatToOpenGLSizedFormat(TextureFormat format) const;
-	GLenum translateFormatToOpenGLInternalFormat(TextureFormat format) const;
 	GLenum translateComparisonModeToOpenGL(TextureComparisonMode comparionMode) const;
-
 	TextureFormat chooseTextureSizedFormat(int numberOfChannels) const;
 };
 

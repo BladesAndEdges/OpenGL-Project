@@ -22,22 +22,18 @@ Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMo
 	GLint numberOfChannels = -1;
 	std::vector<GLubyte> textureStorage;
 	loadTextureFromDisk(source.c_str(), /* out */ numberOfChannels, /* out */ textureStorage);
-
 	assert((m_width > 0u) && (m_height > 0u));
 
 	TextureFormat format = chooseTextureSizedFormat(numberOfChannels);
-
-	GLenum glSizedFormat = translateFormatToOpenGLSizedFormat(format);
-	GLenum glInternalFormat = translateFormatToOpenGLInternalFormat(format);
+	FormatInfo formatInfo = getFormatInfo(format);
 
 	if (!textureStorage.empty())
 	{
 		const uint32_t smallestSide = m_width > m_height ? m_height : m_width;
 
 		const uint32_t mipCount = (uint32_t)ceilf(log2f((float)smallestSide));
-
-		glTextureStorage2D(m_name, mipCount, glSizedFormat, m_width, m_height);
-		glTextureSubImage2D(m_name, 0, 0, 0, m_width, m_height, glInternalFormat, GL_UNSIGNED_BYTE, textureStorage.data()); 
+		glTextureStorage2D(m_name, mipCount, formatInfo.sizedFormat, m_width, m_height);
+		glTextureSubImage2D(m_name, 0, 0, 0, m_width, m_height, formatInfo.baseInternalFormat, GL_UNSIGNED_BYTE, textureStorage.data()); 
 	}
 	else
 	{
@@ -68,7 +64,7 @@ Texture::Texture(const std::string& label, uint32_t width, uint32_t height, uint
 	const GLenum glWrapMode = translateWrapModeToOpenGL(wrapMode);
 	const GLenum glMinFilterMode = translateFilterModeToOpenGLMinFilter(filterMode); // Min Filter may need to be GL_NEAREST FOR SOME CASES
 	const GLenum glMagFilterMode = translateFilterModeToOpenGLMagFilter(filterMode);
-	const GLenum glSizedFormat = translateFormatToOpenGLSizedFormat(format);
+	const FormatInfo formatInfo = getFormatInfo(format);
 
 	glCreateTextures(glTarget, 1, &m_name);
 	assert(m_name > 0);
@@ -81,12 +77,12 @@ Texture::Texture(const std::string& label, uint32_t width, uint32_t height, uint
 
 	if (glTarget == GL_TEXTURE_2D_ARRAY) 
 	{
-		glTextureStorage3D(m_name, 1, glSizedFormat, m_width, m_height, m_depth);
+		glTextureStorage3D(m_name, 1, formatInfo.sizedFormat, m_width, m_height, m_depth);
 	}
 	else
 	{
 		assert(glTarget == GL_TEXTURE_2D);
-		glTextureStorage2D(m_name, 1, glSizedFormat, m_width, m_height);
+		glTextureStorage2D(m_name, 1, formatInfo.sizedFormat, m_width, m_height);
 	}
 
 	glObjectLabel(GL_TEXTURE, m_name, -1, label.c_str());
@@ -316,66 +312,6 @@ GLenum Texture::translateFilterModeToOpenGLMagFilter(TextureFilterMode filterMod
 	case TextureFilterMode::Bilinear:
 	case TextureFilterMode::Trilinear:
 		return GL_LINEAR;
-
-	default:
-		assert(false);
-		return 0;
-	}
-}
-
-// --------------------------------------------------------------------------------
-GLenum Texture::translateFormatToOpenGLSizedFormat(TextureFormat format) const
-{
-	switch (format)
-	{
-	case TextureFormat::R8:
-		return GL_R8;
-
-	case TextureFormat::RG8:
-		return GL_RG8;
-
-	case TextureFormat::RGB8:
-		return GL_RGB8;
-
-	case TextureFormat::RGBA8:
-		return GL_RGBA8;
-
-	case TextureFormat::R32F:
-		return GL_R32F;
-
-	case TextureFormat::RGB32F:
-		return GL_RGB32F;
-
-	case TextureFormat::DEPTH32:
-		return GL_DEPTH_COMPONENT32;
-
-	default:
-		assert(false);
-		return 0;
-	}
-}
-
-// --------------------------------------------------------------------------------
-GLenum Texture::translateFormatToOpenGLInternalFormat(TextureFormat format) const
-{
-	switch (format)
-	{
-	case TextureFormat::R8:
-	case TextureFormat::R32F:
-		return GL_RED;
-
-	case TextureFormat::RG8:
-		return GL_RG;
-
-	case TextureFormat::RGB8:
-	case TextureFormat::RGB32F:
-		return GL_RGB;
-
-	case TextureFormat::RGBA8:
-		return GL_RGBA;
-
-	case TextureFormat::DEPTH32:
-		return GL_DEPTH_COMPONENT;
 
 	default:
 		assert(false);
