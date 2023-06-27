@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-#define TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
+#define GL_TEXTURE_MAX_ANISOTROPY_EXT	0x84FE
 
 // --------------------------------------------------------------------------------
 Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMode wrapMode,
@@ -48,7 +48,7 @@ Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMo
 	glTextureParameteri(m_name, GL_TEXTURE_WRAP_T, glWrapMode);
 	glTextureParameteri(m_name, GL_TEXTURE_MIN_FILTER, glMinFilterMode);
 	glTextureParameteri(m_name, GL_TEXTURE_MAG_FILTER, glMagFilterMode);
-	glTextureParameterf(m_name, TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
+	glTextureParameterf(m_name, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
 }
 
 // --------------------------------------------------------------------------------
