@@ -15,7 +15,7 @@ class MaterialReader
 
 public:
 
-	MaterialReader();
+	MaterialReader(const std::string& rootMeshDirectory);
 	~MaterialReader();
 					
 	MaterialReader(const MaterialReader&) = delete;
@@ -26,6 +26,8 @@ public:
 	const Material* getMaterial(const std::string& materialName) const;
 
 private:
+
+	std::string m_rootMeshDirectory;
 
 	std::unordered_map<std::string, Material> m_Materials;
 	std::unordered_map<std::string, Texture> m_textures;
@@ -41,4 +43,7 @@ private:
 
 	void completeMaterial(Material& material);
 };
+
+std::string processTexturePath(std::ifstream& ifs);
+void handleEscapeSequence(std::ifstream& ifs, const char secondCharInEscapeSequence);
 

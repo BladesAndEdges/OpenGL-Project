@@ -450,7 +450,11 @@ int main()
 	PerViewUniformData perViewUniforms;
 	UniformBuffer perViewUniformBuffer(6u, sizeof(PerViewUniformData), nullptr, "PerViewUniformBuffer");
 
-	MaterialReader materialReader;
+	//MaterialReader emeraldSquareMaterialReader(R"(Meshes\emerald\)");
+	//emeraldSquareMaterialReader.parseMaterialFile(R"(Meshes\emerald\emeraldSquare.mtl)");
+	//Model sponzaModel(R"(EmeraldSquare.compiled)", R"(Meshes\emerald\emeraldSquare.obj)", emeraldSquareMaterialReader);
+
+	MaterialReader materialReader(R"(Meshes\sponza\)");
 	materialReader.parseMaterialFile(R"(Meshes\sponza\sponza.mtl)");
 	Model sponzaModel(R"(SponzaModel.compiled)", R"(Meshes\sponza\sponza.obj)", materialReader);
 
