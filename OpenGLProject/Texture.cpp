@@ -2,10 +2,11 @@
 #include <experimental/filesystem>
 #include <fstream>
 #include <iostream>
+#include "DDSFileLoader.h"
 
 #define GL_TEXTURE_MAX_ANISOTROPY_EXT	0x84FE
 
-// --------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------- // Possibly assumes colour texture
 Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMode wrapMode,
 	TextureFilterMode filterMode)
 {
@@ -13,7 +14,7 @@ Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMo
 	const GLenum glWrapMode = translateWrapModeToOpenGL(wrapMode);
 	const GLenum glMinFilterMode = translateFilterModeToOpenGLMinFilter(filterMode);
 	const GLenum glMagFilterMode = translateFilterModeToOpenGLMagFilter(filterMode);
-
+	
 	glCreateTextures(glTarget, 1, &m_name);
 	assert(m_name > 0);
 
@@ -157,8 +158,9 @@ void Texture::loadTextureFromDisk(const char * sourceFile, GLint& o_numberOfChan
 
 	GLint width = -1; 
 	GLint height = -1;
+	uint32_t allocationSizeInBytes = 0u;
 
-	tryReadFromCache(compiledFileName.c_str(), width, height, o_numberOfChannels, o_vectorStorage);
+	tryReadFromCache(compiledFileName.c_str(), width, height, o_numberOfChannels, allocationSizeInBytes, o_vectorStorage);
 
 	if ((width > 0) && (height > 0))
 	{
@@ -168,17 +170,29 @@ void Texture::loadTextureFromDisk(const char * sourceFile, GLint& o_numberOfChan
 
 	if (!o_vectorStorage.data())
 	{
-		GLubyte* data = stbi_load(sourceFile, &width, &height, &o_numberOfChannels, 0);
+		DDSFileLoader ddsFileLoader;
+		GLubyte* data = nullptr;
 
-		if (stbi_failure_reason())
+		data = stbi_load(sourceFile, &width, &height, &o_numberOfChannels, 0);
+
+		if (stbi_failure_reason()) // && something-to-check-it's dds,, otherwise send exception
 		{
-			const char* failureReason = stbi_failure_reason();
-			throw std::exception(failureReason);
+			ddsFileLoader.parse(sourceFile, width, height); // number of channels excluded for now, not sure of bit depths
+			
+			data = ddsFileLoader.getTextureData();
+			allocationSizeInBytes = ddsFileLoader.getAllocationSizeInBytes();
+			o_vectorStorage.resize(ddsFileLoader.getAllocationSizeInBytes());
+			memcpy(o_vectorStorage.data(), data, ddsFileLoader.getAllocationSizeInBytes());
+
+			o_numberOfChannels = INT_MAX;
 		}
-		
-		const uint32_t allocationInSizeInBytes = width * height * o_numberOfChannels;
-		o_vectorStorage.resize(allocationInSizeInBytes);
-		memcpy(o_vectorStorage.data(), data, allocationInSizeInBytes);
+		else // stbi
+		{
+			allocationSizeInBytes = width * height * o_numberOfChannels;
+			o_vectorStorage.resize(allocationSizeInBytes);
+			memcpy(o_vectorStorage.data(), data, allocationSizeInBytes);
+		}
+
 
 		if ((width > 0) && (height > 0))
 		{
@@ -188,7 +202,7 @@ void Texture::loadTextureFromDisk(const char * sourceFile, GLint& o_numberOfChan
 
 		if (data)
 		{
-			writeToCache(compiledFileName.c_str(), width, height, (uint32_t)o_numberOfChannels, data); // Since it would be empty for the write
+			writeToCache(compiledFileName.c_str(), width, height, (uint32_t)o_numberOfChannels, allocationSizeInBytes, data); // Since it would be empty for the write
 		}
 
 		stbi_image_free(data); // Correct
@@ -196,7 +210,7 @@ void Texture::loadTextureFromDisk(const char * sourceFile, GLint& o_numberOfChan
 }
 
 // --------------------------------------------------------------------------------
-void Texture::tryReadFromCache(const char* fileName, GLint& width, GLint& height, GLint& numberOfChannels, std::vector<GLubyte>& textureData)
+void Texture::tryReadFromCache(const char* fileName, GLint& width, GLint& height, GLint& numberOfChannels, uint32_t& allocationSizeInBytes, std::vector<GLubyte>& textureData)
 {
 	assert(fileName != nullptr);
 	assert(textureData.size() == 0);
@@ -212,21 +226,23 @@ void Texture::tryReadFromCache(const char* fileName, GLint& width, GLint& height
 		inputStream.read((char*)&(width), sizeof(uint32_t));
 		inputStream.read((char*)&(height), sizeof(uint32_t));
 		inputStream.read((char*)&(numberOfChannels), sizeof(uint32_t));
+		inputStream.read((char*)&(allocationSizeInBytes), sizeof(uint32_t));
 
-		textureData.resize(width * height * numberOfChannels);
-		inputStream.read((char*)(textureData.data()), width * height * numberOfChannels);
+		textureData.resize(allocationSizeInBytes);
+		inputStream.read((char*)(textureData.data()), allocationSizeInBytes);
 	}
 
 	// Doesn't fail, it should
 }
 
 // --------------------------------------------------------------------------------
-void Texture::writeToCache(const char* fileName, uint32_t width, uint32_t height, uint32_t numberOfChannels, GLubyte* data)
+void Texture::writeToCache(const char* fileName, uint32_t width, uint32_t height, uint32_t numberOfChannels, uint32_t allocationSizeInBytes, GLubyte* data)
 {
 	assert(fileName != nullptr);
 	assert(width > 0u);
 	assert(height > 0u);
 	assert(numberOfChannels > 0u);
+	assert(allocationSizeInBytes > 0u);
 
 	const std::string directoryName = "Cache";
 	const bool directoryCreationSuccess = std::experimental::filesystem::create_directory(directoryName);
@@ -244,7 +260,8 @@ void Texture::writeToCache(const char* fileName, uint32_t width, uint32_t height
 	fw.write((const char*)&(width), sizeof(uint32_t));
 	fw.write((const char*)&(height), sizeof(uint32_t));
 	fw.write((const char*)&(numberOfChannels), sizeof(uint32_t));
-	fw.write((const char*)data, width * height * numberOfChannels); // Magic number for the interal data requirements (GL_RGBA)
+	fw.write((const char*)&(allocationSizeInBytes), sizeof(uint32_t));
+	fw.write((const char*)data, allocationSizeInBytes); // Magic number for the interal data requirements (GL_RGBA)
 
 	fw.close();
 }
@@ -354,29 +371,34 @@ TextureFormat Texture::chooseTextureSizedFormat(int numberOfChannels) const
 	return colourFormats[index];
 }
 
+// Currently a 1-to-1 copy of another function located in ResourceCompiler.cpp
+// This function here will be removed as soon as I get a better understanding of how
+// I can pair up all the classes into different classes that will interact together.
 // --------------------------------------------------------------------------------
-std::string getFilenameFromTextureSourceString(std::string sourceString)
+std::string getFilenameFromTextureSourceString(const char * sourceString)
 {
+	std::string fileName(sourceString);
+
 	// Cut directory path
-	for (uint32_t charPosition = (uint32_t)sourceString.size(); charPosition >= 0u; charPosition--)
+	for (uint32_t charPosition = (uint32_t)fileName.size(); charPosition >= 0u; charPosition--)
 	{
-		if (sourceString[charPosition] == '\\')
+		if (fileName[charPosition] == '\\')
 		{
-			sourceString.erase(0, charPosition + 1u);
+			fileName.erase(0, charPosition + 1u);
 			break;
 		}
 	}
 
 	// Cut the extension 
-	for (uint32_t charPosition = (uint32_t)sourceString.size(); charPosition >= 0u; charPosition--)
+	for (uint32_t charPosition = (uint32_t)fileName.size(); charPosition >= 0u; charPosition--)
 	{
-		if (sourceString[charPosition] == '.')
+		if (fileName[charPosition] == '.')
 		{
-			const uint32_t countToDelete = (uint32_t)(sourceString.size() - charPosition);
-			sourceString.erase(charPosition, countToDelete);
+			const uint32_t countToDelete = (uint32_t)(fileName.size() - charPosition);
+			fileName.erase(charPosition, countToDelete);
 			break;
 		}
 	}
 
-	return sourceString;
+	return fileName;
 }

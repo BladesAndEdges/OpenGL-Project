@@ -136,6 +136,7 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cascade.cpp" />
+    <ClCompile Include="DDSFileLoader.cpp" />
     <ClCompile Include="Dependencies\glad\src\glad.c" />
     <ClCompile Include="Face.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
@@ -160,6 +161,7 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cascade.h" />
+    <ClInclude Include="DDSFileLoader.h" />
     <ClInclude Include="Face.h" />
     <ClInclude Include="Framebuffer.h" />
     <ClInclude Include="GBuffer.h" />
