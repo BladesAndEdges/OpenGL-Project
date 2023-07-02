@@ -3,27 +3,43 @@
 #include "ProfileMarker.h"
 #include<iostream>
 
-ProfileMarker::ProfileMarker(const std::string& markerName) : name(markerName)
+// --------------------------------------------------------------------------------
+ProfileMarker::ProfileMarker()
 {
-	if (!QueryPerformanceFrequency(&frequency))
-	{
-		std::cout << "Could not query the frequency for Performance Counter " << name << std::endl;
-	}
-
-	QueryPerformanceCounter(&countsAtStart);
+	QueryPerformanceCounter(&m_countsAtStart);
 }
 
+// --------------------------------------------------------------------------------
 void ProfileMarker::endTiming()
 {
-	QueryPerformanceCounter(&countsAtEnd);
-	std::cout << "PERFORMANCE COUNTER << " << name << " >> : | " << 1000 * (countsAtEnd.QuadPart - countsAtStart.QuadPart) / frequency.QuadPart << " miliseconds |" << std::endl;
-	countsAtEnd.QuadPart = -1;
+	QueryPerformanceCounter(&m_countsAtEnd);
+	m_clockCycles.QuadPart = m_countsAtEnd.QuadPart - m_countsAtStart.QuadPart;
+	m_countsAtEnd.QuadPart = -1;
 }
 
+// --------------------------------------------------------------------------------
+void ProfileMarker::accumulate(LONGLONG & result)
+{
+	result += m_clockCycles.QuadPart;
+}
+
+// --------------------------------------------------------------------------------
 ProfileMarker::~ProfileMarker()
 {
-	if (countsAtEnd.QuadPart >= 0)
+	if (m_countsAtEnd.QuadPart >= 0)
 	{
-		std::cout << "PERFORMANCE COUNTER " << name << "MISSING CORRESPONDING endTiming()!" << std::endl;
+//		std::cout << "PERFORMANCE COUNTER " << m_name << "MISSING CORRESPONDING endTiming()!" << std::endl;
 	}
+}
+
+// --------------------------------------------------------------------------------
+LONGLONG clockCyclesToMiliseconds(LONGLONG clockCycles)
+{
+	LARGE_INTEGER frequency;
+	if (!QueryPerformanceFrequency(&frequency))
+	{
+		std::cout << "Could not query the frequency!" << std::endl;
+	}
+
+	return (1000 * clockCycles) / frequency.QuadPart;
 }
