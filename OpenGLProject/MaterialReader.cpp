@@ -22,8 +22,6 @@ MaterialReader::~MaterialReader()
 // --------------------------------------------------------------------------------
 void MaterialReader::parseMaterialFile(const std::string & fileName)
 {
-	ProfileMarker parseMaterialFileMarker("Parse Material File Marker");
-
 	std::ifstream ifs(fileName);
 
 	if (!ifs.is_open())
@@ -191,8 +189,6 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 	const std::string uniformBufferName = materialName + std::string(" UniformBuffer");
 	currentMaterial.m_uniformBuffer = new UniformBuffer(7u, sizeof(PerMaterialUniformData), &perMaterialUniforms, uniformBufferName.c_str());
 	m_Materials.insert({ materialName, currentMaterial });
-
-	parseMaterialFileMarker.endTiming();
 }
 
 // --------------------------------------------------------------------------------

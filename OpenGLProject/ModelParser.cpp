@@ -14,8 +14,6 @@ ModelParser::ModelParser()
 bool ModelParser::parseModelData(const char * objSourceFile, const MaterialReader& materialReader, 
 	std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter)
 {
-	ProfileMarker modelDataParser("Parse Model Data");
-
 	assert(objSourceFile != nullptr);
 	assert((meshes.size() == 0) && (indexedVertexBuffer.size() == 0) && (indexBuffer.size() == 0));
 
@@ -28,8 +26,6 @@ bool ModelParser::parseModelData(const char * objSourceFile, const MaterialReade
 	assert((m_faces.size() * 3) == indexBuffer.size());
 
 	sceneCenter = computeSceneCenter(indexedVertexBuffer);
-
-	modelDataParser.endTiming();
 
 	return (meshes.size() > 0) && (indexedVertexBuffer.size() > 0) && (indexBuffer.size() > 0);
 }
@@ -298,8 +294,6 @@ std::vector<Face> ModelParser::triangulateFaceVertices(const std::vector<Vertex>
 // --------------------------------------------------------------------------------
 void ModelParser::createIndexBufferAndIndexedVertexBuffer(std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer)
 {
-	ProfileMarker createIndexbufferMarker("Create Index Buffer Marker");
-
 	std::unordered_map<Vertex, unsigned int, KeyHasher> indices;
 	unsigned int index = 0;
 
@@ -323,15 +317,11 @@ void ModelParser::createIndexBufferAndIndexedVertexBuffer(std::vector<Vertex>& i
 			}
 		}
 	}
-
-	createIndexbufferMarker.endTiming();
 }
 
 // --------------------------------------------------------------------------------
 glm::vec3 ModelParser::computeSceneCenter(std::vector<Vertex>& indexedVertexBuffer)
 {
-	ProfileMarker computeSceneCenterMarker("Compute Scene Center Marker");
-
 	float minX = indexedVertexBuffer[0].m_position[0];
 	float maxX = minX;
 
@@ -382,8 +372,6 @@ glm::vec3 ModelParser::computeSceneCenter(std::vector<Vertex>& indexedVertexBuff
 	const float halfwayX = (minX + maxX) / 2.0f;
 	const float halfwayY = (minY + maxY) / 2.0f;
 	const float halfWayZ = (minZ + maxZ) / 2.0f;
-
-	computeSceneCenterMarker.endTiming();
 
 	return glm::vec3(halfwayX, halfwayY, halfWayZ);
 }

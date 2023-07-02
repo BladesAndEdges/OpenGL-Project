@@ -14,8 +14,6 @@
 bool ModelCacher::tryReadFromCache(const char* fileName, const MaterialReader& materialReader, std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer,
 	std::vector<unsigned int>& indexBuffer)
 {
-	ProfileMarker cacheReaderFunctionTimer("TryReadFromCache");
-
 	assert(fileName != nullptr);
 	assert((meshes.size() == 0) && (indexedVertexBuffer.size() == 0) && (indexBuffer.size() == 0));
 
@@ -60,8 +58,6 @@ bool ModelCacher::tryReadFromCache(const char* fileName, const MaterialReader& m
 		indexBuffer.resize(originalIndexBufferSize);
 		inputStream.read((char*)(indexBuffer.data()), originalIndexBufferSize * sizeof(unsigned int));
 
-		cacheReaderFunctionTimer.endTiming();
-
 		return true;
 	}
 
@@ -72,8 +68,6 @@ bool ModelCacher::tryReadFromCache(const char* fileName, const MaterialReader& m
 void ModelCacher::writeToCache(const char * fileName, std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, 
 	std::vector<unsigned int>& indexBuffer)
 {
-	ProfileMarker writeToCacheTimer("WriteToCacheTimer");
-
 	assert(fileName != nullptr);
 	assert((meshes.size() != 0) && (indexedVertexBuffer.size() != 0) && (indexBuffer.size() != 0));
 
@@ -115,6 +109,4 @@ void ModelCacher::writeToCache(const char * fileName, std::vector<Mesh>& meshes,
 	fw.write((const char*)(indexBuffer.data()), indexBufferSize * sizeof(unsigned int)); // Change index bufferto use uint32_t
 
 	fw.close();
-
-	writeToCacheTimer.endTiming();
 }
