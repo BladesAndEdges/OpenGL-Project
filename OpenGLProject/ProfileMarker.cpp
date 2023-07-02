@@ -28,7 +28,7 @@ ProfileMarker::~ProfileMarker()
 {
 	if (m_countsAtEnd.QuadPart >= 0)
 	{
-//		std::cout << "PERFORMANCE COUNTER " << m_name << "MISSING CORRESPONDING endTiming()!" << std::endl;
+		throw std::exception("Missing call to endTiming()!");
 	}
 }
 
