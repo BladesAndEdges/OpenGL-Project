@@ -450,10 +450,6 @@ int main()
 	PerViewUniformData perViewUniforms;
 	UniformBuffer perViewUniformBuffer(6u, sizeof(PerViewUniformData), nullptr, "PerViewUniformBuffer");
 
-	//MaterialReader emeraldSquareMaterialReader(R"(Meshes\emerald\)");
-	//emeraldSquareMaterialReader.parseMaterialFile(R"(Meshes\emerald\emeraldSquare.mtl)");
-	//Model sponzaModel(R"(EmeraldSquare.compiled)", R"(Meshes\emerald\emeraldSquare.obj)", emeraldSquareMaterialReader);
-
 	MaterialReader materialReader(R"(Meshes\sponza\)");
 	materialReader.parseMaterialFile(R"(Meshes\sponza\sponza.mtl)");
 	Model sponzaModel(R"(SponzaModel.compiled)", R"(Meshes\sponza\sponza.obj)", materialReader);
@@ -573,9 +569,9 @@ int main()
 
 		// Depth Pass(es);
 		glBindVertexArray(sponzaModel.getVAO());
+
 		for (Cascade& cascade : cascades)
 		{
-
 			const std::string debugMarkerName = "Cascade " + std::to_string(cascadeIndex);
 
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, debugMarkerName.c_str());
