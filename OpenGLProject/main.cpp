@@ -320,6 +320,7 @@ void renderSceneFromView(const Camera&,  const PerViewUniformData&, const Model&
 		mesh.material->m_specularTexture->useTexture(2, TextureComparisonMode::None);
 		mesh.material->m_normalMapTexture->useTexture(3, TextureComparisonMode::None);
 		mesh.material->m_maskTexture->useTexture(4, TextureComparisonMode::None);
+
 		mesh.material->m_uniformBuffer->useBuffer();
 		glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
 	}
@@ -630,15 +631,6 @@ int main()
 			glPopDebugGroup();
 		}
 
-		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Shadow Map Debug Quad");
-		shadowMapDebugShader.useProgram();
-
-		glViewport(0, 0, (GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
-		shadowMap->useTexture(0, TextureComparisonMode::None);
-		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, graphicsConfigurations.getNumberOfActiveCascades());
-
-		glPopDebugGroup();
-
 		if (graphicsConfigurations.getRendererType() == RendererType::Deferred)
 		{
 			// GBuffer test rendering
@@ -663,6 +655,16 @@ int main()
 
 			glPopDebugGroup();
 		}
+
+		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Shadow Map Debug Quad");
+		shadowMapDebugShader.useProgram();
+
+		glViewport(0, 0, (GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
+
+		shadowMap->useTexture(0, TextureComparisonMode::None);
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, graphicsConfigurations.getNumberOfActiveCascades());
+
+		glPopDebugGroup();
 
 		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ImGui Debug Window Rendering");
 		ImGui::Render();
