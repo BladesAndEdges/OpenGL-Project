@@ -151,6 +151,7 @@
     <ClCompile Include="ModelParser.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ProfileMarker.cpp" />
+    <ClCompile Include="ResourceCompiler.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureHashMaps.cpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="ModelParser.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ProfileMarker.h" />
+    <ClInclude Include="ResourceCompiler.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureHashMaps.h" />
