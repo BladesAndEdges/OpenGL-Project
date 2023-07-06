@@ -154,6 +154,7 @@
     <ClCompile Include="ResourceCompiler.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TextureCompiler.cpp" />
     <ClCompile Include="TextureHashMaps.cpp" />
     <ClCompile Include="PerViewUniformData.cpp" />
     <ClCompile Include="UniformBuffer.cpp" />
@@ -179,6 +180,7 @@
     <ClInclude Include="ResourceCompiler.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TextureCompiler.h" />
     <ClInclude Include="TextureHashMaps.h" />
     <ClInclude Include="PerViewUniformData.h" />
     <ClInclude Include="UniformBuffer.h" />
