@@ -9,25 +9,27 @@ class ResourceCompilationContext
 {
 public:
 
-	ResourceCompilationContext(const std::string& filePath);
+	ResourceCompilationContext(const std::string& path);
 
-	const std::string& getFilePath() const;
+	const std::string& getPath() const;
 	const std::string& getExtension() const;
-	const std::string& getFileNameSubstring() const;
+	const std::string& getFileName() const;
+	const std::vector<uint8_t>& getContents() const; // return const ref vs non-const ref
+	bool isEmpty() const;
 
 	void writeUint32(uint32_t value);
 	void writeByteArray(const uint8_t* bytes, uint32_t count);
 
 private:
 
-	std::string parseFileNameSubstring(const std::string& filePath);
-	std::string parseExtension(const std::string& filePath);
+	std::string parseFileName(const std::string& path);
+	std::string parseExtension(const std::string& path);
 
-	std::vector<uint8_t> m_resourceData;
+	std::vector<uint8_t> m_contents;
 
-	std::string m_filePath;
-	std::string m_fileExtension;
-	std::string m_fileNameSubstring;
+	std::string m_path;
+	std::string m_extension;
+	std::string m_fileName;
 };
 
 // --------------------------------------------------------------------------------
@@ -36,9 +38,5 @@ class ResourceCompiler
 public:
 	
 	virtual uint32_t getVersionNumber() const = 0;
-	virtual void compile(ResourceCompilationContext& resourceInfo) const = 0;
-
-private:
-
-	virtual void setUpCompiledData() const = 0;
+	virtual void compile(ResourceCompilationContext& context) const = 0;
 };

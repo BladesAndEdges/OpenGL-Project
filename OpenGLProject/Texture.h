@@ -84,11 +84,10 @@ private:
 	uint32_t m_height;
 	uint32_t m_depth;
 
-	void loadTextureFromDisk(const char* sourceFile, GLint& o_numberOfChannels, std::vector<GLubyte>& o_vectorStorage);
-	void tryReadFromCache(const char* fileName, GLint& width, GLint& height, GLint& numberOfChannels, uint32_t& allocationSizeInBytes, 
-		std::vector<GLubyte>& vectorStorage);
-	void writeToCache(const char* fileName, uint32_t width, uint32_t height, uint32_t numberOfChannels, uint32_t allocationSizeInBytes, 
-					GLubyte* data);
+	void loadTextureFromDisk(const std::string& sourceFile, TextureFormat& format, std::vector<GLubyte>& o_vectorStorage);
+	void tryReadFromCache(const std::string& path, uint32_t& compilerVersion, GLint& width, GLint& height, TextureFormat& format, uint32_t& allocationSizeInBytes, 
+		std::vector<GLubyte>& data);
+	void writeToCache(const std::string& fileName, const std::vector<uint8_t>& contents);
 
 	// --------------------------------------------------------------------------------
 	GLenum translateTargetToOpenGL(TextureTarget target) const;

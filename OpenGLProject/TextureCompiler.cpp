@@ -1,7 +1,6 @@
 #include "TextureCompiler.h"
 
 #include <assert.h>
-#include "DDSFileLoader.h"
 #include "stb_image.h"
 
 #include "FormatInfo.h"
@@ -23,28 +22,33 @@ void TextureCompiler::compile(ResourceCompilationContext & ioContext) const
 	const std::string fileExtension = ioContext.getExtension();
 	assert(fileExtension.size() > 0u);
 
-	int width, height, numberOfChannels;
+	int width = -1;
+	int height = 1;
+	int numberOfChannels = -1;
+	uint32_t dataSizeInBytes = 0u;
 	uint8_t* bytes = nullptr;
 
-	if (fileExtension == "dds")
-	{
-		//DDSFileLoader ddsFileLoader;
-		//bytes = nullptr;
-	}
-	else
-	{
-		bytes = stbi_load(ioContext.getFilePath().c_str(), &width, &height, &numberOfChannels, 0u);
+	bytes = stbi_load(ioContext.getPath().c_str(), &width, &height, &numberOfChannels, 0u);
+	assert(width > 0u);
+	assert(height > 0u);
+	assert(numberOfChannels > 0u);
+	assert(bytes != nullptr);
 
-		const TextureFormat formats[] = { TextureFormat::R8, TextureFormat::RG8, TextureFormat::RGB8, TextureFormat::RGBA8 };
-		const uint32_t format = (uint32_t)(formats[numberOfChannels]);
+	dataSizeInBytes = uint32_t(width) * uint32_t(height) * uint32_t(numberOfChannels);
+	assert(dataSizeInBytes > 0u);
+	
+	// Handle with stbi_failure_reason() ?
 
-		ioContext.writeUint32(0u);
-		ioContext.writeUint32(width);
-		ioContext.writeUint32(height);
-		ioContext.writeUint32(format);
-		ioContext.writeByteArray(bytes, width *  height * numberOfChannels);
+	const TextureFormat formats[] = { TextureFormat::R8, TextureFormat::RG8, TextureFormat::RGB8, TextureFormat::RGBA8 };
+	const uint32_t format = (uint32_t)(formats[numberOfChannels - 1u]);
 
-		stbi_image_free(bytes);
-	}
+	ioContext.writeUint32(getVersionNumber());
+	ioContext.writeUint32((uint32_t)width);
+	ioContext.writeUint32((uint32_t)height);
+	ioContext.writeUint32(format);
+	ioContext.writeUint32(dataSizeInBytes);
+	ioContext.writeByteArray(bytes, dataSizeInBytes);
+
+	stbi_image_free(bytes);
 }
 

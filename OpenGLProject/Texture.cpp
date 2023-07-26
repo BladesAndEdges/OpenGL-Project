@@ -2,9 +2,12 @@
 #include <experimental/filesystem>
 #include <fstream>
 #include <iostream>
-#include "DDSFileLoader.h"
+#include "ResourceCompiler.h"
+#include "TextureCompiler.h"
 
 #define GL_TEXTURE_MAX_ANISOTROPY_EXT	0x84FE
+
+
 
 // -------------------------------------------------------------------------------- // Possibly assumes colour texture
 Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMode wrapMode,
@@ -20,12 +23,11 @@ Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMo
 
 	stbi_set_flip_vertically_on_load(true);
 
-	GLint numberOfChannels = -1;
+	TextureFormat format;
 	std::vector<GLubyte> textureStorage;
-	loadTextureFromDisk(source.c_str(), /* out */ numberOfChannels, /* out */ textureStorage);
+	loadTextureFromDisk(source, /* out */ format, /* out */ textureStorage);
 	assert((m_width > 0u) && (m_height > 0u));
 
-	TextureFormat format = chooseTextureSizedFormat(numberOfChannels);
 	FormatInfo formatInfo = getFormatInfo(format);
 
 	if (!textureStorage.empty())
@@ -150,102 +152,85 @@ uint32_t Texture::getHeight() const
 }
 
 // --------------------------------------------------------------------------------
-void Texture::loadTextureFromDisk(const char * sourceFile, GLint& o_numberOfChannels, std::vector<GLubyte>& o_vectorStorage)
-{
-	const std::string compiledExtension = ".compiled";
-	const std::string textureFileName = getFilenameFromTextureSourceString(sourceFile);
-	const std::string compiledFileName = textureFileName + compiledExtension;
+void Texture::loadTextureFromDisk(const std::string& sourceFile, TextureFormat& format, std::vector<GLubyte>& o_vectorStorage)
+{	
+	const std::string cacheString = "Cache\\";
+	const std::string compiledFileName = getFilenameFromTextureSourceString(sourceFile.c_str()) + std::string(".compiled");
+	const std::string compiledFilePath = cacheString + compiledFileName;
 
-	GLint width = -1; 
-	GLint height = -1;
-	uint32_t allocationSizeInBytes = 0u;
+	TextureCompiler compiler;
+	//TextureLoader loader;
 
-	tryReadFromCache(compiledFileName.c_str(), width, height, o_numberOfChannels, allocationSizeInBytes, o_vectorStorage);
-
-	if ((width > 0) && (height > 0))
+	// Check if the file is available to be read, if not compile the file
+	const bool isAvailable = std::experimental::filesystem::exists(compiledFilePath);
+	if (!isAvailable)
 	{
-		m_width = (uint32_t)width;
-		m_height = (uint32_t)height;
+		ResourceCompilationContext compilationContext(sourceFile);
+		compiler.compile(compilationContext);
+		writeToCache(compiledFileName, compilationContext.getContents());
 	}
 
-	if (!o_vectorStorage.data())
+	// Attempt loading the file
+	int width, height;
+	uint32_t compilerVersion, allocationSizeInBytes;
+	tryReadFromCache(compiledFilePath.c_str(), compilerVersion, width, height, format, allocationSizeInBytes, o_vectorStorage);
+
+	if (compiler.getVersionNumber() != compilerVersion /*loader.getCompilationVersion()*/)
 	{
-		DDSFileLoader ddsFileLoader;
-		GLubyte* data = nullptr;
+		/*std::experimental::filesystem::remove(compiledFilePath);*/
 
-		data = stbi_load(sourceFile, &width, &height, &o_numberOfChannels, 0);
+		ResourceCompilationContext compilationContext(sourceFile);
+		compiler.compile(compilationContext);
+		writeToCache(compiledFilePath.c_str(), compilationContext.getContents());
 
-		if (stbi_failure_reason()) // && something-to-check-it's dds,, otherwise send exception
-		{
-			ddsFileLoader.parse(sourceFile, width, height); // number of channels excluded for now, not sure of bit depths
-			
-			data = ddsFileLoader.getTextureData();
-			allocationSizeInBytes = ddsFileLoader.getAllocationSizeInBytes();
-			o_vectorStorage.resize(ddsFileLoader.getAllocationSizeInBytes());
-			memcpy(o_vectorStorage.data(), data, ddsFileLoader.getAllocationSizeInBytes());
+		// Clear previously loaded data
+		width = 0u;
+		height = 0u;
+		allocationSizeInBytes = 0u;
+		o_vectorStorage.clear();
 
-			o_numberOfChannels = INT_MAX;
-		}
-		else // stbi
-		{
-			allocationSizeInBytes = width * height * o_numberOfChannels;
-			o_vectorStorage.resize(allocationSizeInBytes);
-			memcpy(o_vectorStorage.data(), data, allocationSizeInBytes);
-		}
-
-
-		if ((width > 0) && (height > 0))
-		{
-			m_width = (uint32_t)width;
-			m_height = (uint32_t)height;
-		}
-
-		if (data)
-		{
-			writeToCache(compiledFileName.c_str(), width, height, (uint32_t)o_numberOfChannels, allocationSizeInBytes, data); // Since it would be empty for the write
-		}
-
-		stbi_image_free(data); // Correct
+		tryReadFromCache(sourceFile.c_str(), compilerVersion, width, height, format, allocationSizeInBytes, o_vectorStorage);
 	}
+
+	// Assign width and height
+	m_width = (uint32_t)width;
+	m_height = (uint32_t)height;
 }
 
 // --------------------------------------------------------------------------------
-void Texture::tryReadFromCache(const char* fileName, GLint& width, GLint& height, GLint& numberOfChannels, uint32_t& allocationSizeInBytes, std::vector<GLubyte>& textureData)
+void Texture::tryReadFromCache(const std::string& path, uint32_t& compilerVersion, GLint& width, GLint& height, TextureFormat& format, uint32_t& allocationSizeInBytes, std::vector<GLubyte>& data)
 {
-	assert(fileName != nullptr);
-	assert(textureData.size() == 0);
-
-	const std::string cacheString = "Cache\\";
-	const std::string finalPath = cacheString + std::string(fileName);
-	assert(finalPath.size() != 0);
+	assert(path.size() != 0);
+	assert(data.size() == 0);
 
 	std::ifstream inputStream;
-	inputStream.open(finalPath, std::ios::binary);
+	inputStream.open(path, std::ios::binary);
 	if (inputStream.is_open())
 	{
+		inputStream.read((char*)&(compilerVersion), sizeof(uint32_t));
 		inputStream.read((char*)&(width), sizeof(uint32_t));
 		inputStream.read((char*)&(height), sizeof(uint32_t));
-		inputStream.read((char*)&(numberOfChannels), sizeof(uint32_t));
+		inputStream.read((char*)&(format), sizeof(uint32_t));
 		inputStream.read((char*)&(allocationSizeInBytes), sizeof(uint32_t));
 
-		textureData.resize(allocationSizeInBytes);
-		inputStream.read((char*)(textureData.data()), allocationSizeInBytes);
+		data.resize(allocationSizeInBytes);
+		inputStream.read((char*)(data.data()), allocationSizeInBytes);
 	}
 
-	// Doesn't fail, it should
+	assert(width > 0u);
+	assert(height > 0u);
+	assert(allocationSizeInBytes > 0u);
+	assert(data.size() > 0u);
 }
 
 // --------------------------------------------------------------------------------
-void Texture::writeToCache(const char* fileName, uint32_t width, uint32_t height, uint32_t numberOfChannels, uint32_t allocationSizeInBytes, GLubyte* data)
+void Texture::writeToCache(const std::string& fileName, const std::vector<uint8_t>& contents)
 {
-	assert(fileName != nullptr);
-	assert(width > 0u);
-	assert(height > 0u);
-	assert(numberOfChannels > 0u);
-	assert(allocationSizeInBytes > 0u);
+	assert(fileName.size() != 0u);
+	assert(contents.size() != 0u);
 
 	const std::string directoryName = "Cache";
-	const bool directoryCreationSuccess = std::experimental::filesystem::create_directory(directoryName);
+	const bool directoryCreationSuccess = std::experimental::filesystem::create_directory(directoryName); // May be worth moving to set up code
 
 	const std::string cacheString = "Cache\\";
 	const std::string finalPath = cacheString + std::string(fileName);
@@ -257,12 +242,7 @@ void Texture::writeToCache(const char* fileName, uint32_t width, uint32_t height
 		assert(0);
 	}
 
-	fw.write((const char*)&(width), sizeof(uint32_t));
-	fw.write((const char*)&(height), sizeof(uint32_t));
-	fw.write((const char*)&(numberOfChannels), sizeof(uint32_t));
-	fw.write((const char*)&(allocationSizeInBytes), sizeof(uint32_t));
-	fw.write((const char*)data, allocationSizeInBytes); // Magic number for the interal data requirements (GL_RGBA)
-
+	fw.write((const char*)contents.data(), contents.size());
 	fw.close();
 }
 

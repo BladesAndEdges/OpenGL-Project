@@ -2,28 +2,40 @@
 #include <assert.h>
 
 // --------------------------------------------------------------------------------
-ResourceCompilationContext::ResourceCompilationContext(const std::string & filePath) : m_filePath(filePath)
+ResourceCompilationContext::ResourceCompilationContext(const std::string& path) : m_path(path)
 {
-	m_fileNameSubstring = parseFileNameSubstring(m_filePath);
-	m_fileExtension = parseExtension(m_filePath);
+	m_fileName = parseFileName(path);
+	m_extension = parseExtension(m_path);
 }
 
 // --------------------------------------------------------------------------------
-const std::string & ResourceCompilationContext::getFilePath() const
+const std::string & ResourceCompilationContext::getPath() const
 {
-	return m_filePath;
+	return m_path;
 }
 
 // --------------------------------------------------------------------------------
 const std::string & ResourceCompilationContext::getExtension() const
 {
-	return m_fileExtension;
+	return m_extension;
 }
 
 // --------------------------------------------------------------------------------
-const std::string & ResourceCompilationContext::getFileNameSubstring() const
+const std::string & ResourceCompilationContext::getFileName() const
 {
-	return m_fileNameSubstring;
+	return m_fileName;
+}
+
+// --------------------------------------------------------------------------------
+const std::vector<uint8_t>& ResourceCompilationContext::getContents() const
+{
+	return m_contents;
+}
+
+// --------------------------------------------------------------------------------
+bool ResourceCompilationContext::isEmpty() const
+{
+	return (m_contents.size() == 0);
 }
 
 // --------------------------------------------------------------------------------
@@ -34,10 +46,10 @@ void ResourceCompilationContext::writeUint32(uint32_t value)
 	const uint8_t c = (uint8_t)(value >> 8u);
 	const uint8_t d = (uint8_t)(value);
 
-	m_resourceData.push_back(a);
-	m_resourceData.push_back(b);
-	m_resourceData.push_back(c);
-	m_resourceData.push_back(d);
+	m_contents.push_back(d);
+	m_contents.push_back(c);
+	m_contents.push_back(b);
+	m_contents.push_back(a);
 }
 
 // --------------------------------------------------------------------------------
@@ -45,12 +57,12 @@ void ResourceCompilationContext::writeByteArray(const uint8_t * bytes, uint32_t 
 {
 	for (uint32_t index = 0u; index < count; index++)
 	{
-		m_resourceData.push_back(bytes[index]);
+		m_contents.push_back(bytes[index]);
 	}
 }
 
 // --------------------------------------------------------------------------------
-std::string ResourceCompilationContext::parseFileNameSubstring(const std::string & filePath)
+std::string ResourceCompilationContext::parseFileName(const std::string & filePath)
 {
 	assert(filePath.size() > 0u);
 
@@ -94,6 +106,7 @@ std::string ResourceCompilationContext::parseExtension(const std::string & fileP
 		if (extension[charPosition] == '.')
 		{
 			extension.erase(0u, charPosition + 1u);
+			break;
 		}
 	}
 
