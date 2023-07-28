@@ -167,17 +167,17 @@ void Texture::loadTextureFromDisk(const std::string& sourceFile, TextureFormat& 
 	{
 		ResourceCompilationContext compilationContext(sourceFile);
 		compiler.compile(compilationContext);
-		writeToCache(compiledFileName, compilationContext.getContents());
+		writeToCache(compiledFilePath, compilationContext.getContents());
 	}
 
 	// Attempt loading the file
 	int width, height;
 	uint32_t compilerVersion, allocationSizeInBytes;
-	tryReadFromCache(compiledFilePath.c_str(), compilerVersion, width, height, format, allocationSizeInBytes, o_vectorStorage);
+	tryReadFromCache(compiledFilePath, compilerVersion, width, height, format, allocationSizeInBytes, o_vectorStorage);
 
 	if (compiler.getVersionNumber() != compilerVersion /*loader.getCompilationVersion()*/)
 	{
-		/*std::experimental::filesystem::remove(compiledFilePath);*/
+		std::experimental::filesystem::remove(compiledFilePath);
 
 		ResourceCompilationContext compilationContext(sourceFile);
 		compiler.compile(compilationContext);
@@ -189,7 +189,7 @@ void Texture::loadTextureFromDisk(const std::string& sourceFile, TextureFormat& 
 		allocationSizeInBytes = 0u;
 		o_vectorStorage.clear();
 
-		tryReadFromCache(sourceFile.c_str(), compilerVersion, width, height, format, allocationSizeInBytes, o_vectorStorage);
+		tryReadFromCache(compiledFilePath, compilerVersion, width, height, format, allocationSizeInBytes, o_vectorStorage);
 	}
 
 	// Assign width and height
@@ -224,26 +224,23 @@ void Texture::tryReadFromCache(const std::string& path, uint32_t& compilerVersio
 }
 
 // --------------------------------------------------------------------------------
-void Texture::writeToCache(const std::string& fileName, const std::vector<uint8_t>& contents)
+void Texture::writeToCache(const std::string& path, const std::vector<uint8_t>& contents)
 {
-	assert(fileName.size() != 0u);
+	assert(path.size() != 0u);
 	assert(contents.size() != 0u);
 
 	const std::string directoryName = "Cache";
 	const bool directoryCreationSuccess = std::experimental::filesystem::create_directory(directoryName); // May be worth moving to set up code
 
-	const std::string cacheString = "Cache\\";
-	const std::string finalPath = cacheString + std::string(fileName);
-	assert(finalPath.size() != 0);
-
-	std::ofstream fw(finalPath, std::ios::binary);
-	if (!fw)
+	std::ofstream outputStream;
+	outputStream.open(path, std::ios::binary);
+	if (!outputStream)
 	{
 		assert(0);
 	}
 
-	fw.write((const char*)contents.data(), contents.size());
-	fw.close();
+	outputStream.write((const char*)contents.data(), contents.size());
+	outputStream.close();
 }
 
 // --------------------------------------------------------------------------------

@@ -6,14 +6,14 @@
 #include "FormatInfo.h"
 
 // --------------------------------------------------------------------------------
-TextureCompiler::TextureCompiler()
+TextureCompiler::TextureCompiler() : m_version(0u)
 {
 }
 
 // --------------------------------------------------------------------------------
 uint32_t TextureCompiler::getVersionNumber() const
 {
-	return 0u;
+	return m_version;
 }
 
 // --------------------------------------------------------------------------------
