@@ -7,8 +7,6 @@
 
 #define GL_TEXTURE_MAX_ANISOTROPY_EXT	0x84FE
 
-
-
 // -------------------------------------------------------------------------------- // Possibly assumes colour texture
 Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMode wrapMode,
 	TextureFilterMode filterMode)
@@ -30,13 +28,19 @@ Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMo
 
 	FormatInfo formatInfo = getFormatInfo(format);
 
-	if (!textureStorage.empty())
+	if (!textureStorage.empty() && (formatInfo.isCompressed == false))
 	{
 		const uint32_t smallestSide = m_width > m_height ? m_height : m_width;
-
 		const uint32_t mipCount = (uint32_t)ceilf(log2f((float)smallestSide));
+
 		glTextureStorage2D(m_name, mipCount, formatInfo.sizedFormat, m_width, m_height);
-		glTextureSubImage2D(m_name, 0, 0, 0, m_width, m_height, formatInfo.baseInternalFormat, GL_UNSIGNED_BYTE, textureStorage.data()); 
+		glTextureSubImage2D(m_name, 0, 0, 0, m_width, m_height, formatInfo.baseInternalFormat, GL_UNSIGNED_BYTE, textureStorage.data());
+	}
+	else if (!textureStorage.empty() && (formatInfo.isCompressed == true))
+	{
+		glTextureStorage2D(m_name, 1u, formatInfo.sizedFormat, m_width, m_height);
+		glCompressedTextureSubImage2D(m_name, 0, 0, 0, m_width, m_height, formatInfo.sizedFormat, (GLsizei)textureStorage.size(), textureStorage.data());
+		// glCompressedTexImage2D(glTarget, 0, formatInfo.sizedFormat, m_width, m_height, 0u, (GLsizei)textureStorage.size(), textureStorage.data());
 	}
 	else
 	{
@@ -45,13 +49,25 @@ Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMo
 
 	glObjectLabel(GL_TEXTURE, m_name, -1, source.c_str());
 
-	glGenerateTextureMipmap(m_name);
 
-	glTextureParameteri(m_name, GL_TEXTURE_WRAP_S, glWrapMode);
-	glTextureParameteri(m_name, GL_TEXTURE_WRAP_T, glWrapMode);
-	glTextureParameteri(m_name, GL_TEXTURE_MIN_FILTER, glMinFilterMode);
-	glTextureParameteri(m_name, GL_TEXTURE_MAG_FILTER, glMagFilterMode);
-	glTextureParameterf(m_name, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
+	if (formatInfo.isCompressed == false)
+	{
+		glGenerateTextureMipmap(m_name);
+
+		glTextureParameteri(m_name, GL_TEXTURE_WRAP_S, glWrapMode);
+		glTextureParameteri(m_name, GL_TEXTURE_WRAP_T, glWrapMode);
+		glTextureParameteri(m_name, GL_TEXTURE_MIN_FILTER, glMinFilterMode);
+		glTextureParameteri(m_name, GL_TEXTURE_MAG_FILTER, glMagFilterMode);
+		glTextureParameterf(m_name, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
+	}
+	else
+	{
+		glTextureParameteri(m_name, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTextureParameteri(m_name, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTextureParameteri(m_name, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTextureParameteri(m_name, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTextureParameterf(m_name, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -75,8 +91,6 @@ Texture::Texture(const std::string& label, uint32_t width, uint32_t height, uint
 	m_width = width;
 	m_height = height;
 	m_depth = depth;
-
-
 
 	if (glTarget == GL_TEXTURE_2D_ARRAY) 
 	{

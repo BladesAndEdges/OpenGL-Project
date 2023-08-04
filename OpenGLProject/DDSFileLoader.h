@@ -1,6 +1,7 @@
 #pragma once
 
 #include<stdint.h>
+#include "FormatInfo.h"
 
 struct BlockCompressionInfo;
 struct DDSHeader;
@@ -15,12 +16,15 @@ public:
 
 	unsigned char* getTextureData() const;
 	uint32_t getAllocationSizeInBytes() const;
+	TextureFormat getTextureFormat() const;
 		
 private:
 
 	unsigned char* m_data;
+	TextureFormat m_format;
 	uint32_t m_allocationSizeInBytes;
 };
 
 BlockCompressionInfo getBlockCompressionInfo(const DDSPixelFormat& ddsPixelFormat);
+TextureFormat chooseTextureFormat(const DDSPixelFormat& ddsPixelFormat);
 

@@ -1,10 +1,12 @@
-#include "DDSFileLoader.h"
 #include <windows.h>
+#include "DDSFileLoader.h"
 #include <assert.h>
 #include <fstream>
 #include <cstring>
 #include <dxgiformat.h>
 #include <Mmsystem.h>
+
+#include <iostream>
 
 // --------------------------------------------------------------------------------
 struct BlockCompressionInfo
@@ -68,27 +70,32 @@ void DDSFileLoader::parse(const char* sourceFile, int& width, int& height)
 			width = (int)ddsHeader.dwWidth;
 			height = (int)ddsHeader.dwHeight;
 
-			const char formatAsChar[4] = { 'D', 'X', '1', '0' };
-			uint32_t formatAsUint;
-			memcpy_s(&formatAsUint, sizeof(uint32_t), formatAsChar, sizeof(formatAsChar));
-
-
-			if ((ddsHeader.ddspf.dwFlags == 0x4) && (ddsHeader.ddspf.dwFourCC == formatAsUint))
+			if ((ddsHeader.ddspf.dwFlags == 0x4) && (ddsHeader.ddspf.dwFourCC == MAKEFOURCC('D','X','1','0')))
 			{
 				assert(0);
 			}
 
+			//if (width == 16u && height == 16u)
+			//{
+			//	std::cout << "It's 16" << std::endl;
+			//}
+
 			BlockCompressionInfo blockInfo = getBlockCompressionInfo(ddsHeader.ddspf);
-			const uint32_t rowPitch = max(1u, ((ddsHeader.dwWidth + 3u) / 4u)) * blockInfo.blockSizeInBytes;
+			// Why 3, is it because the largest remainder would be 3 extra pixels?
+			const uint32_t bytesPerBlockRow = max(1u, ((ddsHeader.dwWidth + 3u) / 4u)) * blockInfo.blockSizeInBytes;
 			const uint32_t blocksAlongY = ((ddsHeader.dwHeight + 3u) / 4u);
 
-			m_allocationSizeInBytes = rowPitch * blocksAlongY;
+			m_format = chooseTextureFormat(ddsHeader.ddspf);
+			m_allocationSizeInBytes = bytesPerBlockRow * blocksAlongY;
+
+			assert(m_allocationSizeInBytes == ddsHeader.dwPitchOrLinearSize);
+
 			m_data = new unsigned char[m_allocationSizeInBytes];
 			ifs.read((char*)m_data, m_allocationSizeInBytes);
 		}
 		else
 		{
-			// Not DDS
+			throw std::exception("DDS file contains incorrect magic value in file.");
 		}
 	}
 }
@@ -103,6 +110,12 @@ unsigned char * DDSFileLoader::getTextureData() const
 uint32_t DDSFileLoader::getAllocationSizeInBytes() const
 {
 	return m_allocationSizeInBytes;
+}
+
+// --------------------------------------------------------------------------------
+TextureFormat DDSFileLoader::getTextureFormat() const
+{
+	return m_format;
 }
 
 // --------------------------------------------------------------------------------
@@ -139,4 +152,30 @@ BlockCompressionInfo getBlockCompressionInfo(const DDSPixelFormat& ddsPixelForma
 
 	assert(blockInfo.blockSizeInBytes > 0u);
 	return blockInfo;
+}
+
+// --------------------------------------------------------------------------------
+TextureFormat chooseTextureFormat(const DDSPixelFormat & ddsPixelFormat)
+{
+	TextureFormat format = TextureFormat::COUNT;
+
+	if (ddsPixelFormat.dwFlags == 0x4) // Compressed
+	{
+
+		if (ddsPixelFormat.dwFourCC == MAKEFOURCC('D', 'X', 'T', '1'))
+		{
+			format = TextureFormat::DXT1;
+		}
+		if (ddsPixelFormat.dwFourCC == MAKEFOURCC('D', 'X', 'T', '3'))
+		{
+			format = TextureFormat::DXT3;
+		}
+		if (ddsPixelFormat.dwFourCC == MAKEFOURCC('D', 'X', 'T', '5'))
+		{
+			format = TextureFormat::DXT5;
+		}
+	}
+
+	assert((format == TextureFormat::DXT1) || (format == TextureFormat::DXT3) || (format == TextureFormat::DXT5));
+	return format;
 }
