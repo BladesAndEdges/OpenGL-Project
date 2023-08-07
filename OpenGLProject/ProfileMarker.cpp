@@ -28,7 +28,7 @@ ProfileMarker::~ProfileMarker()
 {
 	if (m_countsAtEnd.QuadPart >= 0)
 	{
-		throw std::exception("Missing call to endTiming()!");
+		std::cout << "Forgot to call endTiming() for a profile marker!" << std::endl;
 	}
 }
 
