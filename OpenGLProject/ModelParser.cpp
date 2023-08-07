@@ -5,6 +5,8 @@
 #include <assert.h>
 #include "MaterialReader.h"
 
+#include "ProfileMarker.h"
+
 // --------------------------------------------------------------------------------
 ModelParser::ModelParser()
 {
@@ -207,21 +209,20 @@ std::vector<Vertex> ModelParser::parseVertexData(const std::string & line)
 			
 				if (vertexPositionId >= 1)
 				{
-					vertex.m_position[0] = m_vertexPositions[vertexPositionId - 1].x / 100.0f; 
-					vertex.m_position[1] = m_vertexPositions[vertexPositionId - 1].y / 100.0f;
-					vertex.m_position[2] = m_vertexPositions[vertexPositionId - 1].z / 100.0f;
+					vertex.m_position[0] = m_vertexPositions[vertexPositionId - 1].x; 
+					vertex.m_position[1] = m_vertexPositions[vertexPositionId - 1].y;
+					vertex.m_position[2] = m_vertexPositions[vertexPositionId - 1].z;
 				}
 				else
 				{
 					unsigned int arraySize = (unsigned int)m_vertexPositions.size();
 
-					vertex.m_position[0] = m_vertexPositions[arraySize + vertexPositionId].x / 100.0f;
-					vertex.m_position[1] = m_vertexPositions[arraySize + vertexPositionId].y / 100.0f;
-					vertex.m_position[2] = m_vertexPositions[arraySize + vertexPositionId].z / 100.0f;
+					vertex.m_position[0] = m_vertexPositions[arraySize + vertexPositionId].x;
+					vertex.m_position[1] = m_vertexPositions[arraySize + vertexPositionId].y;
+					vertex.m_position[2] = m_vertexPositions[arraySize + vertexPositionId].z;
 				}
 
 				// Code for centering the camera position
-
 			}
 
 			//TO ADD: NEGATIVE INDICES
@@ -369,7 +370,7 @@ glm::vec3 ModelParser::computeSceneCenter(std::vector<Vertex>& indexedVertexBuff
 		}
 	}
 
-	const float halfwayX = (minX + maxX) / 2.0f;
+ 	const float halfwayX = (minX + maxX) / 2.0f;
 	const float halfwayY = (minY + maxY) / 2.0f;
 	const float halfWayZ = (minZ + maxZ) / 2.0f;
 
