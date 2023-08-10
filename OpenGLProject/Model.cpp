@@ -6,15 +6,15 @@
 #include <assert.h>
 
 // --------------------------------------------------------------------------------
-Model::Model(const char * compiledModelFileName, const char* objSourceFile, const MaterialReader& materialReader)
+Model::Model(const char * compiledModelFileName, const std::string& cacheSubFolder, const char* objSourceFile, const MaterialReader& materialReader)
 {
-	const bool hasLoadedFromCache = ModelCacher::tryReadFromCache(compiledModelFileName, materialReader, m_meshes, m_indexedVertexBuffer, m_indexBuffer);
+	const bool hasLoadedFromCache = ModelCacher::tryReadFromCache(compiledModelFileName, cacheSubFolder, materialReader, m_meshes, m_indexedVertexBuffer, m_indexBuffer);
 	if (!hasLoadedFromCache)
 	{
 		const bool hasLoadedFromSource = m_modelParser.parseModelData(objSourceFile, materialReader, 
 			m_meshes, m_indexedVertexBuffer, m_indexBuffer, m_sceneCenter);
 
-		ModelCacher::writeToCache(compiledModelFileName, m_meshes, m_indexedVertexBuffer, m_indexBuffer);
+		ModelCacher::writeToCache(compiledModelFileName,cacheSubFolder, m_meshes, m_indexedVertexBuffer, m_indexBuffer);
 		if (!hasLoadedFromSource)
 		{
 			std::exception("Model data could not be loaded!");

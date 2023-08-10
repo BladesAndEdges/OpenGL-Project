@@ -15,7 +15,7 @@ class MaterialReader
 
 public:
 
-	MaterialReader(const std::string& rootMeshDirectory);
+	MaterialReader(const std::string& rootMeshDirectory, const std::string& cacheSubFolder);
 	~MaterialReader();
 					
 	MaterialReader(const MaterialReader&) = delete;
@@ -28,13 +28,13 @@ public:
 private:
 
 	std::string m_rootMeshDirectory;
+	std::string m_cacheSubFolder;
 
 	std::unordered_map<std::string, Material> m_Materials;
 	std::unordered_map<std::string, Texture> m_textures;
 	TextureHashMaps m_textureHashMaps;
 
-	// Consider making it just loadTexture(const char path, <Texture properties>);
-	void loadTexture(const char* name, TextureTarget target, TextureWrapMode wrapMode,
+	void loadTexture(const char* path, const std::string& cacheSubFolder,TextureTarget target, TextureWrapMode wrapMode,
 		TextureFilterMode filterMode);
 
 	void provideNormalMapTexture(Material& material);

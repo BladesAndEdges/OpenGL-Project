@@ -5,11 +5,13 @@
 #include "PerMaterialUniformData.h"
 
 // --------------------------------------------------------------------------------
-MaterialReader::MaterialReader(const std::string& rootMeshDirectory) : m_rootMeshDirectory(rootMeshDirectory)
+MaterialReader::MaterialReader(const std::string& rootMeshDirectory, const std::string& cacheSubFolder) : m_rootMeshDirectory(rootMeshDirectory), 
+																											m_cacheSubFolder(cacheSubFolder)
+																							
 {
-	loadTexture(R"(Meshes\sponza\textures\dummy_ddn.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point); // default normal map
-	loadTexture(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point); // default mask texture
-	loadTexture(R"(Meshes\sponza\textures\black8x8.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point); // default texture for missing textures
+	loadTexture(R"(Meshes\sponza\textures\dummy_ddn.png)", m_cacheSubFolder, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point); // default normal map
+	loadTexture(R"(Meshes\sponza\textures\dummy_mask.png)", m_cacheSubFolder, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point); // default mask texture
+	loadTexture(R"(Meshes\sponza\textures\black8x8.png)", m_cacheSubFolder, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point); // default texture for missing textures
 }
 
 // --------------------------------------------------------------------------------
@@ -90,7 +92,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textures.find(finalPath) == m_textures.end())
 			{
-				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
+				loadTexture(finalPath.c_str(), m_cacheSubFolder, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 				currentMaterial.m_ambientTexture = &m_textures.at(finalPath);
 
 				std::cout << "Loaded Ambient Texture: " << texturePath << std::endl;
@@ -109,7 +111,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textures.find(finalPath) == m_textures.end())
 			{
-				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
+				loadTexture(finalPath.c_str(), m_cacheSubFolder, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 				currentMaterial.m_diffuseTexture = &m_textures.at(finalPath);
 				
 				std::cout << "Loaded Diffuse Texture: " << texturePath << std::endl;
@@ -128,7 +130,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textures.find(finalPath) == m_textures.end())
 			{
-				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
+				loadTexture(finalPath.c_str(), m_cacheSubFolder, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 				currentMaterial.m_specularTexture = &m_textures.at(finalPath);
 				
 				std::cout << "Loaded Specular Texture: " << texturePath << std::endl;
@@ -147,7 +149,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textures.find(finalPath) == m_textures.end())
 			{
-				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
+				loadTexture(finalPath.c_str(), m_cacheSubFolder, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 				currentMaterial.m_normalMapTexture = &m_textures.at(finalPath);
 				
 				std::cout << "Loaded Normal Texture: " << texturePath << std::endl;
@@ -166,7 +168,7 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 
 			if (m_textures.find(finalPath) == m_textures.end())
 			{
-				loadTexture(finalPath.c_str(), TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
+				loadTexture(finalPath.c_str(), m_cacheSubFolder, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
 				currentMaterial.m_maskTexture = &m_textures.at(finalPath);
 
 				std::cout << "Loaded Mask Texture: " << texturePath << std::endl;
@@ -198,9 +200,9 @@ const Material * MaterialReader::getMaterial(const std::string & materialName) c
 }
 
 // --------------------------------------------------------------------------------
-void MaterialReader::loadTexture(const char * path, TextureTarget target, TextureWrapMode wrapMode, TextureFilterMode filterMode)
+void MaterialReader::loadTexture(const char * path, const std::string& cacheSubFolder, TextureTarget target, TextureWrapMode wrapMode, TextureFilterMode filterMode)
 {
-	Texture texture(path, target, wrapMode, filterMode);
+	Texture texture(path, cacheSubFolder, target, wrapMode, filterMode);
 	m_textures.insert({ path, std::move(texture) });
 }
 

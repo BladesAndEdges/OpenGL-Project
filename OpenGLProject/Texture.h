@@ -53,7 +53,7 @@ class Texture
 
 public:
 
-	Texture(const std::string& source, TextureTarget target, TextureWrapMode wrapMode,
+	Texture(const std::string& source, const std::string& cacheSubFolder, TextureTarget target, TextureWrapMode wrapMode,
 		TextureFilterMode filterMode);
 
 	Texture(const std::string& label, uint32_t width,  uint32_t height, uint32_t depth, TextureTarget target
@@ -84,10 +84,10 @@ private:
 	uint32_t m_height;
 	uint32_t m_depth;
 
-	void loadTextureFromDisk(const std::string& sourceFile, TextureFormat& format, std::vector<GLubyte>& o_vectorStorage);
+	void loadTextureFromDisk(const std::string& sourceFile, const std::string& cacheSubFolder, TextureFormat& format, std::vector<GLubyte>& o_vectorStorage);
 	void tryReadFromCache(const std::string& path, uint32_t& compilerVersion, GLint& width, GLint& height, TextureFormat& format, uint32_t& allocationSizeInBytes, 
 		std::vector<GLubyte>& data);
-	void writeToCache(const std::string& path, const std::vector<uint8_t>& contents);
+	void writeToCache(const std::string& path, const std::string& cacheSubFolder, const std::vector<uint8_t>& contents);
 
 	// --------------------------------------------------------------------------------
 	GLenum translateTargetToOpenGL(TextureTarget target) const;

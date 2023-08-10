@@ -452,8 +452,16 @@ int main()
 	UniformBuffer perViewUniformBuffer(6u, sizeof(PerViewUniformData), nullptr, "PerViewUniformBuffer");
 
 	MaterialReader materialReader(R"(Meshes\sponza\)");
+	const std::string sponza = "sponza";
+	MaterialReader materialReader(R"(Meshes\sponza\)", sponza);
 	materialReader.parseMaterialFile(R"(Meshes\sponza\sponza.mtl)");
-	Model sponzaModel(R"(SponzaModel.compiled)", R"(Meshes\sponza\sponza.obj)", materialReader);
+	Model sponzaModel(R"(SponzaModel.compiled)", sponza, R"(Meshes\sponza\sponza.obj)", materialReader);
+
+	const std::vector<glm::vec3> minMaxVec = computeMinAndMax(sponzaModel.getIndexedVertexBuffer());
+
+	Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", sponza, TextureTarget::Texture2D, TextureWrapMode::Repeat,
+		TextureFilterMode::Point);
+	Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)", sponza, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point);
 
 	//-----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -465,10 +473,6 @@ int main()
 
 	float frameTimeArray[128];
 	unsigned int frameNumber = 0;
-
-	Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat,
-		TextureFilterMode::Point);
-	Texture dummyMask(R"(Meshes\sponza\textures\dummy_mask.png)", TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Point);
 
 	// Shadow Map texture
 	Texture* shadowMap = nullptr;

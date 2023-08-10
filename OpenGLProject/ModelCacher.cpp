@@ -11,13 +11,13 @@
 #include "MaterialReader.h"
 
 // --------------------------------------------------------------------------------
-bool ModelCacher::tryReadFromCache(const char* fileName, const MaterialReader& materialReader, std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer,
+bool ModelCacher::tryReadFromCache(const char* fileName, const std::string& cacheSubFolder, const MaterialReader& materialReader, std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer,
 	std::vector<unsigned int>& indexBuffer)
 {
 	assert(fileName != nullptr);
 	assert((meshes.size() == 0) && (indexedVertexBuffer.size() == 0) && (indexBuffer.size() == 0));
 
-	const std::string cacheString = "Cache\\";
+	const std::string cacheString = "Cache\\" + cacheSubFolder;
 	const std::string finalPath = cacheString + std::string(fileName);
 	assert(finalPath.size() != 0);
 	
@@ -65,16 +65,17 @@ bool ModelCacher::tryReadFromCache(const char* fileName, const MaterialReader& m
 }
 
 // --------------------------------------------------------------------------------
-void ModelCacher::writeToCache(const char * fileName, std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, 
+void ModelCacher::writeToCache(const char * fileName, const std::string& cacheSubFolder, std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, 
 	std::vector<unsigned int>& indexBuffer)
 {
 	assert(fileName != nullptr);
 	assert((meshes.size() != 0) && (indexedVertexBuffer.size() != 0) && (indexBuffer.size() != 0));
 
-	const std::string directoryName = "Cache";
-	const bool directoryCreationSuccess = std::experimental::filesystem::create_directory(directoryName);
+	const std::string directoriesName = "Cache\\" + cacheSubFolder;
+	const bool directoriesCreationSuccess = std::experimental::filesystem::create_directories(directoriesName);
+	// const bool directoryCreationSuccess = std::experimental::filesystem::create_directory(directoryName);
 
-	const std::string cacheString = "Cache\\";
+	const std::string cacheString = "Cache\\" + cacheSubFolder;
 	const std::string finalPath = cacheString + std::string(fileName);
 	assert(finalPath.size() != 0);
 

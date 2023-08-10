@@ -8,7 +8,7 @@
 #define GL_TEXTURE_MAX_ANISOTROPY_EXT	0x84FE
 
 // -------------------------------------------------------------------------------- // Possibly assumes colour texture
-Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMode wrapMode,
+Texture::Texture(const std::string & source, const std::string& cacheSubFolder, TextureTarget target, TextureWrapMode wrapMode,
 	TextureFilterMode filterMode)
 {
 	const GLenum glTarget = translateTargetToOpenGL(target);
@@ -23,7 +23,7 @@ Texture::Texture(const std::string & source, TextureTarget target, TextureWrapMo
 
 	TextureFormat format;
 	std::vector<GLubyte> textureStorage;
-	loadTextureFromDisk(source, /* out */ format, /* out */ textureStorage);
+	loadTextureFromDisk(source, /* out */ cacheSubFolder, format, /* out */ textureStorage);
 	assert((m_width > 0u) && (m_height > 0u));
 
 	FormatInfo formatInfo = getFormatInfo(format);
@@ -166,11 +166,11 @@ uint32_t Texture::getHeight() const
 }
 
 // --------------------------------------------------------------------------------
-void Texture::loadTextureFromDisk(const std::string& sourceFile, TextureFormat& format, std::vector<GLubyte>& o_vectorStorage)
+void Texture::loadTextureFromDisk(const std::string& sourceFile, const std::string& cacheSubFolder, TextureFormat& format, std::vector<GLubyte>& o_vectorStorage)
 {	
 	const std::string cacheString = "Cache\\";
 	const std::string compiledFileName = getFilenameFromTextureSourceString(sourceFile.c_str()) + std::string(".compiled");
-	const std::string compiledFilePath = cacheString + compiledFileName;
+	const std::string compiledFilePath = cacheString + cacheSubFolder + "\\" + compiledFileName;
 
 	TextureCompiler compiler;
 	//TextureLoader loader;
@@ -181,7 +181,7 @@ void Texture::loadTextureFromDisk(const std::string& sourceFile, TextureFormat& 
 	{
 		ResourceCompilationContext compilationContext(sourceFile);
 		compiler.compile(compilationContext);
-		writeToCache(compiledFilePath, compilationContext.getContents());
+		writeToCache(compiledFilePath, cacheSubFolder, compilationContext.getContents());
 	}
 
 	// Attempt loading the file
@@ -195,7 +195,7 @@ void Texture::loadTextureFromDisk(const std::string& sourceFile, TextureFormat& 
 
 		ResourceCompilationContext compilationContext(sourceFile);
 		compiler.compile(compilationContext);
-		writeToCache(compiledFilePath.c_str(), compilationContext.getContents());
+		writeToCache(compiledFilePath.c_str(), cacheSubFolder, compilationContext.getContents());
 
 		// Clear previously loaded data
 		width = 0u;
@@ -238,13 +238,13 @@ void Texture::tryReadFromCache(const std::string& path, uint32_t& compilerVersio
 }
 
 // --------------------------------------------------------------------------------
-void Texture::writeToCache(const std::string& path, const std::vector<uint8_t>& contents)
+void Texture::writeToCache(const std::string& path, const std::string& cacheSubFolder, const std::vector<uint8_t>& contents)
 {
 	assert(path.size() != 0u);
 	assert(contents.size() != 0u);
 
-	const std::string directoryName = "Cache";
-	const bool directoryCreationSuccess = std::experimental::filesystem::create_directory(directoryName); // May be worth moving to set up code
+	const std::string cacheHierarchy = "Cache\\" + cacheSubFolder;
+	const bool directoryCreationSuccess = std::experimental::filesystem::create_directories(cacheHierarchy); // May be worth moving to set up code
 
 	std::ofstream outputStream;
 	outputStream.open(path, std::ios::binary);
