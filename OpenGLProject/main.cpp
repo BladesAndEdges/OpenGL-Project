@@ -451,13 +451,12 @@ int main()
 	PerViewUniformData perViewUniforms;
 	UniformBuffer perViewUniformBuffer(6u, sizeof(PerViewUniformData), nullptr, "PerViewUniformBuffer");
 
-	MaterialReader materialReader(R"(Meshes\sponza\)");
 	const std::string sponza = "sponza";
 	MaterialReader materialReader(R"(Meshes\sponza\)", sponza);
 	materialReader.parseMaterialFile(R"(Meshes\sponza\sponza.mtl)");
 	Model sponzaModel(R"(SponzaModel.compiled)", sponza, R"(Meshes\sponza\sponza.obj)", materialReader);
 
-	const std::vector<glm::vec3> minMaxVec = computeMinAndMax(sponzaModel.getIndexedVertexBuffer());
+	//const std::vector<glm::vec3> minMaxVec = computeMinAndMax(sponzaModel.getIndexedVertexBuffer());
 
 	Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", sponza, TextureTarget::Texture2D, TextureWrapMode::Repeat,
 		TextureFilterMode::Point);
