@@ -12,7 +12,7 @@
 
 // --------------------------------------------------------------------------------
 bool ModelCacher::tryReadFromCache(const char* fileName, const std::string& cacheSubFolder, const MaterialReader& materialReader, std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer,
-	std::vector<unsigned int>& indexBuffer)
+	std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter)
 {
 	assert(fileName != nullptr);
 	assert((meshes.size() == 0) && (indexedVertexBuffer.size() == 0) && (indexBuffer.size() == 0));
@@ -58,6 +58,11 @@ bool ModelCacher::tryReadFromCache(const char* fileName, const std::string& cach
 		indexBuffer.resize(originalIndexBufferSize);
 		inputStream.read((char*)(indexBuffer.data()), originalIndexBufferSize * sizeof(unsigned int));
 
+		//Scene Center
+		inputStream.read((char*)&(sceneCenter.x), sizeof(float));
+		inputStream.read((char*)&(sceneCenter.y), sizeof(float));
+		inputStream.read((char*)&(sceneCenter.z), sizeof(float));
+
 		return true;
 	}
 
@@ -66,7 +71,7 @@ bool ModelCacher::tryReadFromCache(const char* fileName, const std::string& cach
 
 // --------------------------------------------------------------------------------
 void ModelCacher::writeToCache(const char * fileName, const std::string& cacheSubFolder, std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, 
-	std::vector<unsigned int>& indexBuffer)
+	std::vector<unsigned int>& indexBuffer, const glm::vec3& sceneCenter)
 {
 	assert(fileName != nullptr);
 	assert((meshes.size() != 0) && (indexedVertexBuffer.size() != 0) && (indexBuffer.size() != 0));
@@ -108,6 +113,11 @@ void ModelCacher::writeToCache(const char * fileName, const std::string& cacheSu
 	const uint32_t indexBufferSize = (uint32_t)indexBuffer.size();
 	fw.write((const char*)&(indexBufferSize), sizeof(uint32_t));
 	fw.write((const char*)(indexBuffer.data()), indexBufferSize * sizeof(unsigned int)); // Change index bufferto use uint32_t
+
+	// Scene center
+	fw.write((const char*)&(sceneCenter.x), sizeof(float));
+	fw.write((const char*)&(sceneCenter.y), sizeof(float));
+	fw.write((const char*)&(sceneCenter.z), sizeof(float));
 
 	fw.close();
 }
