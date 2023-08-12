@@ -454,9 +454,7 @@ int main()
 	const std::string sponza = "sponza";
 	MaterialReader materialReader(R"(Meshes\sponza\)", sponza);
 	materialReader.parseMaterialFile(R"(Meshes\sponza\sponza.mtl)");
-	Model sponzaModel(R"(SponzaModel.compiled)", sponza, R"(Meshes\sponza\sponza.obj)", materialReader);
-
-	//const std::vector<glm::vec3> minMaxVec = computeMinAndMax(sponzaModel.getIndexedVertexBuffer());
+	Model sponzaModel(R"(SponzaModel.compiled)", sponza, R"(Meshes\sponza\sponza.obj)", materialReader, false);
 
 	Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", sponza, TextureTarget::Texture2D, TextureWrapMode::Repeat,
 		TextureFilterMode::Point);
@@ -618,8 +616,8 @@ int main()
 
 		// What to do about this. Isn't this meaning cascade 0 values get partially updated ahead of others ?
 		const glm::vec3 worldSpaceToLightVector = calculateWorldSpaceToLightVector(graphicsConfigurations.getGlobalLightSourceZenith(), graphicsConfigurations.getGlobalLightSourceAzimuth()); // Issue ?
-		updateUniformBuffer(perViewUniforms, mainView, cascades[0].getCascadeView(), cascadeSplitStartDistances[1], 0u, worldSpaceToLightVector, offsetScale, graphicsConfigurations.getMaximumShadowDrawDistance(),
-			graphicsConfigurations.getFadedShadowsStartDistance(), graphicsConfigurations.getNormalMappingEnabled(), graphicsConfigurations.getDiffuseLightingEnabled(), graphicsConfigurations.getSpecularLightingEnabled(), graphicsConfigurations.getCascadesOverlayModeEnabled());
+		updateUniformBuffer(perViewUniforms, mainView, cascades[0].getCascadeView(), cascadeSplitStartDistances[1], 0u, worldSpaceToLightVector, offsetScale, graphicsConfigurations.getMaximumShadowDrawDistance(), graphicsConfigurations.getFadedShadowsStartDistance(), 
+			graphicsConfigurations.getNormalMappingEnabled(), graphicsConfigurations.getDiffuseLightingEnabled(), graphicsConfigurations.getSpecularLightingEnabled(), graphicsConfigurations.getCascadesOverlayModeEnabled());
 
 		perViewUniformBuffer.update(&perViewUniforms);
 		perViewUniformBuffer.useBuffer();

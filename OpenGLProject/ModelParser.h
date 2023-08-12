@@ -18,10 +18,10 @@ public:
 
 	ModelParser();
 	bool parseModelData(const char* objSourceFile, const MaterialReader& materialReader, 
-		std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter);
+		std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter, const bool flipTexCoordsAlongV);
 
 private:
-	void createMeshAndFaceBuffers(const std::string & fileName, const MaterialReader& materialReader, std::vector<Mesh>& meshes);
+	void createMeshAndFaceBuffers(const std::string & fileName, const MaterialReader& materialReader, std::vector<Mesh>& meshes, const bool flipTexCoordsAlongV);
 
 	void createIndexBufferAndIndexedVertexBuffer(std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer);
 

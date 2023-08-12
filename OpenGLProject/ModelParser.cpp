@@ -14,12 +14,12 @@ ModelParser::ModelParser()
 
 // --------------------------------------------------------------------------------
 bool ModelParser::parseModelData(const char * objSourceFile, const MaterialReader& materialReader, 
-	std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter)
+	std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter, const bool flipTexCoordsAlongV)
 {
 	assert(objSourceFile != nullptr);
 	assert((meshes.size() == 0) && (indexedVertexBuffer.size() == 0) && (indexBuffer.size() == 0));
 
-	createMeshAndFaceBuffers(objSourceFile, materialReader, meshes);
+	createMeshAndFaceBuffers(objSourceFile, materialReader, meshes, flipTexCoordsAlongV);
 
 	computeTangentVectors();
 
@@ -33,7 +33,7 @@ bool ModelParser::parseModelData(const char * objSourceFile, const MaterialReade
 }
 
 // --------------------------------------------------------------------------------
-void ModelParser::createMeshAndFaceBuffers(const std::string & fileName , const MaterialReader& materialReader, std::vector<Mesh>& meshes)
+void ModelParser::createMeshAndFaceBuffers(const std::string & fileName , const MaterialReader& materialReader, std::vector<Mesh>& meshes, const bool flipTexCoorsAlongV)
 {
 	std::ifstream ifs(fileName);
 
@@ -87,6 +87,12 @@ void ModelParser::createMeshAndFaceBuffers(const std::string & fileName , const 
 			float v;
 
 			ifs >> u >> v;
+
+			// Flip coordinates along V, for DirectX system
+			if (flipTexCoorsAlongV)
+			{
+				v = 1.0f - v;
+			}
 
 			glm::vec2 textureCoordinate(u, v);
 			m_vertextextureCoordinates.push_back(textureCoordinate);
