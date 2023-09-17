@@ -17,18 +17,18 @@ class ModelParser
 public:
 
 	ModelParser();
-	bool parseModelData(const char* objSourceFile, const MaterialReader& materialReader, 
-		std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter, const bool flipTexCoordsAlongV);
+	bool parseModelData(const char* objSourceFile, const MaterialReader& materialReader, std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, 
+		std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter, const bool flipTexCoordsAlongV, const float scaleFactor);
 
 private:
-	void createMeshAndFaceBuffers(const std::string & fileName, const MaterialReader& materialReader, std::vector<Mesh>& meshes, const bool flipTexCoordsAlongV);
+	void createMeshAndFaceBuffers(const std::string & fileName, const MaterialReader& materialReader, std::vector<Mesh>& meshes, const bool flipTexCoordsAlongV, const float scaleFactor);
 
 	void createIndexBufferAndIndexedVertexBuffer(std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer);
 
 	glm::vec3 computeSceneCenter(std::vector<Vertex>& indexedVertexBuffer);
 
 	void computeTangentVectors();
-	std::vector<Vertex> parseVertexData(const std::string& line);
+	std::vector<Vertex> parseVertexData(const std::string& line, const float scaleFactor);
 	std::vector<Face> triangulateFaceVertices(const std::vector<Vertex>& vertices);
 
 	std::vector<glm::vec3> m_vertexPositions;

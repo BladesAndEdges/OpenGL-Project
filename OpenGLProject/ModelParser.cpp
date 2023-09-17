@@ -13,13 +13,13 @@ ModelParser::ModelParser()
 }
 
 // --------------------------------------------------------------------------------
-bool ModelParser::parseModelData(const char * objSourceFile, const MaterialReader& materialReader, 
-	std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter, const bool flipTexCoordsAlongV)
+bool ModelParser::parseModelData(const char * objSourceFile, const MaterialReader& materialReader, std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer, 
+	std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter, const bool flipTexCoordsAlongV, const float scaleFactor)
 {
 	assert(objSourceFile != nullptr);
 	assert((meshes.size() == 0) && (indexedVertexBuffer.size() == 0) && (indexBuffer.size() == 0));
 
-	createMeshAndFaceBuffers(objSourceFile, materialReader, meshes, flipTexCoordsAlongV);
+	createMeshAndFaceBuffers(objSourceFile, materialReader, meshes, flipTexCoordsAlongV, scaleFactor);
 
 	computeTangentVectors();
 
@@ -33,7 +33,8 @@ bool ModelParser::parseModelData(const char * objSourceFile, const MaterialReade
 }
 
 // --------------------------------------------------------------------------------
-void ModelParser::createMeshAndFaceBuffers(const std::string & fileName , const MaterialReader& materialReader, std::vector<Mesh>& meshes, const bool flipTexCoorsAlongV)
+void ModelParser::createMeshAndFaceBuffers(const std::string & fileName , const MaterialReader& materialReader, std::vector<Mesh>& meshes, 
+	const bool flipTexCoorsAlongV, const float scaleFactor)
 {
 	std::ifstream ifs(fileName);
 
@@ -117,7 +118,7 @@ void ModelParser::createMeshAndFaceBuffers(const std::string & fileName , const 
 			std::string line;
 			std::getline(ifs, line);
 
-			const std::vector<Vertex> faceVertices = parseVertexData(line);
+			const std::vector<Vertex> faceVertices = parseVertexData(line, scaleFactor);
 			const std::vector<Face> faces = triangulateFaceVertices(faceVertices);
 
 			// Compute the vertex count for the mesh
@@ -161,7 +162,7 @@ void ModelParser::createMeshAndFaceBuffers(const std::string & fileName , const 
 }
 
 // --------------------------------------------------------------------------------
-std::vector<Vertex> ModelParser::parseVertexData(const std::string & line)
+std::vector<Vertex> ModelParser::parseVertexData(const std::string & line, const float scaleFactor)
 {
 	std::vector<Vertex> vertices;
 
@@ -215,17 +216,17 @@ std::vector<Vertex> ModelParser::parseVertexData(const std::string & line)
 			
 				if (vertexPositionId >= 1)
 				{
-					vertex.m_position[0] = m_vertexPositions[vertexPositionId - 1].x; 
-					vertex.m_position[1] = m_vertexPositions[vertexPositionId - 1].y;
-					vertex.m_position[2] = m_vertexPositions[vertexPositionId - 1].z;
+					vertex.m_position[0] = m_vertexPositions[vertexPositionId - 1].x * scaleFactor; 
+					vertex.m_position[1] = m_vertexPositions[vertexPositionId - 1].y * scaleFactor;
+					vertex.m_position[2] = m_vertexPositions[vertexPositionId - 1].z * scaleFactor;
 				}
 				else
 				{
 					unsigned int arraySize = (unsigned int)m_vertexPositions.size();
 
-					vertex.m_position[0] = m_vertexPositions[arraySize + vertexPositionId].x;
-					vertex.m_position[1] = m_vertexPositions[arraySize + vertexPositionId].y;
-					vertex.m_position[2] = m_vertexPositions[arraySize + vertexPositionId].z;
+					vertex.m_position[0] = m_vertexPositions[arraySize + vertexPositionId].x * scaleFactor;
+					vertex.m_position[1] = m_vertexPositions[arraySize + vertexPositionId].y * scaleFactor;
+					vertex.m_position[2] = m_vertexPositions[arraySize + vertexPositionId].z * scaleFactor;
 				}
 
 				// Code for centering the camera position

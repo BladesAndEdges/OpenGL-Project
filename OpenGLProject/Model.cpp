@@ -6,14 +6,15 @@
 #include <assert.h>
 
 // --------------------------------------------------------------------------------
-Model::Model(const char * compiledModelFileName, const std::string& cacheSubFolder, const char* objSourceFile, const MaterialReader& materialReader, const bool flipTexCoordsAlongV)
+Model::Model(const char * compiledModelFileName, const std::string& cacheSubFolder, const char* objSourceFile, const MaterialReader& materialReader, 
+																					const bool flipTexCoordsAlongV, const float scaleFactor)
 {
 	const bool hasLoadedFromCache = ModelCacher::tryReadFromCache(compiledModelFileName, cacheSubFolder, materialReader, m_meshes, m_indexedVertexBuffer, m_indexBuffer,
 																			m_sceneCenter);
 	if (!hasLoadedFromCache)
 	{
 		const bool hasLoadedFromSource = m_modelParser.parseModelData(objSourceFile, materialReader, 
-			m_meshes, m_indexedVertexBuffer, m_indexBuffer, m_sceneCenter, flipTexCoordsAlongV);
+			m_meshes, m_indexedVertexBuffer, m_indexBuffer, m_sceneCenter, flipTexCoordsAlongV, scaleFactor);
 
 		ModelCacher::writeToCache(compiledModelFileName,cacheSubFolder, m_meshes, m_indexedVertexBuffer, m_indexBuffer, m_sceneCenter);
 		if (!hasLoadedFromSource)

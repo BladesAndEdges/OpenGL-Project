@@ -14,7 +14,7 @@ class Model
 public:
 
 	Model(const char* compiledModelFileName, const std::string& cacheSubFolder, const char* objSourceFile, const MaterialReader& materialReader, 
-															const bool flipTexCoorsAlongV);
+															const bool flipTexCoorsAlongV, const float scaleFactor);
 
 	const std::vector<Mesh>& getMeshes() const;
 	const std::vector<Vertex>& getIndexedVertexBuffer() const;

@@ -454,7 +454,7 @@ int main()
 	const std::string sponza = "sponza";
 	MaterialReader materialReader(R"(Meshes\sponza\)", sponza);
 	materialReader.parseMaterialFile(R"(Meshes\sponza\sponza.mtl)");
-	Model sponzaModel(R"(SponzaModel.compiled)", sponza, R"(Meshes\sponza\sponza.obj)", materialReader, false);
+	Model sponzaModel(R"(SponzaModel.compiled)", sponza, R"(Meshes\sponza\sponza.obj)", materialReader, false, 0.01f);
 
 	Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", sponza, TextureTarget::Texture2D, TextureWrapMode::Repeat,
 		TextureFilterMode::Point);
