@@ -18,7 +18,7 @@ GraphicsConfigurations::GraphicsConfigurations() : m_rendererType(RendererType::
 													m_samplingRadiusInTexelUnits(0.0f),
 													m_maximumShadowDrawDistance(100.0f),
 													m_fadedShadowsStartDistance(0.9f)
-												
+
 {
 }
 

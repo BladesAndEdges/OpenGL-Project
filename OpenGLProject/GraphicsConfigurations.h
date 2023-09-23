@@ -54,7 +54,5 @@ private:
 	float m_samplingRadiusInTexelUnits;
 	float m_maximumShadowDrawDistance;
 	float m_fadedShadowsStartDistance;
-	
-
 };
 
