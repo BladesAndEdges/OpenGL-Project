@@ -208,12 +208,11 @@ glm::vec3 calculateWorldSpaceToLightVector(float zenith, float azimuth)
 // --------------------------------------------------------------------------------
 void updateShadowView(const Camera& mainView, Camera& shadowView, float cascadeWidth, float zenith, float azimuth, float cascadeStartDistance, float cascadeEndDistance)
 {
-
 	// Compte both the World Space -> Light Space and Light Space -> World Space quaternion
 	const glm::vec3 eulerAngles = glm::vec3(glm::radians(-zenith), glm::radians(azimuth), glm::radians(0.0f));
 	const glm::quat lightSpaceToWorldSpaceQuaternion = glm::quat(eulerAngles);
 	const glm::quat worldSpaceToLightSpaceQuaternion = glm::inverse(lightSpaceToWorldSpaceQuaternion);
-
+	
 	// Compute the cascades 8 world space corners
 	glm::vec3 worldSpaceFrustumCorners[8u];
 	mainView.computeFrustumPlaneCornersInWorldSpace(cascadeStartDistance, worldSpaceFrustumCorners);
@@ -466,7 +465,7 @@ int main()
 	glfwGetFramebufferSize(window, &mainViewWidth, &mainViewHeight);
 
 	Camera mainView = Camera::perspective(sponzaModel.getSceneCenter(), (float)mainViewWidth,
-		(float)mainViewHeight, 0.1f, 100.0f, 90.0f);
+		(float)mainViewHeight, 0.1f, 200.0, 90.0f);
 
 	float frameTimeArray[128];
 	unsigned int frameNumber = 0;
