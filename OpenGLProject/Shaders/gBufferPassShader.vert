@@ -41,5 +41,5 @@ void main()
 	gl_Position = ubo.viewProjection * vec4(worldPosition, 1.0f);	
 	v2f_worldPosition = worldPosition;
 	v2f_textureCoordinate = in_TextureCoordinate;
-	v2f_worldNormalBeforeTangent = (ubo.model * vec4(in_Normal, 1.0f)).xyz;
+	v2f_worldNormalBeforeTangent = (ubo.model * vec4(in_Normal, 0.0f)).xyz;
 };
