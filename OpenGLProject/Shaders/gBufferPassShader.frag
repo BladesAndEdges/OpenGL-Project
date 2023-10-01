@@ -2,7 +2,8 @@
 
 in vec3 v2f_worldPosition;
 in vec2 v2f_textureCoordinate;
-in vec3 v2f_worldNormalBeforeTangent;
+in vec3 v2f_objectSpaceNormal;
+in vec4 v2f_tangentVector;
 
 layout(binding = 0) uniform sampler2D ambientTextureSampler;
 layout(binding = 1) uniform sampler2D diffuseTextureSampler;
@@ -30,6 +31,13 @@ struct SurfaceProperties
 	float m_opacity;
 };
 
+vec3 computeWorldNormal()
+{
+	const vec4 tangentSpaceNormal = (texture(normalMapTextureSampler,v2f_textureCoordinate) * 2.0f) - 1.0f;
+	const vec3 bitangent = v2f_tangentVector.w *  cross(v2f_objectSpaceNormal, vec3(v2f_tangentVector.xyz));
+	return normalize(tangentSpaceNormal.x * v2f_tangentVector.xyz + tangentSpaceNormal.y * bitangent + tangentSpaceNormal.z * v2f_objectSpaceNormal);
+};
+
 // --------------------------------------------------------------------------------
 SurfaceProperties getSurfaceProperties()
 {	
@@ -39,7 +47,7 @@ SurfaceProperties getSurfaceProperties()
 	surfaceProperties.m_worldPosition = v2f_worldPosition;
 	
 	// Normal
-	surfaceProperties.m_worldNormal = v2f_worldNormalBeforeTangent;
+	surfaceProperties.m_worldNormal = computeWorldNormal();
 	
 	// Material properties
 	surfaceProperties.m_ambientColour = materialUniformData.m_ambientColour.xyz * texture(ambientTextureSampler, v2f_textureCoordinate).rgb;
