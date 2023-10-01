@@ -442,7 +442,7 @@ int main()
 	glFrontFace(GL_CCW);
 	glCullFace(GL_BACK);
 
-	Shader meshTestShader(R"(Shaders\meshTestShader.vert)", R"(Shaders\meshTestShader.frag)");
+	Shader forwardPassShader(R"(Shaders\forwardPassShader.vert)", R"(Shaders\forwardPassShader.frag)");
 	Shader depthOnlyPassShader(R"(Shaders\depthOnlyPass.vert)", R"(Shaders\depthOnlyPass.frag)");
 	Shader shadowMapDebugShader(R"(Shaders\shadowMapDebug.vert)", R"(Shaders\shadowMapDebug.frag)");
 
@@ -624,7 +624,7 @@ int main()
 		if (graphicsConfigurations.getRendererType() == RendererType::Forward)
 		{
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Forward Renderer Drawing");
-			meshTestShader.useProgram();
+			forwardPassShader.useProgram();
 			glBindVertexArray(sponzaModel.getVAO());
 			glViewport(0, 0,(GLsizei)mainView.getViewWidth(), (GLsizei)mainView.getViewHeight());
 			renderSceneFromView(mainView, perViewUniforms, sponzaModel, mainFramebuffer, shadowMap);
