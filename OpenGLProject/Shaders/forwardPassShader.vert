@@ -29,23 +29,23 @@ layout(std140, binding = 6) uniform sceneMatrices
 	bool cascadeDrawDistanceToggle;
 }ubo;
 
-out vec3 out_worldSpaceNormal;
-out vec3 out_worldSpaceFragment;
-out vec2 out_textureCoordinate;
-out vec4 out_Tangent;
-out vec3 vn;
+out vec3 v2f_worldSpaceNormal;
+out vec3 v2f_worldSpaceFragment;
+out vec2 v2f_textureCoordinate;
+out vec4 v2f_Tangent;
+out vec3 v2f_objectSpaceNormal;
 
 void main()
 {
 	gl_Position = ubo.viewProjection * (ubo.model * vec4(in_Position, 1.0f));
 	
-	out_worldSpaceNormal = vec3(ubo.model * vec4(in_Normal, 1.0f));
+	v2f_worldSpaceNormal = vec3(ubo.model * vec4(in_Normal, 1.0f));
 	
-	out_worldSpaceFragment = vec3(ubo.model * vec4(in_Position, 1.0f));
+	v2f_worldSpaceFragment = vec3(ubo.model * vec4(in_Position, 1.0f));
 	
-	out_textureCoordinate = in_TextureCoordinate;
+	v2f_textureCoordinate = in_TextureCoordinate;
 	
-	out_Tangent = in_Tangent;
+	v2f_Tangent = in_Tangent;
 	
-	vn = in_Normal;
+	v2f_objectSpaceNormal = in_Normal;
 }

@@ -4,11 +4,11 @@
 #define MAXIMUM_CASCADES 4
 #define UINT_MAX 0xFFFFFFFFu
 
-in vec3 out_worldSpaceNormal;
-in vec3 out_worldSpaceFragment;
-in vec2 out_textureCoordinate;
-in vec4 out_Tangent;
-in vec3 vn;
+in vec3 v2f_worldSpaceNormal;
+in vec3 v2f_worldSpaceFragment;
+in vec2 v2f_textureCoordinate;
+in vec4 v2f_Tangent;
+in vec3 v2f_objectSpaceNormal;
 
 out vec3 FragColour;
 
@@ -195,13 +195,13 @@ vec3 getWorldSurfaceNormal(bool normalMappingEnabled)
 {
 	if(normalMappingEnabled)
 	{
-		const vec4 tangentSpaceNormal = ((texture(normalMapTextureSampler, out_textureCoordinate) * 2.0f) -1.0f);
-		const vec3 bitangent = out_Tangent.w * cross(vn, vec3(out_Tangent.xyz)); 
-		return normalize(tangentSpaceNormal.x * out_Tangent.xyz + tangentSpaceNormal.y * bitangent + tangentSpaceNormal.z * vn);
+		const vec4 tangentSpaceNormal = ((texture(normalMapTextureSampler, v2f_textureCoordinate) * 2.0f) -1.0f);
+		const vec3 bitangent = v2f_Tangent.w * cross(v2f_objectSpaceNormal, vec3(v2f_Tangent.xyz)); 
+		return normalize(tangentSpaceNormal.x * v2f_Tangent.xyz + tangentSpaceNormal.y * bitangent + tangentSpaceNormal.z * v2f_objectSpaceNormal);
 	}
 	else
 	{
-		return normalize(out_worldSpaceNormal);
+		return normalize(v2f_worldSpaceNormal);
 	}
 };
 
@@ -211,17 +211,17 @@ SurfaceProperties getSurfaceProperties()
 	SurfaceProperties surfaceProperties;
 	
 	// Position
-	surfaceProperties.m_worldPosition = out_worldSpaceFragment;
+	surfaceProperties.m_worldPosition = v2f_worldSpaceFragment;
 	
 	// Normal
 	surfaceProperties.m_worldNormal = getWorldSurfaceNormal(ubo.normalMapToggle);
 	
 	// Material properties
-	surfaceProperties.m_ambientColour = materialUniformData.m_ambientColour.xyz * texture(ambientTextureSampler, out_textureCoordinate).rgb;
-	surfaceProperties.m_diffuseColour = materialUniformData.m_diffuseColour.xyz * texture(diffuseTextureSampler, out_textureCoordinate).rgb;
-	surfaceProperties.m_specularColour = materialUniformData.m_specularColour.xyz * texture(specularTextureSampler, out_textureCoordinate).rgb;
+	surfaceProperties.m_ambientColour = materialUniformData.m_ambientColour.xyz * texture(ambientTextureSampler, v2f_textureCoordinate).rgb;
+	surfaceProperties.m_diffuseColour = materialUniformData.m_diffuseColour.xyz * texture(diffuseTextureSampler, v2f_textureCoordinate).rgb;
+	surfaceProperties.m_specularColour = materialUniformData.m_specularColour.xyz * texture(specularTextureSampler, v2f_textureCoordinate).rgb;
 	surfaceProperties.m_smoothness = materialUniformData.m_specularHighLight;
-	surfaceProperties.m_opacity = texture(maskTextureSampler, out_textureCoordinate).r;
+	surfaceProperties.m_opacity = texture(maskTextureSampler, v2f_textureCoordinate).r;
 
 	return surfaceProperties;
 };
@@ -255,7 +255,7 @@ vec3 calculateSpecularTerm(bool specularLightingEnabled, const vec3 surfaceSpecu
 	{
 		const vec3 c_lightSourceIntensity = vec3(0.723f, 0.535f, 0.1293f);
 		
-		const vec3 fragmentToCameraDirection = normalize(ubo.worldCameraPosition.xyz - out_worldSpaceFragment);
+		const vec3 fragmentToCameraDirection = normalize(ubo.worldCameraPosition.xyz - v2f_worldSpaceFragment);
 		const vec3 reflectedVector = normalize(reflect(-ubo.lightSourceDirection.xyz, surfaceWorldNormal));
 		const float highlightDistribution = pow(max(dot(fragmentToCameraDirection, reflectedVector), 0.0f), surfaceSmoothness);
 		return c_lightSourceIntensity * surfaceSpecularColour * highlightDistribution; // Ask if this is a correct term
@@ -281,20 +281,20 @@ vec3 calculateLightingAtSurfacePoint(SurfaceProperties surfaceProperties)
 	
 	// Needs to be revised
 	// Shadow Map Cascades sampling
-	const vec3 mainCameraToFragment = out_worldSpaceFragment - ubo.worldCameraPosition.xyz;
+	const vec3 mainCameraToFragment = v2f_worldSpaceFragment - ubo.worldCameraPosition.xyz;
 	const uint cascadeSplitId = pickCascadeSplit(length(mainCameraToFragment), ubo.cascadeSplitsEndDistances);
 	
 	float inShadowRatio = 1.0f;
 	if(cascadeSplitId < MAXIMUM_CASCADES)
 	{
 		// Calculate shadow map tex coord
-		const vec4 homogeneousShadowMapSpaceFragment = ubo.worldToShadowMapMatrices[cascadeSplitId] * vec4(out_worldSpaceFragment, 1.0f);
+		const vec4 homogeneousShadowMapSpaceFragment = ubo.worldToShadowMapMatrices[cascadeSplitId] * vec4(v2f_worldSpaceFragment, 1.0f);
 		const vec3 cartesianShadowMapFragment = homogeneousShadowMapSpaceFragment.xyz / homogeneousShadowMapSpaceFragment.w;
 		const vec3 shadowMapSpaceFragment = vec3(cartesianShadowMapFragment.x, cartesianShadowMapFragment.y, 
 											cartesianShadowMapFragment.z);
 		
 		// Sample the Shadow Map
-		inShadowRatio = computeInShadowRatio(ubo.offsetScale, shadowMapSpaceFragment, ubo.worldCameraPosition.xyz, out_worldSpaceFragment, 
+		inShadowRatio = computeInShadowRatio(ubo.offsetScale, shadowMapSpaceFragment, ubo.worldCameraPosition.xyz, v2f_worldSpaceFragment, 
 																				ubo.shadowDrawDistance, ubo.shadowFadeStartDistance, cascadeSplitId);
 	}
 	
