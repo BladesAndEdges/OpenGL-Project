@@ -15,8 +15,6 @@ out vec3 FragColour;
 layout(std140, binding = 7) uniform PerMaterialUniforms
 {
 	vec4 m_ambientColour;
-	vec4 m_diffuseColour;
-	vec4 m_specularColour;
 	float m_specularHighLight;
 } materialUniformData;
 
@@ -54,11 +52,10 @@ layout(std140, binding = 6) uniform sceneMatrices
 }ubo;
 
 layout(binding = 0) uniform sampler2D ambientTextureSampler;
-layout(binding = 1) uniform sampler2D diffuseTextureSampler;
-layout(binding = 2) uniform sampler2D specularTextureSampler;
+layout(binding = 1) uniform sampler2D baseColourTextureSampler;
+layout(binding = 2) uniform sampler2D metalnessTextureSampler;
 layout(binding = 3) uniform sampler2D normalMapTextureSampler;
 layout(binding = 4) uniform sampler2D maskTextureSampler;
-
 layout(binding = 5) uniform sampler2DArrayShadow shadowMap;
 
 // --------------------------------------------------------------------------------
@@ -206,6 +203,22 @@ vec3 getWorldSurfaceNormal(bool normalMappingEnabled)
 };
 
 // --------------------------------------------------------------------------------
+vec3 getDiffuseColour()
+{
+	const vec3 baseColour = texture(baseColourTextureSampler, v2f_textureCoordinate).rgb;
+	const float metalness = texture(metalnessTextureSampler, v2f_textureCoordinate).r;
+	return (1.0f - metalness) * baseColour;
+};
+
+// --------------------------------------------------------------------------------
+vec3 getSpecularColour()
+{
+	const vec3 baseColour = texture(baseColourTextureSampler, v2f_textureCoordinate).rgb;
+	const float metalness = texture(metalnessTextureSampler, v2f_textureCoordinate).r;
+	return metalness * baseColour + (1.0f - metalness) * vec3(0.04f);
+};
+
+// --------------------------------------------------------------------------------
 SurfaceProperties getSurfaceProperties()
 {	
 	SurfaceProperties surfaceProperties;
@@ -218,8 +231,8 @@ SurfaceProperties getSurfaceProperties()
 	
 	// Material properties
 	surfaceProperties.m_ambientColour = materialUniformData.m_ambientColour.xyz * texture(ambientTextureSampler, v2f_textureCoordinate).rgb;
-	surfaceProperties.m_diffuseColour = materialUniformData.m_diffuseColour.xyz * texture(diffuseTextureSampler, v2f_textureCoordinate).rgb;
-	surfaceProperties.m_specularColour = materialUniformData.m_specularColour.xyz * texture(specularTextureSampler, v2f_textureCoordinate).rgb;
+	surfaceProperties.m_diffuseColour = getDiffuseColour();
+	surfaceProperties.m_specularColour = getSpecularColour();
 	surfaceProperties.m_smoothness = materialUniformData.m_specularHighLight;
 	surfaceProperties.m_opacity = texture(maskTextureSampler, v2f_textureCoordinate).r;
 

@@ -18,8 +18,8 @@ struct Material
 	~Material();
 
 	const Texture* m_ambientTexture;
-	const Texture* m_diffuseTexture;
-	const Texture* m_specularTexture;
+	const Texture* m_baseColourTexture;
+	const Texture* m_metallicTexture;
 	const Texture* m_normalMapTexture;
 	const Texture* m_maskTexture;
 

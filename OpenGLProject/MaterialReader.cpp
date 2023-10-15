@@ -51,8 +51,8 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			}
 
 			currentMaterial.m_ambientTexture = nullptr;
-			currentMaterial.m_diffuseTexture = nullptr;
-			currentMaterial.m_specularTexture = nullptr;
+			currentMaterial.m_baseColourTexture = nullptr;
+			currentMaterial.m_metallicTexture = nullptr;
 			currentMaterial.m_normalMapTexture = nullptr;
 			currentMaterial.m_maskTexture = nullptr;
 			currentMaterial.m_uniformBuffer = nullptr;
@@ -68,20 +68,6 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			ifs >> perMaterialUniforms.m_ambientColour[0] 
 				>> perMaterialUniforms.m_ambientColour[1] 
 				>> perMaterialUniforms.m_ambientColour[2];
-		}
-
-		if (str == "Kd")
-		{
-			ifs >> perMaterialUniforms.m_diffuseColour[0]
-				>> perMaterialUniforms.m_diffuseColour[1]
-				>> perMaterialUniforms.m_diffuseColour[2];
-		}
-
-		if (str == "Ks")
-		{
-			ifs >> perMaterialUniforms.m_specularColour[0]
-				>> perMaterialUniforms.m_specularColour[1]
-				>> perMaterialUniforms.m_specularColour[2];
 		}
 
 		if (str == "map_Ka")
@@ -112,32 +98,13 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			if (m_textures.find(finalPath) == m_textures.end())
 			{
 				loadTexture(finalPath.c_str(), m_cacheSubFolder, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
-				currentMaterial.m_diffuseTexture = &m_textures.at(finalPath);
+				currentMaterial.m_baseColourTexture = &m_textures.at(finalPath);
 				
-				std::cout << "Loaded Diffuse Texture: " << texturePath << std::endl;
+				std::cout << "Loaded BaseColour Texture: " << texturePath << std::endl;
 			}
 			else
 			{
-				currentMaterial.m_diffuseTexture = &m_textures.at(finalPath);
-			}
-		}
-
-		if (str == "map_Ks")
-		{
-			std::string texturePath = processTexturePath(ifs);
-
-			const std::string finalPath = m_rootMeshDirectory + texturePath;
-
-			if (m_textures.find(finalPath) == m_textures.end())
-			{
-				loadTexture(finalPath.c_str(), m_cacheSubFolder, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
-				currentMaterial.m_specularTexture = &m_textures.at(finalPath);
-				
-				std::cout << "Loaded Specular Texture: " << texturePath << std::endl;
-			}
-			else
-			{
-				currentMaterial.m_specularTexture = &m_textures.at(finalPath);
+				currentMaterial.m_baseColourTexture = &m_textures.at(finalPath);
 			}
 		}
 
@@ -235,11 +202,11 @@ void MaterialReader::provideBlackTexture(Material & material, uint32_t id)
 		break;
 
 	case 1:
-		material.m_diffuseTexture = &m_textures.at(defaultBlackTexturePath);
+		material.m_baseColourTexture = &m_textures.at(defaultBlackTexturePath);
 		break;
 
 	case 2: 
-		material.m_specularTexture = &m_textures.at(defaultBlackTexturePath);
+		material.m_metallicTexture = &m_textures.at(defaultBlackTexturePath);
 		break;
 
 	default:
@@ -253,8 +220,8 @@ void MaterialReader::completeMaterial(Material & material)
 {
 	// Provide a black texture for missing light components
 	if (material.m_ambientTexture == nullptr) { provideBlackTexture(material, 0); };
-	if (material.m_diffuseTexture == nullptr) { provideBlackTexture(material, 1); };
-	if (material.m_specularTexture == nullptr) { provideBlackTexture(material, 2); };
+	if (material.m_baseColourTexture == nullptr) { provideBlackTexture(material, 1); };
+	if (material.m_metallicTexture == nullptr) { provideBlackTexture(material, 2); };
 
 	if (material.m_normalMapTexture == nullptr) { provideNormalMapTexture(material); };
 	if (material.m_maskTexture == nullptr) { provideMaskTexture(material); };

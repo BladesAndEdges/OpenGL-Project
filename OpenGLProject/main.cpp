@@ -276,15 +276,15 @@ void renderAttributeToGBuffer(const Model& model, const Framebuffer& framebuffer
 	for (const Mesh& mesh : model.getMeshes())
 	{
 		assert(mesh.material->m_ambientTexture != nullptr);
-		assert(mesh.material->m_diffuseTexture != nullptr);
-		assert(mesh.material->m_specularTexture != nullptr);
+		assert(mesh.material->m_baseColourTexture != nullptr);
+		assert(mesh.material->m_metallicTexture != nullptr);
 		assert(mesh.material->m_normalMapTexture != nullptr);
 		assert(mesh.material->m_maskTexture != nullptr);
 		assert(mesh.material->m_uniformBuffer != nullptr);
 
 		mesh.material->m_ambientTexture->useTexture(0, TextureComparisonMode::None);
-		mesh.material->m_diffuseTexture->useTexture(1, TextureComparisonMode::None);
-		mesh.material->m_specularTexture->useTexture(2, TextureComparisonMode::None);
+		mesh.material->m_baseColourTexture->useTexture(1, TextureComparisonMode::None);
+		mesh.material->m_metallicTexture->useTexture(2, TextureComparisonMode::None);
 		mesh.material->m_normalMapTexture->useTexture(3, TextureComparisonMode::None);
 		mesh.material->m_maskTexture->useTexture(4, TextureComparisonMode::None);
 		mesh.material->m_uniformBuffer->useBuffer();
@@ -308,15 +308,15 @@ void renderSceneFromView(const Camera&,  const PerViewUniformData&, const Model&
 	for (const Mesh& mesh : model.getMeshes())
 	{
 		assert(mesh.material->m_ambientTexture != nullptr);
-		assert(mesh.material->m_diffuseTexture != nullptr);
-		assert(mesh.material->m_specularTexture != nullptr);
+		assert(mesh.material->m_baseColourTexture != nullptr);
+		assert(mesh.material->m_metallicTexture != nullptr);
 		assert(mesh.material->m_normalMapTexture != nullptr);
 		assert(mesh.material->m_maskTexture != nullptr);
 		assert(mesh.material->m_uniformBuffer != nullptr);
 
 		mesh.material->m_ambientTexture->useTexture(0, TextureComparisonMode::None);
-		mesh.material->m_diffuseTexture->useTexture(1, TextureComparisonMode::None);
-		mesh.material->m_specularTexture->useTexture(2, TextureComparisonMode::None);
+		mesh.material->m_baseColourTexture->useTexture(1, TextureComparisonMode::None);
+		mesh.material->m_metallicTexture->useTexture(2, TextureComparisonMode::None);
 		mesh.material->m_normalMapTexture->useTexture(3, TextureComparisonMode::None);
 		mesh.material->m_maskTexture->useTexture(4, TextureComparisonMode::None);
 
