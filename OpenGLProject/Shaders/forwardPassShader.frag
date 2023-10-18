@@ -215,7 +215,7 @@ vec3 getSpecularColour()
 {
 	const vec3 baseColour = texture(baseColourTextureSampler, v2f_textureCoordinate).rgb;
 	const float metalness = texture(metalnessTextureSampler, v2f_textureCoordinate).r;
-	return metalness * baseColour + (1.0f - metalness) * vec3(0.04f);
+	return (metalness * baseColour) + (1.0f - metalness) * vec3(0.04f, 0.04f, 0.04f);
 };
 
 // --------------------------------------------------------------------------------
@@ -289,7 +289,7 @@ vec3 calculateLightingAtSurfacePoint(SurfaceProperties surfaceProperties)
 	const vec3 directDiffuseTerm = calculateDirectDiffuseTerm(ubo.diffuseToggle, surfaceProperties.m_diffuseColour, surfaceProperties.m_worldNormal);
 	
 	// Specular Term
-	const vec3 specularTerm = calculateSpecularTerm(ubo.specularToggle, surfaceProperties.m_specularColour, surfaceProperties.m_specularColour, surfaceProperties.m_smoothness);
+	const vec3 specularTerm = calculateSpecularTerm(ubo.specularToggle, surfaceProperties.m_specularColour, surfaceProperties.m_worldNormal, surfaceProperties.m_smoothness);
 	
 	
 	// Needs to be revised
