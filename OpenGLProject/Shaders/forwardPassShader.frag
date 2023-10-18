@@ -240,10 +240,17 @@ SurfaceProperties getSurfaceProperties()
 };
 
 // --------------------------------------------------------------------------------
-vec3 calculateIndirectDiffuseTerm(const vec3 surfaceDiffuseColour)
+vec3 calculateIndirectDiffuseTerm(bool diffuseLightingEnabled, const vec3 surfaceDiffuseColour)
 {
-	const vec3 c_globalLightSourceIntensity = vec3(0.8f, 0.8f, 0.8f);
-	return c_globalLightSourceIntensity * surfaceDiffuseColour;
+	if(diffuseLightingEnabled)
+	{
+		const vec3 c_globalLightSourceIntensity = vec3(0.8f, 0.8f, 0.8f);
+		return c_globalLightSourceIntensity * surfaceDiffuseColour;
+	}
+	else
+	{
+		return vec3(0.0f, 0.0f, 0.0f);
+	}
 };
 
 // --------------------------------------------------------------------------------
@@ -283,7 +290,7 @@ vec3 calculateSpecularTerm(bool specularLightingEnabled, const vec3 surfaceSpecu
 vec3 calculateLightingAtSurfacePoint(SurfaceProperties surfaceProperties)
 {	
 	// Indirect Diffuse Term
-	const vec3 indirectDiffuseTerm = calculateIndirectDiffuseTerm(surfaceProperties.m_diffuseColour);
+	const vec3 indirectDiffuseTerm = calculateIndirectDiffuseTerm(ubo.diffuseToggle, surfaceProperties.m_diffuseColour);
 	
 	// Direct Diffuse Term
 	const vec3 directDiffuseTerm = calculateDirectDiffuseTerm(ubo.diffuseToggle, surfaceProperties.m_diffuseColour, surfaceProperties.m_worldNormal);
