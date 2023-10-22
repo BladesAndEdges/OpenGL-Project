@@ -2,7 +2,8 @@
 
 in vec2 out_textureCoordinate;
 
-layout(binding = 4) uniform sampler2D maskTextureSampler;
+// This works without calling mesh.material->useTexture() since bindings seem to persist
+layout(binding = 3) uniform sampler2D maskTextureSampler;
 
 void main()
 {

@@ -50,7 +50,6 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 				m_Materials.insert({ materialName, currentMaterial });
 			}
 
-			currentMaterial.m_ambientTexture = nullptr;
 			currentMaterial.m_baseColourTexture = nullptr;
 			currentMaterial.m_metallicTexture = nullptr;
 			currentMaterial.m_normalMapTexture = nullptr;
@@ -61,32 +60,6 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			ifs >> materialName;
 
 			firstMaterial = false;
-		}
-
-		if (str == "Ka")
-		{
-			ifs >> perMaterialUniforms.m_ambientColour[0] 
-				>> perMaterialUniforms.m_ambientColour[1] 
-				>> perMaterialUniforms.m_ambientColour[2];
-		}
-
-		if (str == "map_Ka")
-		{
-			std::string texturePath = processTexturePath(ifs);
-
-			const std::string finalPath = m_rootMeshDirectory + texturePath;
-
-			if (m_textures.find(finalPath) == m_textures.end())
-			{
-				loadTexture(finalPath.c_str(), m_cacheSubFolder, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
-				currentMaterial.m_ambientTexture = &m_textures.at(finalPath);
-
-				std::cout << "Loaded Ambient Texture: " << texturePath << std::endl;
-			}
-			else
-			{
-				currentMaterial.m_ambientTexture = &m_textures.at(finalPath);
-			}
 		}
 
 		if (str == "map_Kd")
@@ -198,14 +171,10 @@ void MaterialReader::provideBlackTexture(Material & material, uint32_t id)
 	switch (id)
 	{
 	case 0:
-		material.m_ambientTexture = &m_textures.at(defaultBlackTexturePath);
-		break;
-
-	case 1:
 		material.m_baseColourTexture = &m_textures.at(defaultBlackTexturePath);
 		break;
 
-	case 2: 
+	case 1: 
 		material.m_metallicTexture = &m_textures.at(defaultBlackTexturePath);
 		break;
 
@@ -219,9 +188,8 @@ void MaterialReader::provideBlackTexture(Material & material, uint32_t id)
 void MaterialReader::completeMaterial(Material & material)
 {
 	// Provide a black texture for missing light components
-	if (material.m_ambientTexture == nullptr) { provideBlackTexture(material, 0); };
-	if (material.m_baseColourTexture == nullptr) { provideBlackTexture(material, 1); };
-	if (material.m_metallicTexture == nullptr) { provideBlackTexture(material, 2); };
+	if (material.m_baseColourTexture == nullptr) { provideBlackTexture(material, 0); };
+	if (material.m_metallicTexture == nullptr) { provideBlackTexture(material, 1); };
 
 	if (material.m_normalMapTexture == nullptr) { provideNormalMapTexture(material); };
 	if (material.m_maskTexture == nullptr) { provideMaskTexture(material); };

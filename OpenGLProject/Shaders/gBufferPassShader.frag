@@ -5,16 +5,14 @@ in vec2 v2f_textureCoordinate;
 in vec3 v2f_objectSpaceNormal;
 in vec4 v2f_tangentVector;
 
-layout(binding = 0) uniform sampler2D ambientTextureSampler;
-layout(binding = 1) uniform sampler2D baseColourTextureSampler;
-layout(binding = 2) uniform sampler2D metalnessTextureSampler;
-layout(binding = 3) uniform sampler2D normalMapTextureSampler;
-layout(binding = 4) uniform sampler2D maskTextureSampler;
+layout(binding = 0) uniform sampler2D baseColourTextureSampler;
+layout(binding = 1) uniform sampler2D metalnessTextureSampler;
+layout(binding = 2) uniform sampler2D normalMapTextureSampler;
+layout(binding = 3) uniform sampler2D maskTextureSampler;
 
 // --------------------------------------------------------------------------------
 layout(std140, binding = 7) uniform PerMaterialUniforms
 {
-	vec4 m_ambientColour;
 	float m_specularHighLight;
 } materialUniformData;
 
@@ -22,7 +20,6 @@ struct SurfaceProperties
 {
 	vec3 m_worldPosition;
 	vec3 m_worldNormal; 
-	vec3 m_ambientColour;
 	vec3 m_diffuseColour;
 	vec3 m_specularColour;
 	float m_smoothness;
@@ -65,7 +62,6 @@ SurfaceProperties getSurfaceProperties()
 	surfaceProperties.m_worldNormal = computeWorldNormal();
 	
 	// Material properties
-	surfaceProperties.m_ambientColour = materialUniformData.m_ambientColour.xyz * texture(ambientTextureSampler, v2f_textureCoordinate).rgb;
 	surfaceProperties.m_diffuseColour = getDiffuseColour();
 	surfaceProperties.m_specularColour = getSpecularColour();
 	surfaceProperties.m_smoothness = materialUniformData.m_specularHighLight;

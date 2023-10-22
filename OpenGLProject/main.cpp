@@ -275,18 +275,16 @@ void renderAttributeToGBuffer(const Model& model, const Framebuffer& framebuffer
 
 	for (const Mesh& mesh : model.getMeshes())
 	{
-		assert(mesh.material->m_ambientTexture != nullptr);
 		assert(mesh.material->m_baseColourTexture != nullptr);
 		assert(mesh.material->m_metallicTexture != nullptr);
 		assert(mesh.material->m_normalMapTexture != nullptr);
 		assert(mesh.material->m_maskTexture != nullptr);
 		assert(mesh.material->m_uniformBuffer != nullptr);
 
-		mesh.material->m_ambientTexture->useTexture(0, TextureComparisonMode::None);
-		mesh.material->m_baseColourTexture->useTexture(1, TextureComparisonMode::None);
-		mesh.material->m_metallicTexture->useTexture(2, TextureComparisonMode::None);
-		mesh.material->m_normalMapTexture->useTexture(3, TextureComparisonMode::None);
-		mesh.material->m_maskTexture->useTexture(4, TextureComparisonMode::None);
+		mesh.material->m_baseColourTexture->useTexture(0, TextureComparisonMode::None);
+		mesh.material->m_metallicTexture->useTexture(1, TextureComparisonMode::None);
+		mesh.material->m_normalMapTexture->useTexture(2, TextureComparisonMode::None);
+		mesh.material->m_maskTexture->useTexture(3, TextureComparisonMode::None);
 		mesh.material->m_uniformBuffer->useBuffer();
 
 		glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
@@ -301,24 +299,22 @@ void renderSceneFromView(const Camera&,  const PerViewUniformData&, const Model&
 								const Texture* shadowMap)
 {
 	assert(shadowMap != nullptr);
-	shadowMap->useTexture(5, TextureComparisonMode::LessEqual);
+	shadowMap->useTexture(4, TextureComparisonMode::LessEqual);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.getName());
 
 	for (const Mesh& mesh : model.getMeshes())
 	{
-		assert(mesh.material->m_ambientTexture != nullptr);
 		assert(mesh.material->m_baseColourTexture != nullptr);
 		assert(mesh.material->m_metallicTexture != nullptr);
 		assert(mesh.material->m_normalMapTexture != nullptr);
 		assert(mesh.material->m_maskTexture != nullptr);
 		assert(mesh.material->m_uniformBuffer != nullptr);
 
-		mesh.material->m_ambientTexture->useTexture(0, TextureComparisonMode::None);
-		mesh.material->m_baseColourTexture->useTexture(1, TextureComparisonMode::None);
-		mesh.material->m_metallicTexture->useTexture(2, TextureComparisonMode::None);
-		mesh.material->m_normalMapTexture->useTexture(3, TextureComparisonMode::None);
-		mesh.material->m_maskTexture->useTexture(4, TextureComparisonMode::None);
+		mesh.material->m_baseColourTexture->useTexture(0, TextureComparisonMode::None);
+		mesh.material->m_metallicTexture->useTexture(1, TextureComparisonMode::None);
+		mesh.material->m_normalMapTexture->useTexture(2, TextureComparisonMode::None);
+		mesh.material->m_maskTexture->useTexture(3, TextureComparisonMode::None);
 
 		mesh.material->m_uniformBuffer->useBuffer();
 		glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));

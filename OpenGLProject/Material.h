@@ -17,7 +17,6 @@ struct Material
 	Material();
 	~Material();
 
-	const Texture* m_ambientTexture;
 	const Texture* m_baseColourTexture;
 	const Texture* m_metallicTexture;
 	const Texture* m_normalMapTexture;

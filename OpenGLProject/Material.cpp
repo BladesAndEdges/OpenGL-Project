@@ -1,7 +1,7 @@
 #include "Material.h"
 
 // --------------------------------------------------------------------------------
-Material::Material() : m_ambientTexture(nullptr), m_baseColourTexture(nullptr), m_metallicTexture(nullptr), m_normalMapTexture(nullptr), 
+Material::Material() : m_baseColourTexture(nullptr), m_metallicTexture(nullptr), m_normalMapTexture(nullptr), 
 						m_maskTexture(nullptr), m_uniformBuffer(nullptr)
 {
 	// Create UniformBuffer here
