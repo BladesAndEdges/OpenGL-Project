@@ -187,9 +187,13 @@ float computeInShadowRatio(float offsetScale, vec3 shadowMapFragment, const vec3
 // --------------------------------------------------------------------------------
 vec3 getWorldSurfaceNormal(bool normalMappingEnabled)
 {
+
+	const vec2 c_texCoords = vec2(v2f_textureCoordinate.x, 1.0f - v2f_textureCoordinate.y);
+	
 	if(normalMappingEnabled)
 	{
-		const vec4 tangentSpaceNormal = ((texture(normalMapTextureSampler, v2f_textureCoordinate) * 2.0f) -1.0f);
+		vec4 tangentSpaceNormal = ((texture(normalMapTextureSampler, c_texCoords) * 2.0f) -1.0f);
+		tangentSpaceNormal.z = tangentSpaceNormal.z * -1.0f;
 		const vec3 bitangent = v2f_Tangent.w * cross(v2f_objectSpaceNormal, vec3(v2f_Tangent.xyz)); 
 		return normalize(tangentSpaceNormal.x * v2f_Tangent.xyz + tangentSpaceNormal.y * bitangent + tangentSpaceNormal.z * v2f_objectSpaceNormal);
 	}
@@ -202,16 +206,20 @@ vec3 getWorldSurfaceNormal(bool normalMappingEnabled)
 // --------------------------------------------------------------------------------
 vec3 getDiffuseColour()
 {
-	const vec3 baseColour = texture(baseColourTextureSampler, v2f_textureCoordinate).rgb;
-	const float metalness = texture(metalnessTextureSampler, v2f_textureCoordinate).r;
+	const vec2 c_texCoords = vec2(v2f_textureCoordinate.x, 1.0f - v2f_textureCoordinate.y);
+	
+	const vec3 baseColour = texture(baseColourTextureSampler, c_texCoords).rgb;
+	const float metalness = texture(metalnessTextureSampler, c_texCoords).b;
 	return (1.0f - metalness) * baseColour;
 };
 
 // --------------------------------------------------------------------------------
 vec3 getSpecularColour()
 {
-	const vec3 baseColour = texture(baseColourTextureSampler, v2f_textureCoordinate).rgb;
-	const float metalness = texture(metalnessTextureSampler, v2f_textureCoordinate).r;
+	const vec2 c_texCoords = vec2(v2f_textureCoordinate.x, 1.0f - v2f_textureCoordinate.y);
+	
+	const vec3 baseColour = texture(baseColourTextureSampler, c_texCoords).rgb;
+	const float metalness = texture(metalnessTextureSampler, c_texCoords).b;
 	return (metalness * baseColour) + (1.0f - metalness) * vec3(0.04f, 0.04f, 0.04f);
 };
 
@@ -219,6 +227,7 @@ vec3 getSpecularColour()
 SurfaceProperties getSurfaceProperties()
 {	
 	SurfaceProperties surfaceProperties;
+	const vec2 c_texCoords = vec2(v2f_textureCoordinate.x, 1.0f - v2f_textureCoordinate.y);
 	
 	// Position
 	surfaceProperties.m_worldPosition = v2f_worldSpaceFragment;
@@ -230,7 +239,7 @@ SurfaceProperties getSurfaceProperties()
 	surfaceProperties.m_diffuseColour = getDiffuseColour();
 	surfaceProperties.m_specularColour = getSpecularColour();
 	surfaceProperties.m_smoothness = materialUniformData.m_specularHighLight;
-	surfaceProperties.m_opacity = texture(maskTextureSampler, v2f_textureCoordinate).r;
+	surfaceProperties.m_opacity = texture(baseColourTextureSampler, c_texCoords).a;
 
 	return surfaceProperties;
 };

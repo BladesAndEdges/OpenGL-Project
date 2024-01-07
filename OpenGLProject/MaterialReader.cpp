@@ -81,7 +81,26 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 			}
 		}
 
-		if (str == "map_normal")
+		if (str == "map_Ks")
+		{
+			std::string texturePath = processTexturePath(ifs);
+
+			const std::string finalPath = m_rootMeshDirectory + texturePath;
+
+			if (m_textures.find(finalPath) == m_textures.end())
+			{
+				loadTexture(finalPath.c_str(), m_cacheSubFolder, TextureTarget::Texture2D, TextureWrapMode::Repeat, TextureFilterMode::Trilinear);
+				currentMaterial.m_baseColourTexture = &m_textures.at(finalPath);
+
+				std::cout << "Loaded Metalness Texture: " << texturePath << std::endl;
+			}
+			else
+			{
+				currentMaterial.m_metallicTexture = &m_textures.at(finalPath);
+			}
+		}
+
+		if ((str == "map_normal") || (str == "map_Bump"))
 		{
 			std::string texturePath = processTexturePath(ifs);
 
