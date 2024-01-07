@@ -32,7 +32,7 @@ private:
 
 	std::unordered_map<std::string, Material> m_Materials;
 	std::unordered_map<std::string, Texture> m_textures;
-	TextureHashMaps m_textureHashMaps;
+	//TextureHashMaps m_textureHashMaps;
 
 	void loadTexture(const char* path, const std::string& cacheSubFolder,TextureTarget target, TextureWrapMode wrapMode,
 		TextureFilterMode filterMode);
