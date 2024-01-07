@@ -287,7 +287,8 @@ void renderAttributeToGBuffer(const Model& model, const Framebuffer& framebuffer
 		mesh.material->m_maskTexture->useTexture(3, TextureComparisonMode::None);
 		mesh.material->m_uniformBuffer->useBuffer();
 
-		glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
+		glDrawElementsBaseVertex(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)), 0u);
+
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -317,7 +318,7 @@ void renderSceneFromView(const Camera&,  const PerViewUniformData&, const Model&
 		mesh.material->m_maskTexture->useTexture(3, TextureComparisonMode::None);
 
 		mesh.material->m_uniformBuffer->useBuffer();
-		glDrawElements(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)));
+		glDrawElementsBaseVertex(GL_TRIANGLES, mesh.indicesCount, GL_UNSIGNED_INT, (void*)(mesh.firstIndex * sizeof(unsigned int)), 0u);
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -446,10 +447,10 @@ int main()
 	PerViewUniformData perViewUniforms;
 	UniformBuffer perViewUniformBuffer(6u, sizeof(PerViewUniformData), nullptr, "PerViewUniformBuffer");
 
-	const std::string sponza = "sponza";
-	MaterialReader materialReader(R"(Meshes\sponza\)", sponza);
-	materialReader.parseMaterialFile(R"(Meshes\sponza\sponza.mtl)");
-	Model sponzaModel(R"(SponzaModel.compiled)", sponza, R"(Meshes\sponza\sponza.obj)", materialReader, false, 0.01f);
+	const std::string sponza = "emerald";
+	MaterialReader materialReader(R"(Meshes\emerald\)", sponza);
+	materialReader.parseMaterialFile(R"(Meshes\emerald\emeraldSquare.mtl)");
+	Model sponzaModel(R"(emeraldSquare.compiled)", sponza, R"(Meshes\emerald\emeraldSquare.obj)", materialReader, false, 1.0f);
 
 	Texture dummyNormalMap(R"(Meshes\sponza\textures\dummy_ddn.png)", sponza, TextureTarget::Texture2D, TextureWrapMode::Repeat,
 		TextureFilterMode::Point);
@@ -678,7 +679,7 @@ int main()
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
 
-		const std::string projectName = "Crytek Sponza OpenGL Project ";
+		const std::string projectName = "Engine ";
 		const std::string averageTimeTitle = std::to_string(averageFrameTime);
 		const std::string windowTitle = projectName + averageTimeTitle;
 
