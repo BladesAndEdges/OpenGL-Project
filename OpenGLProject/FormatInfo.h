@@ -22,6 +22,8 @@ enum class TextureFormat : uint32_t
 	DXT3,
 	DXT5,
 
+	ATI2,
+
 	// Depth
 	DEPTH32,
 

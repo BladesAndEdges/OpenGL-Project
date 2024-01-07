@@ -66,22 +66,16 @@ void DDSFileLoader::parse(const char* sourceFile, int& width, int& height)
 			DDSHeader ddsHeader;
 			ifs.read((char*)&ddsHeader, sizeof(DDSHeader));
 
-			// Set width and height
+			if ((ddsHeader.ddspf.dwFlags == 0x4) && (ddsHeader.ddspf.dwFourCC == MAKEFOURCC('D', 'X', '1', '0')))
+			{
+				assert(0); // ...or read DX10 header, not implemented yet.
+			}
+
 			width = (int)ddsHeader.dwWidth;
 			height = (int)ddsHeader.dwHeight;
 
-			if ((ddsHeader.ddspf.dwFlags == 0x4) && (ddsHeader.ddspf.dwFourCC == MAKEFOURCC('D','X','1','0')))
-			{
-				assert(0);
-			}
-
-			//if (width == 16u && height == 16u)
-			//{
-			//	std::cout << "It's 16" << std::endl;
-			//}
-
+			// Data count
 			BlockCompressionInfo blockInfo = getBlockCompressionInfo(ddsHeader.ddspf);
-			// Why 3, is it because the largest remainder would be 3 extra pixels?
 			const uint32_t bytesPerBlockRow = max(1u, ((ddsHeader.dwWidth + 3u) / 4u)) * blockInfo.blockSizeInBytes;
 			const uint32_t blocksAlongY = ((ddsHeader.dwHeight + 3u) / 4u);
 
@@ -126,7 +120,10 @@ BlockCompressionInfo getBlockCompressionInfo(const DDSPixelFormat& ddsPixelForma
 	blockInfo.blockWidth = 0u;
 	blockInfo.blockHeight = 0u;
 
-	if (ddsPixelFormat.dwFlags == 0x4) // Compressed
+	// Check if it is a compressed format
+	const DWORD ddpfFourCC = ddsPixelFormat.dwFlags & 0x4;
+
+	if (ddpfFourCC == 0x4) // Compressed
 	{	
 
 		if (ddsPixelFormat.dwFourCC == MAKEFOURCC('D', 'X', 'T', '1'))
@@ -148,18 +145,27 @@ BlockCompressionInfo getBlockCompressionInfo(const DDSPixelFormat& ddsPixelForma
 			blockInfo.blockWidth = 4u;
 			blockInfo.blockHeight = 4u;
 		}
+
+		if (ddsPixelFormat.dwFourCC == MAKEFOURCC('A', 'T', 'I', '2'))
+		{
+			blockInfo.blockSizeInBytes = 16u;
+			blockInfo.blockWidth = 4u;
+			blockInfo.blockHeight = 4u;
+		}
 	}
 
 	assert(blockInfo.blockSizeInBytes > 0u);
 	return blockInfo;
 }
 
+
 // --------------------------------------------------------------------------------
 TextureFormat chooseTextureFormat(const DDSPixelFormat & ddsPixelFormat)
 {
 	TextureFormat format = TextureFormat::COUNT;
 
-	if (ddsPixelFormat.dwFlags == 0x4) // Compressed
+	const DWORD ddpfFourCC = ddsPixelFormat.dwFlags & 0x4;
+	if (ddpfFourCC == 0x4) // Compressed
 	{
 
 		if (ddsPixelFormat.dwFourCC == MAKEFOURCC('D', 'X', 'T', '1'))
@@ -174,8 +180,12 @@ TextureFormat chooseTextureFormat(const DDSPixelFormat & ddsPixelFormat)
 		{
 			format = TextureFormat::DXT5;
 		}
+		if (ddsPixelFormat.dwFourCC == MAKEFOURCC('A', 'T', 'I', '2'))
+		{
+			format = TextureFormat::ATI2;
+		}
 	}
 
-	assert((format == TextureFormat::DXT1) || (format == TextureFormat::DXT3) || (format == TextureFormat::DXT5));
+	assert(format != TextureFormat::COUNT);
 	return format;
 }

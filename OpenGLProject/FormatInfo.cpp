@@ -10,6 +10,7 @@
 #define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT   0x83F1
 #define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT   0x83F2
 #define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT   0x83F3
+#define GL_COMRESSED_RG_RGTC2   0x8DBD	
 
 // Format this properly
 // --------------------------------------------------------------------------------
@@ -26,6 +27,7 @@ const FormatInfo g_glFormatInfoTable[] =
 	4u,	     4u,       8u,			  GL_RGBA,       GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,                        true,
 	4u,      4u,       16u,           GL_RGBA,       GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,                        true,
 	4u,      4u,       16u,           GL_RGBA,       GL_COMPRESSED_RGBA_S3TC_DXT5_EXT,                        true,
+	4u,      4u,       16u,           GL_RG,         GL_COMRESSED_RG_RGTC2,                                   true,
 	1u,      1u,       4u,            GL_DEPTH,      GL_DEPTH_COMPONENT32,                                    false
 };
 
