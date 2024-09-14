@@ -3,7 +3,7 @@
 #include "Vertex.h"
 #include "Mesh.h"
 #include <assert.h>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -77,8 +77,7 @@ void ModelCacher::writeToCache(const char * fileName, const std::string& cacheSu
 	assert((meshes.size() != 0) && (indexedVertexBuffer.size() != 0) && (indexBuffer.size() != 0));
 
 	const std::string directoriesName = "Cache\\" + cacheSubFolder;
-	const bool directoriesCreationSuccess = std::experimental::filesystem::create_directories(directoriesName);
-	// const bool directoryCreationSuccess = std::experimental::filesystem::create_directory(directoryName);
+	const bool directoriesCreationSuccess = std::filesystem::create_directories(directoriesName);
 
 	const std::string cacheString = "Cache\\" + cacheSubFolder;
 	const std::string finalPath = cacheString + std::string(fileName);

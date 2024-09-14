@@ -1,5 +1,5 @@
 #include "Texture.h"
-#include <experimental/filesystem>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include "ResourceCompiler.h"
@@ -176,7 +176,7 @@ void Texture::loadTextureFromDisk(const std::string& sourceFile, const std::stri
 	//TextureLoader loader;
 
 	// Check if the file is available to be read, if not compile the file
-	const bool isAvailable = std::experimental::filesystem::exists(compiledFilePath);
+	const bool isAvailable = std::filesystem::exists(compiledFilePath);
 	if (!isAvailable)
 	{
 		ResourceCompilationContext compilationContext(sourceFile);
@@ -191,7 +191,7 @@ void Texture::loadTextureFromDisk(const std::string& sourceFile, const std::stri
 
 	if (compiler.getVersionNumber() != compilerVersion /*loader.getCompilationVersion()*/)
 	{
-		std::experimental::filesystem::remove(compiledFilePath);
+		std::filesystem::remove(compiledFilePath);
 
 		ResourceCompilationContext compilationContext(sourceFile);
 		compiler.compile(compilationContext);
@@ -244,7 +244,7 @@ void Texture::writeToCache(const std::string& path, const std::string& cacheSubF
 	assert(contents.size() != 0u);
 
 	const std::string cacheHierarchy = "Cache\\" + cacheSubFolder;
-	const bool directoryCreationSuccess = std::experimental::filesystem::create_directories(cacheHierarchy); // May be worth moving to set up code
+	const bool directoryCreationSuccess = std::filesystem::create_directories(cacheHierarchy); // May be worth moving to set up code
 
 	std::ofstream outputStream;
 	outputStream.open(path, std::ios::binary);

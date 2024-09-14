@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 #include <glm.hpp>
 
 struct Vertex;
@@ -11,7 +12,7 @@ class MaterialReader;
 class ModelCacher
 {
 public:
-
+	
 	static bool tryReadFromCache(const char* fileName, const std::string& cacheSubFolder, const MaterialReader& materialReader, std::vector<Mesh>& meshes, std::vector<Vertex>& indexedVertexBuffer,
 		std::vector<unsigned int>& indexBuffer, glm::vec3& sceneCenter);
 
