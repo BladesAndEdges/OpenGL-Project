@@ -30,6 +30,8 @@ void MaterialReader::parseMaterialFile(const std::string & fileName)
 	{
 		throw std::exception("Could not read Material Data!");
 	}
+	// Exception will be thrown here, because do not have GIT LFS, and 
+	// could not commit the Emerald Square file from Nvidia, even in compiled format, 
 
 	Material currentMaterial;
 	PerMaterialUniformData perMaterialUniforms;

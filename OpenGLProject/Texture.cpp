@@ -244,7 +244,7 @@ void Texture::writeToCache(const std::string& path, const std::string& cacheSubF
 	assert(contents.size() != 0u);
 
 	const std::string cacheHierarchy = "Cache\\" + cacheSubFolder;
-	const bool directoryCreationSuccess = std::filesystem::create_directories(cacheHierarchy); // May be worth moving to set up code
+	std::filesystem::create_directories(cacheHierarchy); // May be worth moving to set up code
 
 	std::ofstream outputStream;
 	outputStream.open(path, std::ios::binary);

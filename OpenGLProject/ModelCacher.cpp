@@ -77,7 +77,7 @@ void ModelCacher::writeToCache(const char * fileName, const std::string& cacheSu
 	assert((meshes.size() != 0) && (indexedVertexBuffer.size() != 0) && (indexBuffer.size() != 0));
 
 	const std::string directoriesName = "Cache\\" + cacheSubFolder;
-	const bool directoriesCreationSuccess = std::filesystem::create_directories(directoriesName);
+	std::filesystem::create_directories(directoriesName);
 
 	const std::string cacheString = "Cache\\" + cacheSubFolder;
 	const std::string finalPath = cacheString + std::string(fileName);

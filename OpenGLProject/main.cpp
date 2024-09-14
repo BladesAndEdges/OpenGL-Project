@@ -577,8 +577,6 @@ int main()
 			int framebufferWidth, framebufferHeight;
 			glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
 
-			const uint32_t width = cascade.getShadowMap()->getWidth();
-			const uint32_t height = cascade.getShadowMap()->getHeight();
 			glViewport(0, 0, cascade.getShadowMap()->getWidth(), cascade.getShadowMap()->getHeight());
 			
 			const GLfloat clearValue = 1.0f;
