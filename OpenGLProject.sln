@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.1022
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.34916.146
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGLProject", "OpenGLProject\OpenGLProject.vcxproj", "{52FE1978-B7C0-4564-8A95-537ED9E70B5D}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MikkTSpace", "MikkTSpace\MikkTSpace.vcxproj", "{9BF17A57-885F-4D33-8AE9-88A3C9EF59B3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImGui", "ImGui\ImGui.vcxproj", "{9D8CCA9D-4719-4709-9B88-BDD6F88C7A36}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glad", "glad\glad.vcxproj", "{9B20CE04-414F-4694-8BE8-CF27A967EB2F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,14 @@ Global
 		{9D8CCA9D-4719-4709-9B88-BDD6F88C7A36}.Release|x64.Build.0 = Release|x64
 		{9D8CCA9D-4719-4709-9B88-BDD6F88C7A36}.Release|x86.ActiveCfg = Release|Win32
 		{9D8CCA9D-4719-4709-9B88-BDD6F88C7A36}.Release|x86.Build.0 = Release|Win32
+		{9B20CE04-414F-4694-8BE8-CF27A967EB2F}.Debug|x64.ActiveCfg = Debug|x64
+		{9B20CE04-414F-4694-8BE8-CF27A967EB2F}.Debug|x64.Build.0 = Debug|x64
+		{9B20CE04-414F-4694-8BE8-CF27A967EB2F}.Debug|x86.ActiveCfg = Debug|Win32
+		{9B20CE04-414F-4694-8BE8-CF27A967EB2F}.Debug|x86.Build.0 = Debug|Win32
+		{9B20CE04-414F-4694-8BE8-CF27A967EB2F}.Release|x64.ActiveCfg = Release|x64
+		{9B20CE04-414F-4694-8BE8-CF27A967EB2F}.Release|x64.Build.0 = Release|x64
+		{9B20CE04-414F-4694-8BE8-CF27A967EB2F}.Release|x86.ActiveCfg = Release|Win32
+		{9B20CE04-414F-4694-8BE8-CF27A967EB2F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
