@@ -2,12 +2,13 @@
 
 This is my current and on-going project. It is meant to be a playground for me to test and improve my Graphics programming skills. 
 
-![](OpenGLProject/Screenshots/GLEngine.JPG)
-![](OpenGLProject/Screenshots/AmbientSponza.JPG)
-![](OpenGLProject/Screenshots/DiffuseSponza.JPG)
-![](OpenGLProject/Screenshots/SpecularSponza.JPG)
-![](OpenGLProject/Screenshots/NormalMapOff.JPG)
-![](OpenGLProject/Screenshots/NormalMapOn.JPG)
+![](OpenGLProject/Screenshots/FullScreen.png)
+![](OpenGLProject/Screenshots/CascadeDebug.png)
+![](OpenGLProject/Screenshots/ShadowMapDebug.png)
+![](OpenGLProject/Screenshots/ShadowsNoPCF.png)
+![](OpenGLProject/Screenshots/SoftShadowsWithPCF.png)
+![](OpenGLProject/Screenshots/NormalMapsOff.png)
+![](OpenGLProject/Screenshots/NormalMapsOn.png)
 
 ## How To Run
 
