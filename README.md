@@ -12,13 +12,16 @@ This is my current and on-going project. It is meant to be a playground for me t
 ## How To Run
 
 Download the project on your machine. Open the solution within your Visual Studio IDE and run the project.
+In it's current state, the project will be compiled, however, would encounter an error when running due to missing 
+model Emerald Square, which was too large to host on Github, without LFS.
 
 ## Features
 
+- Cascaded Shadow Maps with up to 4 cascades
+- PCF using Interleaved Gradient Noise
 - Phong Lighting
-- Custom Mesh Loader capable of handling large models with different materials.
 - Normal Mapping
-- Shadow Mapping with PCF using Interleaved Gradient Noise
+- A Mesh Loader capable of handling large models
 
 ## Camera Controls
 
