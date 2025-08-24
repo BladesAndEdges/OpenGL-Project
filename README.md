@@ -4,16 +4,16 @@ An OpenGL engine that I worked on shorly after graduation. This project was used
 and to get a better grasp on Computer Graphics concepts.
 
 <p align="left">
-  <img width="460" height="300" src="OpenGLProject/Screenshots/FullScreen.png">
-  <img width="460" height="300" src="OpenGLProject/Screenshots/CascadeDebug.png">
+  <img width="360" height="200" src="OpenGLProject/Screenshots/FullScreen.png">
+  <img width="360" height="200" src="OpenGLProject/Screenshots/CascadeDebug.png">
 </p>
 <p align="left">
-  <img width="460" height="300" src="OpenGLProject/Screenshots/ShadowsNoPCF.png">
-  <img width="460" height="300" src="OpenGLProject/Screenshots/SoftShadowsWithPCF.png">
+  <img width="360" height="200" src="OpenGLProject/Screenshots/ShadowsNoPCF.png">
+  <img width="360" height="200" src="OpenGLProject/Screenshots/SoftShadowsWithPCF.png">
 </p>
 <p align="left">
-  <img width="460" height="300" src="OpenGLProject/Screenshots/NormalMapsOff.png">
-  <img width="460" height="300" src="OpenGLProject/Screenshots/NormalMapsOn.png">
+  <img width="360" height="200" src="OpenGLProject/Screenshots/NormalMapsOff.png">
+  <img width="360" height="200" src="OpenGLProject/Screenshots/NormalMapsOn.png">
 </p>
 
 ## How To Run
