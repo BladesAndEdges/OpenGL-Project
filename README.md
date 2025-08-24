@@ -1,14 +1,20 @@
 # OpenGL-Project
 
-I completed this project shortly after I graduated in 2020. It was used to get a better understanding of Graphics programming.
+An OpenGL engine that I worked on shorly after graduation. This project was used to enhance my programming skills, 
+and to get a better grasp on Computer Graphics concepts.
 
-![](OpenGLProject/Screenshots/FullScreen.png)
-![](OpenGLProject/Screenshots/CascadeDebug.png)
-![](OpenGLProject/Screenshots/ShadowMapDebug.png)
-![](OpenGLProject/Screenshots/ShadowsNoPCF.png)
-![](OpenGLProject/Screenshots/SoftShadowsWithPCF.png)
-![](OpenGLProject/Screenshots/NormalMapsOff.png)
-![](OpenGLProject/Screenshots/NormalMapsOn.png)
+<p align="left">
+  <img width="460" height="300" src="OpenGLProject/Screenshots/FullScreen.png">
+  <img width="460" height="300" src="OpenGLProject/Screenshots/CascadeDebug.png">
+</p>
+<p align="left">
+  <img width="460" height="300" src="OpenGLProject/Screenshots/ShadowsNoPCF.png">
+  <img width="460" height="300" src="OpenGLProject/Screenshots/SoftShadowsWithPCF.png">
+</p>
+<p align="left">
+  <img width="460" height="300" src="OpenGLProject/Screenshots/NormalMapsOff.png">
+  <img width="460" height="300" src="OpenGLProject/Screenshots/NormalMapsOn.png">
+</p>
 
 ## How To Run
 
