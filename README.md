@@ -1,6 +1,6 @@
 # OpenGL-Project
 
-This is my current and on-going project. It is meant to be a playground for me to test and improve my Graphics programming skills. 
+I completed this project shortly after I graduated in 2020. It was used to get a better understanding of Graphics programming.
 
 ![](OpenGLProject/Screenshots/FullScreen.png)
 ![](OpenGLProject/Screenshots/CascadeDebug.png)
